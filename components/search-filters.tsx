@@ -51,12 +51,12 @@ export function SearchFilters() {
       {/* Property Type */}
       <div>
         <Label>Type</Label>
-        <Select value={filters.type} onValueChange={(v) => handleFilterChange('type', v)}>
+        <Select value={filters.type || undefined} onValueChange={(v) => handleFilterChange('type', v === 'all' ? '' : v)}>
           <SelectTrigger>
             <SelectValue placeholder="All types" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All types</SelectItem>
+            <SelectItem value="all">All types</SelectItem>
             <SelectItem value="sale">For Sale</SelectItem>
             <SelectItem value="rent">For Rent</SelectItem>
           </SelectContent>
@@ -66,12 +66,12 @@ export function SearchFilters() {
       {/* Bedrooms */}
       <div>
         <Label>Bedrooms</Label>
-        <Select value={filters.bedrooms} onValueChange={(v) => handleFilterChange('bedrooms', v)}>
+        <Select value={filters.bedrooms || undefined} onValueChange={(v) => handleFilterChange('bedrooms', v === 'any' ? '' : v)}>
           <SelectTrigger>
             <SelectValue placeholder="Any" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Any</SelectItem>
+            <SelectItem value="any">Any</SelectItem>
             <SelectItem value="1">1+</SelectItem>
             <SelectItem value="2">2+</SelectItem>
             <SelectItem value="3">3+</SelectItem>

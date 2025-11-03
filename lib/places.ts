@@ -43,7 +43,7 @@ export class PlacesService {
   async autocomplete(
     input: string,
     sessionToken?: string,
-    options?: { types?: string; location?: string; radius?: number }
+    options?: { types?: string; location?: string; radius?: number; components?: string }
   ): Promise<PlaceAutocompleteResult[]> {
     const cacheKey = `places:autocomplete:${input}:${JSON.stringify(options)}`
     const cached = await redis.get<PlaceAutocompleteResult[]>(cacheKey)
@@ -56,6 +56,7 @@ export class PlacesService {
       ...(options?.types && { types: options.types }),
       ...(options?.location && { location: options.location }),
       ...(options?.radius && { radius: String(options.radius) }),
+      ...(options?.components && { components: options.components }),
     })
 
     const response = await fetch(`${this.baseUrl}/place/autocomplete/json?${params}`)
