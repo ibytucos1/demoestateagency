@@ -1,0 +1,89 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  theme     Json     // { primaryColor, logo, etc }
+  createdAt DateTime @default(now())
+  Users     User[]
+  Listings  Listing[]
+  Leads     Lead[]
+}
+
+model User {
+  id        String   @id @default(cuid())
+  tenantId  String
+  email     String
+  name      String?
+  role      String   // 'owner' | 'agent' | 'admin'
+  clerkId   String   @unique
+  Tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+  @@index([clerkId])
+}
+
+model Listing {
+  id           String   @id @default(cuid())
+  tenantId     String
+  slug         String
+  title        String
+  status       String   // 'active' | 'sold' | 'let' | 'draft'
+  type         String   // 'rent' | 'sale'
+  price        Int
+  currency     String   @default("USD")
+  bedrooms     Int?
+  bathrooms    Int?
+  propertyType String?  // 'house' | 'apartment' | 'condo' | 'villa' | etc
+  addressLine1 String
+  city         String
+  postcode     String?
+  lat          Float?
+  lng          Float?
+  description  String   @db.Text
+  features     String[] // tags like ['parking', 'garden', 'balcony']
+  media        Json     // [{key,width,height,alt}]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  Tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  Leads        Lead[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId, status, type])
+  @@index([tenantId, city, status])
+  @@index([tenantId, createdAt])
+  @@index([tenantId, lat, lng])
+  @@index([features], type: Gin)
+}
+
+model Lead {
+  id        String    @id @default(cuid())
+  tenantId  String
+  listingId String?
+  name      String
+  email     String
+  phone     String?
+  message   String    @db.Text
+  source    String    // 'form' | 'phone' | 'portal'
+  createdAt DateTime  @default(now())
+  Listing   Listing?  @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  Tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+  @@index([listingId])
+}
+

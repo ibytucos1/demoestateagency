@@ -1,0 +1,266 @@
+# start every chat and response with VJ
+
+# Cursor Guardrails — Generic Project Rules
+
+## 0) Purpose
+Operate as a senior engineer **only within the user’s explicit requests**. 
+- If an instruction conflicts with these rules, propose a short plan and **ask first**.
+- If anything is ambiguous, **ask a single precise question** with 2–3 options.
+
+## 1) Scope of Authority
+- ✅ Make changes strictly related to the current request.
+- ✅ Suggest best practices briefly (1–3 bullets) **before** implementing, only if relevant.
+- ❌ Do not add scope, features, files, services, or dependencies unless explicitly asked.
+
+## 2) Hard Guardrails (NEVER)
+- ❌ Do not commit secrets, tokens, or `.env*` files; never print secrets in logs/diffs.
+- ❌ Do not introduce third-party services/libs without explicit approval.
+- ❌ Do not alter build/deploy pipelines, CI/CD, or infra without approval.
+- ❌ Do not remove data, change schemas destructively, or run irreversible migrations.
+- ❌ Do not weaken security (CORS wide-open, public buckets, plaintext passwords, etc.).
+- ❌ Do not bypass tests/linters/typechecks or commit broken code.
+
+## 3) Ask-First Items (require confirmation)
+- New dependencies or service vendors (DB, auth, email, storage, analytics).
+- Changes to data models, migrations, or public APIs.
+- Non-trivial refactors, file/folder restructures, or config rewrites.
+- New background jobs/queues/schedulers.
+- Anything affecting pricing, compliance, or user data retention.
+
+## 4) Output & Change Style
+- Keep diffs **surgical**. Provide only changed files/blocks (no full-file dumps unless requested).
+- Include a short **“What/Why/How”** summary for each change.
+- If creating files, include path + minimal boilerplate; keep comments concise.
+- When suggesting alternatives, list pros/cons briefly; don’t implement both.
+
+## 5) Security Defaults (applies to any stack)
+- Secrets only via environment variables; validate them on startup.
+- Principle of least privilege (roles, keys, bucket/object ACLs).
+- Server-side handling for sensitive operations (auth, payments, API keys).
+- Sanitize and validate all inputs; rate-limit public endpoints.
+- Use HTTPS everywhere; set sensible security headers.
+- Log minimal PII; redact sensitive fields.
+
+## 6) Reliability & Performance (generic best practices)
+- Add indexes for any field used in filters/sorts; prefer keyset pagination over OFFSET.
+- Cache hot reads (app-layer/edge/kv) with clear TTLs; avoid caching private data.
+- Avoid N+1 queries; batch or join where appropriate.
+- Use idempotency on write endpoints that can be retried.
+- Put timeouts/circuit breakers on external calls.
+
+## 7) Testing & Quality
+- Maintain or add **basic tests** for changed logic (unit or small integration).
+- Keep linters/typechecks green; fix or justify rule suppressions.
+- Provide a minimal **manual QA checklist** for user flows you touch.
+
+## 8) Documentation
+- Update README or a short `docs/CHANGELOG.md` entry for:
+  - New env vars, commands, migrations, or breaking changes.
+- Inline comments only where non-obvious; avoid noise.
+
+## 9) Observability (lightweight)
+- Add/maintain error reporting at boundaries (API, jobs).
+- Log key events (start/finish/fail) with request IDs; avoid verbose debug logs in prod.
+
+## 10) Data & Compliance (generic)
+- Provide export/delete stubs if handling user data.
+- Don’t store secrets, access tokens, or raw payment data.
+- Respect robots/SEO settings if generating public pages.
+
+## 11) Accessibility & UX (baseline)
+- Labels for inputs, alt text for images, focus states, keyboard nav for critical flows.
+
+## 12) Unknowns → Ask
+If any requirement is unclear, reply with:
+- “Need choice:” and exactly 2–3 options (A/B/C) with one-line trade-offs.
+- Do not proceed until the user selects.
+
+## 13) Acceptance Checklist (per change)
+- [ ] Scope matches request
+- [ ] Security unaffected (or improved)
+- [ ] Tests/linters/types pass
+- [ ] Docs/env updated (if needed)
+- [ ] Minimal diffs; rationale provided
+
+## 14) Template Placeholders (for portability)
+- Use placeholders instead of vendor lock-in unless specified:
+  - <DB_PROVIDER>, <AUTH_PROVIDER>, <EMAIL_PROVIDER>, <STORAGE_PROVIDER>, <CACHE_PROVIDER>, <ANALYTICS_PROVIDER>
+- If a provider is unspecified, **ask** before adding one.
+
+
+
+# Real Estate Platform - Cursor Rules
+
+## Tech Stack
+- **Framework**: Next.js 14 (App Router, TypeScript)
+- **Database**: Supabase Postgres with Prisma ORM
+- **Auth**: Clerk (using `clerkMiddleware()` from `@clerk/nextjs/server`)
+- **UI**: Tailwind CSS, shadcn/ui components, Lucide React icons
+- **Storage**: Supabase Storage (via StorageService wrapper)
+- **Email**: Resend
+- **Search**: Postgres queries (DBSearchService) with Typesense adapter ready
+- **Caching**: Upstash Redis (falls back to in-memory)
+
+## Project Structure
+- `app/` - Next.js App Router pages and API routes
+- `components/` - React components (UI components in `components/ui/`)
+- `lib/` - Utility functions and services
+- `prisma/` - Database schema and migrations
+- `inngest/` - Background job functions
+
+## Code Style & Conventions
+
+### TypeScript
+- Use strict TypeScript
+- Prefer `async/await` over promises
+- Use type inference where possible, explicit types for function parameters/returns
+- Use `z.infer<typeof schema>` for Zod types
+
+### Next.js App Router
+- Use Server Components by default, mark with `'use client'` only when needed
+- API routes in `app/api/` directory
+- Use `next/headers` for cookies, headers in Server Components
+- Use `next/navigation` for client-side navigation
+
+### Multi-Tenant Architecture
+- **ALWAYS** scope database queries by `tenantId`
+- Use `getTenantId()` from `@/lib/tenant` to get current tenant
+- Never query across tenants
+- Tenant ID comes from `x-tenant` header (set by middleware)
+- Default tenant for demo: `'acme'` (slug), actual ID: `'acme-tenant-id'`
+
+### Database (Prisma)
+- Use Prisma Client from `@/lib/db` (singleton pattern)
+- Always include `tenantId` in `where` clauses
+- Use indexes: `(tenantId, status, type)`, `(tenantId, city, status)`, etc.
+- Use `findUnique` for single lookups, `findMany` for lists
+- Use keyset pagination with `createdAt,id` cursor
+
+### Authentication (Clerk)
+- Use `clerkMiddleware()` in `middleware.ts` (NOT deprecated `authMiddleware()`)
+- Wrap app with `<ClerkProvider>` in `app/layout.tsx`
+- Use `auth()` from `@clerk/nextjs/server` for server-side auth checks
+- Use `requireAuth()` from `@/lib/rbac` for protected routes
+- Roles: `'owner' | 'admin' | 'agent'`
+
+### Services
+- **StorageService** (`lib/storage.ts`): Use for file uploads, returns URLs for `<Image />`
+- **EmailService** (`lib/email.ts`): Use for sending emails via Resend
+- **PlacesService** (`lib/places.ts`): Google Places API proxy with caching
+- **SearchService** (`lib/search.ts`): Interface + DBSearchService implementation
+
+### Environment Variables
+- All env vars validated via Zod in `lib/env.ts`
+- Use `env` from `@/lib/env` (never `process.env` directly)
+- Never commit real keys to git
+- Use `.env.local` for local development
+
+### Components
+- Use shadcn/ui components from `components/ui/`
+- Prefer composition over configuration
+- Use `cn()` utility from `@/lib/utils` for className merging
+- Client components should be marked with `'use client'` at the top
+
+### API Routes
+- Use `NextRequest` and `NextResponse` from `next/server`
+- Always use rate limiting: `readLimiter` for GET, `writeLimiter` for POST/PATCH/DELETE
+- Return proper HTTP status codes (200, 400, 401, 404, 500)
+- Always scope queries by `tenantId` (use `getTenantId()`)
+
+### Error Handling
+- Use try/catch in API routes and async functions
+- Log errors with `console.error()` for debugging
+- Return user-friendly error messages
+- Don't expose internal errors to clients
+
+### File Naming
+- Use kebab-case for files: `listing-card.tsx`, `search-filters.tsx`
+- Use PascalCase for React components: `ListingCard`, `SearchFilters`
+- Use camelCase for utilities: `getTenantId`, `requireAuth`
+
+## Important Patterns
+
+### Tenant Lookup
+- `getTenantId()` returns tenant identifier (slug or ID)
+- `getTenant()` accepts either slug or ID and returns full tenant object
+- Always use tenant scoping in queries
+
+### Search
+- Use `searchService.search()` from `@/lib/search`
+- Supports keyset pagination with cursor
+- Filters: status, type, price, bedrooms, city, radius, features
+
+### Forms
+- Use `react-hook-form` for complex forms
+- Validate with Zod schemas
+- Use Turnstile for spam protection (optional, graceful degradation)
+
+### Images
+- Use Next.js `<Image />` component
+- Images stored in Supabase Storage bucket `media`
+- Use `storage.publicUrl()` for image URLs
+
+## What NOT to Do
+
+### Clerk
+- ❌ Don't use `authMiddleware()` (deprecated)
+- ❌ Don't use Pages Router patterns (`_app.tsx`, `pages/` directory)
+- ❌ Don't import from deprecated Clerk packages
+
+### Database
+- ❌ Never query without `tenantId` filter
+- ❌ Don't use raw SQL unless necessary
+- ❌ Don't bypass Prisma for simple queries
+
+### Security
+- ❌ Never expose API keys in code
+- ❌ Don't skip rate limiting on API routes
+- ❌ Don't trust client-side tenant selection (validate server-side)
+
+### Code Organization
+- ❌ Don't put business logic in components
+- ❌ Don't create components without reusability in mind
+- ❌ Don't duplicate tenant lookup logic
+
+## Testing
+- Unit tests: Vitest (in `tests/` directory)
+- E2E tests: Playwright (in `tests/e2e/`)
+- Test files: `*.test.ts` or `*.spec.ts`
+
+## Deployment
+- Deploy to Vercel
+- Use Vercel environment variables
+- Run `pnpm db:migrate` after deployment
+- Seed data: `pnpm db:seed` (optional, for demo data)
+
+## Common Tasks
+
+### Adding a New API Route
+1. Create file in `app/api/[route]/route.ts`
+2. Use `getTenantId()` for tenant scoping
+3. Add rate limiting
+4. Handle errors properly
+5. Return JSON responses
+
+### Adding a New Page
+1. Create in `app/(public)/` or `app/(admin)/`
+2. Use Server Components by default
+3. Add tenant scoping if querying database
+4. Use layout for shared UI
+
+### Adding a New Service
+1. Create in `lib/[service-name].ts`
+2. Export singleton instance
+3. Add to `lib/env.ts` if needs env vars
+4. Document usage in code comments
+
+## Code Review Checklist
+- [ ] All database queries scoped by `tenantId`
+- [ ] Rate limiting on API routes
+- [ ] Error handling implemented
+- [ ] TypeScript types correct
+- [ ] No hardcoded values (use env vars)
+- [ ] Client components marked with `'use client'`
+- [ ] Proper Next.js App Router patterns
+- [ ] Clerk integration follows latest patterns
+
