@@ -264,3 +264,10 @@ If any requirement is unclear, reply with:
 - [ ] Proper Next.js App Router patterns
 - [ ] Clerk integration follows latest patterns
 
+## Git & Commits
+- Use conventional commit messages: `feat:`, `fix:`, `refactor:`, `style:`, `docs:`, `test:`, `chore:`
+- Commit after completing a feature or significant change
+- Include a clear summary of what was changed in the commit message
+- Example format: `feat: add Google Places autocomplete to location search`
+- Always commit changes before user requests new features
+
