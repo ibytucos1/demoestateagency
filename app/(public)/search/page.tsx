@@ -1,8 +1,7 @@
 import { getTenantId } from '@/lib/tenant'
 import { searchService } from '@/lib/search'
-import { SearchFilters } from '@/components/search-filters'
 import { ListingCard } from '@/components/listing-card'
-import { Suspense } from 'react'
+import { FilterBar } from '@/components/filter-bar'
 
 interface SearchPageProps {
   searchParams: { [key: string]: string | string[] | undefined }
@@ -28,41 +27,44 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   })
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Search Properties</h1>
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <aside className="lg:col-span-1">
-          <Suspense fallback={<div>Loading filters...</div>}>
-            <SearchFilters />
-          </Suspense>
-        </aside>
-        <main className="lg:col-span-3">
-          {result.listings.length > 0 ? (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                {result.listings.map((listing) => (
-                  <ListingCard key={listing.id} listing={listing} />
-                ))}
-              </div>
-              {result.hasMore && (
-                <div className="text-center">
-                  <form action="/search" method="get">
-                    <input type="hidden" name="cursor" value={result.nextCursor} />
-                    <button
-                      type="submit"
-                      className="px-6 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
-                    >
-                      Load More
-                    </button>
-                  </form>
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">No listings found. Try adjusting your filters.</p>
+    <div>
+      {/* Filter Bar - Right under nav bar */}
+      <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800">
+        <div className="container mx-auto px-4 py-4">
+          <FilterBar />
+        </div>
+      </div>
+      
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-8">Search Properties</h1>
+        
+        <main>
+        {result.listings.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 gap-6 mb-8">
+              {result.listings.map((listing) => (
+                <ListingCard key={listing.id} listing={listing} />
+              ))}
             </div>
-          )}
+            {result.hasMore && (
+              <div className="text-center">
+                <form action="/search" method="get">
+                  <input type="hidden" name="cursor" value={result.nextCursor} />
+                  <button
+                    type="submit"
+                    className="px-6 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+                  >
+                    Load More
+                  </button>
+                </form>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">No listings found. Try adjusting your filters.</p>
+          </div>
+        )}
         </main>
       </div>
     </div>
