@@ -1,7 +1,9 @@
 import { getTenant } from '@/lib/tenant'
+import { getCurrentUser } from '@/lib/rbac'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { UserButton } from '@clerk/nextjs'
+import { UserMenu } from '@/components/user-menu'
 
 export default async function AdminLayout({
   children,
@@ -9,6 +11,16 @@ export default async function AdminLayout({
   children: React.ReactNode
 }) {
   const tenant = await getTenant()
+  const tenantId = tenant.id
+  console.log(`[AdminLayout] Tenant: id=${tenantId}, slug=${tenant.slug}`)
+  
+  const user = await getCurrentUser(tenantId)
+  console.log(`[AdminLayout] User check result: ${user ? `Found user ${user.email}` : 'No user found'}`)
+
+  if (!user) {
+    console.log('[AdminLayout] Redirecting to sign-in - no user found')
+    redirect('/sign-in?redirect_url=/admin')
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -28,7 +40,7 @@ export default async function AdminLayout({
             <Link href="/">
               <Button variant="ghost">View Site</Button>
             </Link>
-            <UserButton />
+            <UserMenu user={user} />
           </div>
         </div>
       </header>
@@ -36,4 +48,3 @@ export default async function AdminLayout({
     </div>
   )
 }
-

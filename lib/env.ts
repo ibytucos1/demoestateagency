@@ -4,14 +4,6 @@ const envSchema = z.object({
   // Database
   DATABASE_URL: z.string().url(),
 
-  // Clerk Auth
-  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
-  CLERK_SECRET_KEY: z.string().min(1),
-  NEXT_PUBLIC_CLERK_SIGN_IN_URL: z.string().default('/sign-in'),
-  NEXT_PUBLIC_CLERK_SIGN_UP_URL: z.string().default('/sign-up'),
-  NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL: z.string().default('/admin'),
-  NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL: z.string().default('/admin'),
-
   // Resend Email
   RESEND_API_KEY: z.string().min(1),
   RESEND_FROM_EMAIL: z.string().email().optional(),
@@ -20,6 +12,8 @@ const envSchema = z.object({
   // Supabase
   SUPABASE_URL: z.string().url(),
   SUPABASE_ANON_KEY: z.string().min(1),
+  NEXT_PUBLIC_SUPABASE_URL: z.string().url().optional(),
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1).optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
 
   // Google APIs
@@ -53,9 +47,17 @@ const envSchema = z.object({
 
 export type Env = z.infer<typeof envSchema>
 
-function getEnv(): Env {
+function getEnv(): Env & { NEXT_PUBLIC_SUPABASE_URL: string; NEXT_PUBLIC_SUPABASE_ANON_KEY: string } {
   try {
-    return envSchema.parse(process.env)
+    const parsed = envSchema.parse(process.env)
+    // Default NEXT_PUBLIC_ vars to regular vars if not set
+    const nextPublicUrl = parsed.NEXT_PUBLIC_SUPABASE_URL || parsed.SUPABASE_URL
+    const nextPublicKey = parsed.NEXT_PUBLIC_SUPABASE_ANON_KEY || parsed.SUPABASE_ANON_KEY
+    return {
+      ...parsed,
+      NEXT_PUBLIC_SUPABASE_URL: nextPublicUrl,
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: nextPublicKey,
+    }
   } catch (error) {
     if (error instanceof z.ZodError) {
       const missing = error.errors.map(e => e.path.join('.')).join(', ')

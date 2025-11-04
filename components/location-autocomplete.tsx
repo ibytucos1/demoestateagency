@@ -20,6 +20,7 @@ interface LocationAutocompleteProps {
   placeholder?: string
   className?: string
   id?: string
+  rightButton?: React.ReactNode
 }
 
 export function LocationAutocomplete({
@@ -28,6 +29,7 @@ export function LocationAutocomplete({
   placeholder = 'Enter city or postcode',
   className,
   id = 'location',
+  rightButton,
 }: LocationAutocompleteProps) {
   const [suggestions, setSuggestions] = useState<AutocompleteResult[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -156,7 +158,7 @@ export function LocationAutocomplete({
 
   return (
     <div ref={containerRef} className="relative w-full">
-      <div className="relative">
+      <div className="relative flex items-center rounded-md border border-input overflow-hidden">
         <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5 z-10" />
         <Input
           ref={inputRef}
@@ -178,11 +180,16 @@ export function LocationAutocomplete({
             }, 200)
           }}
           placeholder={placeholder}
-          className={cn('pl-10 h-12 text-gray-900', className)}
+          className={cn('pl-10 h-12 text-gray-900 rounded-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0', className)}
           autoComplete="off"
         />
         {isLoading && (
-          <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 animate-spin" />
+          <Loader2 className="absolute right-14 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 animate-spin z-20" />
+        )}
+        {rightButton && (
+          <div className="flex-shrink-0">
+            {rightButton}
+          </div>
         )}
       </div>
 

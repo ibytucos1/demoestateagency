@@ -27,14 +27,14 @@ model User {
   email     String
   name      String?
   role      String   // 'owner' | 'agent' | 'admin'
-  clerkId   String   @unique
+  authId    String   @unique // Supabase Auth user ID
   Tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([tenantId, email])
   @@index([tenantId])
-  @@index([clerkId])
+  @@index([authId])
 }
 
 model Listing {
@@ -43,7 +43,7 @@ model Listing {
   slug         String
   title        String
   status       String   // 'active' | 'sold' | 'let' | 'draft'
-  type         String   // 'rent' | 'sale'
+  type         String   // 'rent' | 'sale' | 'commercial'
   price        Int
   currency     String   @default("USD")
   bedrooms     Int?

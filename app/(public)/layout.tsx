@@ -1,7 +1,9 @@
 import { getTenant } from '@/lib/tenant'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Home, Search, User } from 'lucide-react'
+import { Home, Search } from 'lucide-react'
+import { LandlordsDropdown } from '@/components/landlords-dropdown'
+import { ServicesDropdown } from '@/components/services-dropdown'
 
 export default async function PublicLayout({
   children,
@@ -14,34 +16,48 @@ export default async function PublicLayout({
     <div className="min-h-screen flex flex-col bg-gray-50">
       <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center gap-2 group">
+          <div className="flex items-center justify-between h-16 relative">
+            <Link href="/" className="flex items-center gap-2 group md:absolute md:left-4">
               <div className="bg-primary text-primary-foreground p-2 rounded-lg group-hover:scale-105 transition-transform">
                 <Home className="h-5 w-5" />
               </div>
               <span className="text-2xl font-bold text-gray-900">{tenant.name}</span>
             </Link>
-            <nav className="hidden md:flex items-center gap-6">
+            <nav className="hidden md:flex items-center gap-6 md:absolute md:left-1/2 md:transform md:-translate-x-1/2">
               <Link
-                href="/"
+                href="/search?type=sale"
                 className="text-gray-700 hover:text-primary font-medium transition-colors"
               >
-                Home
+                Sell
               </Link>
               <Link
-                href="/search"
-                className="text-gray-700 hover:text-primary font-medium transition-colors flex items-center gap-1"
+                href="/search?type=sale"
+                className="text-gray-700 hover:text-primary font-medium transition-colors"
               >
-                <Search className="h-4 w-4" />
-                Search Properties
+                Buy
               </Link>
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/admin" className="flex items-center gap-1">
-                  <User className="h-4 w-4" />
-                  Admin
+              <Link
+                href="/search?type=rent"
+                className="text-gray-700 hover:text-primary font-medium transition-colors"
+              >
+                Rent
+              </Link>
+              <LandlordsDropdown />
+              <ServicesDropdown />
+              <Link
+                href="/contact"
+                className="text-gray-700 hover:text-primary font-medium transition-colors"
+              >
+                Contact Us
+              </Link>
+            </nav>
+            <div className="hidden md:block md:absolute md:right-4">
+              <Button asChild>
+                <Link href="/valuation">
+                  Get a Free Valuation
                 </Link>
               </Button>
-            </nav>
+            </div>
             <div className="md:hidden">
               <Button asChild variant="ghost" size="sm">
                 <Link href="/search">
@@ -78,6 +94,11 @@ export default async function PublicLayout({
                 <li>
                   <Link href="/search?type=rent" className="hover:text-white transition-colors">
                     Properties to Rent
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/search?type=commercial" className="hover:text-white transition-colors">
+                    Commercial Properties
                   </Link>
                 </li>
               </ul>

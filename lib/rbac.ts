@@ -1,5 +1,6 @@
-import { auth } from '@clerk/nextjs/server'
+import { getCurrentUserId } from './auth'
 import { db } from './db'
+import { getTenant } from './tenant'
 
 export type UserRole = 'owner' | 'admin' | 'agent'
 
@@ -12,17 +13,46 @@ export interface User {
 }
 
 /**
- * Get current user from Clerk and DB
+ * Resolve tenant identifier (slug or ID) to actual tenant ID
  */
-export async function getCurrentUser(tenantId: string): Promise<User | null> {
-  const { userId: clerkId } = await auth()
-  if (!clerkId) return null
+async function resolveTenantId(identifier: string): Promise<string> {
+  const tenant = await getTenant(identifier)
+  return tenant.id
+}
+
+/**
+ * Get current user from Supabase Auth and DB
+ * Accepts either tenant slug or tenant ID
+ */
+export async function getCurrentUser(tenantIdOrSlug: string): Promise<User | null> {
+  // Resolve slug to ID if needed
+  const tenantId = await resolveTenantId(tenantIdOrSlug)
+  const authId = await getCurrentUserId()
+  if (!authId) {
+    console.log('[getCurrentUser] No authId found')
+    return null
+  }
+
+  console.log(`[getCurrentUser] Looking for user with authId: ${authId}, tenantId: ${tenantId}`)
 
   const user = await db.user.findUnique({
-    where: { clerkId },
+    where: { authId },
   })
 
-  if (!user || user.tenantId !== tenantId) {
+  if (!user) {
+    console.log(`[getCurrentUser] No user found in database for authId: ${authId}`)
+    // Try to find any user with this authId to debug
+    const anyUser = await db.user.findMany({
+      where: { authId },
+    })
+    console.log(`[getCurrentUser] Debug: Found ${anyUser.length} users with this authId`)
+    return null
+  }
+
+  console.log(`[getCurrentUser] Found user: email=${user.email}, user.tenantId=${user.tenantId}, requested.tenantId=${tenantId}`)
+
+  if (user.tenantId !== tenantId) {
+    console.log(`[getCurrentUser] Tenant mismatch: user.tenantId=${user.tenantId}, requested=${tenantId}`)
     return null
   }
 
@@ -44,16 +74,20 @@ export function hasRole(user: User | null, requiredRoles: UserRole[]): boolean {
 }
 
 /**
- * Require auth and role (throws if not authorized)
+ * Require auth and role (redirects if not authorized)
+ * Accepts either tenant slug or tenant ID
  */
-export async function requireAuth(tenantId: string, requiredRoles?: UserRole[]): Promise<User> {
-  const user = await getCurrentUser(tenantId)
+export async function requireAuth(tenantIdOrSlug: string, requiredRoles?: UserRole[]): Promise<User> {
+  const user = await getCurrentUser(tenantIdOrSlug)
   if (!user) {
-    throw new Error('Unauthorized')
+    // Import redirect dynamically to avoid issues
+    const { redirect } = await import('next/navigation')
+    redirect('/sign-in?redirect_url=' + encodeURIComponent('/admin'))
+    // This never returns, but TypeScript doesn't know that
+    throw new Error('Redirecting to sign-in')
   }
   if (requiredRoles && !hasRole(user, requiredRoles)) {
     throw new Error('Forbidden')
   }
   return user
 }
-

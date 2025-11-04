@@ -1,16 +1,77 @@
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
 
-// Protect admin routes
-const isAdminRoute = createRouteMatcher(['/admin(.*)'])
+// Use NEXT_PUBLIC_ vars (available in middleware) or fallback to regular vars
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
 
-export default clerkMiddleware(async (auth, req: NextRequest) => {
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    'Missing Supabase environment variables. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY (or SUPABASE_URL and SUPABASE_ANON_KEY) in your .env.local file'
+  )
+}
+
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
+
+  // Create Supabase client for middleware
+  const supabase = createServerClient(
+    supabaseUrl,
+    supabaseAnonKey,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          request.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+        },
+        remove(name: string, options: CookieOptions) {
+          request.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+        },
+      },
+    }
+  )
+
+  // Refresh session
+  await supabase.auth.getSession()
+
   // Check tenant from cookie or query param (demo only - use subdomain in production)
-  const tenant = req.cookies.get('x-tenant')?.value || req.nextUrl.searchParams.get('tenant') || 'acme'
+  const tenant = request.cookies.get('x-tenant')?.value || request.nextUrl.searchParams.get('tenant') || 'acme'
   
   // Set tenant in headers for server components
-  const response = NextResponse.next()
   response.headers.set('x-tenant', tenant)
   response.cookies.set('x-tenant', tenant, { 
     httpOnly: false, // Allow JS access for switching
@@ -19,17 +80,20 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   })
 
   // Protect admin routes
-  if (isAdminRoute(req)) {
-    const { userId } = await auth()
-    if (!userId) {
-      const signInUrl = new URL('/sign-in', req.url)
-      signInUrl.searchParams.set('redirect_url', req.url)
+  if (request.nextUrl.pathname.startsWith('/admin')) {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    
+    if (!session) {
+      const signInUrl = new URL('/sign-in', request.url)
+      signInUrl.searchParams.set('redirect_url', request.url)
       return NextResponse.redirect(signInUrl)
     }
   }
 
   return response
-})
+}
 
 export const config = {
   matcher: [
@@ -37,4 +101,3 @@ export const config = {
     '/(api|trpc)(.*)',
   ],
 }
-

@@ -59,6 +59,7 @@ export function SearchFilters() {
             <SelectItem value="all">All types</SelectItem>
             <SelectItem value="sale">For Sale</SelectItem>
             <SelectItem value="rent">For Rent</SelectItem>
+            <SelectItem value="commercial">Commercial</SelectItem>
           </SelectContent>
         </Select>
       </div>

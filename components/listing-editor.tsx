@@ -132,6 +132,7 @@ export function ListingEditor({ listing }: ListingEditorProps) {
                   <SelectContent>
                     <SelectItem value="sale">Sale</SelectItem>
                     <SelectItem value="rent">Rent</SelectItem>
+                    <SelectItem value="commercial">Commercial</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

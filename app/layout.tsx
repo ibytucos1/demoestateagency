@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { ClerkProvider } from '@clerk/nextjs'
 import Script from 'next/script'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -19,20 +18,18 @@ export default function RootLayout({
   const plausibleDomain = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN
 
   return (
-    <ClerkProvider>
-      <html lang="en">
-        <head>
-          {plausibleDomain && (
-            <Script
-              defer
-              data-domain={plausibleDomain}
-              src="https://plausible.io/js/script.js"
-            />
-          )}
-        </head>
-        <body className={inter.className}>{children}</body>
-      </html>
-    </ClerkProvider>
+    <html lang="en">
+      <head>
+        {plausibleDomain && (
+          <Script
+            defer
+            data-domain={plausibleDomain}
+            src="https://plausible.io/js/script.js"
+          />
+        )}
+      </head>
+      <body className={inter.className}>{children}</body>
+    </html>
   )
 }
 
