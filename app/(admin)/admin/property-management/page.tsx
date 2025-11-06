@@ -207,8 +207,9 @@ export default async function PropertyManagementPage() {
   })
 
   const propertyRows = properties.map((property) => {
-    const totalUnitsForProperty = property.Units.length
-    const occupiedUnitsForProperty = property.Units.filter((unit) => unit.status === 'OCCUPIED').length
+    const propertyWithUnits = property as any
+    const totalUnitsForProperty = propertyWithUnits.Units.length
+    const occupiedUnitsForProperty = propertyWithUnits.Units.filter((unit: any) => unit.status === 'OCCUPIED').length
     const hasOverduePayments = overduePaymentsMap.get(property.id) ?? 0
 
     return {
