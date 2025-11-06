@@ -23,7 +23,7 @@ export async function lookupPostcode(postcode: string): Promise<UKAddress[]> {
     
     // Use Google Places Autocomplete via our API proxy
     const response = await fetch(
-      `/api/places?action=autocomplete&input=${encodeURIComponent(cleanPostcode)}&types=address&componentRestrictions=country:uk`
+      `/api/places?action=autocomplete&input=${encodeURIComponent(cleanPostcode)}&types=address&components=country:uk`
     )
 
     if (!response.ok) {
@@ -32,7 +32,15 @@ export async function lookupPostcode(postcode: string): Promise<UKAddress[]> {
 
     const data = await response.json()
     
-    if (!data.predictions || data.predictions.length === 0) {
+    console.log('🔍 Postcode lookup response:', JSON.stringify(data, null, 2))
+    
+    // API returns { results } which is the array of predictions
+    const predictions = data.results || []
+    
+    console.log('📍 Predictions found:', predictions.length)
+    
+    if (predictions.length === 0) {
+      console.log('❌ No predictions returned from API')
       return []
     }
 
@@ -40,10 +48,12 @@ export async function lookupPostcode(postcode: string): Promise<UKAddress[]> {
     const addresses: UKAddress[] = []
     
     // Limit to first 10 results for performance
-    const predictions = data.predictions.slice(0, 10)
+    const limitedPredictions = predictions.slice(0, 10)
     
-    for (const prediction of predictions) {
+    for (const prediction of limitedPredictions) {
       try {
+        console.log('📌 Fetching details for place_id:', prediction.place_id)
+        
         const detailsResponse = await fetch(
           `/api/places?action=details&placeId=${encodeURIComponent(prediction.place_id)}`
         )
@@ -52,17 +62,26 @@ export async function lookupPostcode(postcode: string): Promise<UKAddress[]> {
           const detailsData = await detailsResponse.json()
           const result = detailsData.result
           
+          console.log('📝 Place details:', result?.formatted_address)
+          
           if (result && result.address_components) {
             const address = parseGoogleAddress(result.address_components, cleanPostcode)
+            console.log('🏠 Parsed address:', address)
             if (address) {
               addresses.push(address)
+            } else {
+              console.log('⚠️ Address parsing returned null')
             }
           }
+        } else {
+          console.log('❌ Details response not OK:', detailsResponse.status)
         }
       } catch (err) {
         console.error('Error fetching place details:', err)
       }
     }
+    
+    console.log('✅ Total addresses parsed:', addresses.length)
 
     return addresses
   } catch (error) {

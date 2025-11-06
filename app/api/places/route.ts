@@ -30,6 +30,8 @@ export async function GET(req: NextRequest) {
       const radius = searchParams.get('radius') ? Number(searchParams.get('radius')) : undefined
       const components = searchParams.get('components') || undefined
 
+      console.log('🔍 Autocomplete API called with:', { input, types, components })
+
       if (!input) {
         return NextResponse.json({ error: 'Missing input' }, { status: 400 })
       }
@@ -40,6 +42,8 @@ export async function GET(req: NextRequest) {
         radius,
         components,
       })
+
+      console.log('📍 Autocomplete results count:', results.length)
 
       return NextResponse.json({ results })
     }

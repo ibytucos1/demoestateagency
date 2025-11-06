@@ -14,9 +14,11 @@ interface PropertyGalleryProps {
     alt?: string
   }>
   propertyTitle: string
+  typeLabel?: string
+  typeColor?: string
 }
 
-export function PropertyGallery({ images, propertyTitle }: PropertyGalleryProps) {
+export function PropertyGallery({ images, propertyTitle, typeLabel, typeColor }: PropertyGalleryProps) {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
@@ -56,64 +58,102 @@ export function PropertyGallery({ images, propertyTitle }: PropertyGalleryProps)
 
   return (
     <>
-      {/* Gallery Grid */}
-      <div className="space-y-2">
-        {/* Main Image */}
-        <div 
-          className="relative aspect-[16/10] bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl overflow-hidden group cursor-pointer"
-          onClick={() => openLightbox(0)}
-        >
-          <Image
-            src={getImageUrl(images[0]) || ''}
-            alt={images[0].alt || propertyTitle}
-            fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-            priority
-            sizes="(max-width: 1024px) 100vw, 66vw"
-          />
-          {/* Overlay */}
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-          
-          {/* Image Counter */}
-          <div className="absolute top-4 right-4 bg-black/70 backdrop-blur-md text-white px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-lg">
-            <Maximize2 className="h-4 w-4" />
-            <span>{images.length} Photos</span>
-          </div>
-          
-          {/* View Gallery Button */}
-          <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button variant="secondary" size="sm" className="bg-white hover:bg-gray-100">
-              <Maximize2 className="h-4 w-4 mr-2" />
-              View Gallery
-            </Button>
+      {/* Gallery Grid - Rightmove Style */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 lg:gap-3 lg:h-[600px]">
+        {/* Main Large Image - Left Side */}
+        <div className="lg:col-span-7">
+          <div 
+            className="relative aspect-[4/3] lg:aspect-auto lg:h-full bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl overflow-hidden group cursor-pointer"
+            onClick={() => openLightbox(0)}
+          >
+            <Image
+              src={getImageUrl(images[0]) || ''}
+              alt={images[0].alt || propertyTitle}
+              fill
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              priority
+              sizes="(max-width: 1024px) 100vw, 58vw"
+            />
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+            
+            {/* Image Counter Badge */}
+            {images.length > 1 && (
+              <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm text-gray-900 px-3 py-1.5 rounded-lg text-sm font-semibold shadow-lg">
+                {images.length} Photos
+              </div>
+            )}
+            
+            {/* Type Badge */}
+            {typeLabel && typeColor && (
+              <div className="absolute top-4 right-4">
+                <span className={`px-3 py-1.5 rounded-lg text-xs font-bold text-white shadow-lg ${typeColor}`}>
+                  {typeLabel}
+                </span>
+              </div>
+            )}
           </div>
         </div>
-        
-        {/* Thumbnail Grid */}
-        {images.length > 1 && (
-          <div className="grid grid-cols-4 gap-2">
-            {images.slice(1, 5).map((img, idx) => (
-              <div
-                key={`${img.key}-${idx}`}
-                className="relative aspect-video bg-muted rounded-lg overflow-hidden cursor-pointer hover:opacity-75 transition-opacity group"
-                onClick={() => openLightbox(idx + 1)}
+
+        {/* Two Smaller Images - Right Side (Stacked vertically) */}
+        <div className="lg:col-span-5 flex flex-col gap-2 lg:gap-3 lg:h-full">
+          {images.length > 1 ? (
+            <>
+              {/* First smaller image - Takes half the height */}
+              <div 
+                className="relative aspect-[4/3] lg:aspect-auto lg:flex-1 lg:min-h-0 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg overflow-hidden group cursor-pointer"
+                onClick={() => openLightbox(1)}
               >
                 <Image
-                  src={getImageUrl(img) || ''}
-                  alt={img.alt || propertyTitle}
+                  src={getImageUrl(images[1]) || ''}
+                  alt={images[1].alt || propertyTitle}
                   fill
-                  className="object-cover"
-                  sizes="(max-width: 1024px) 25vw, 15vw"
+                  className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  sizes="(max-width: 1024px) 100vw, 38vw"
                 />
-                {idx === 3 && images.length > 5 && (
-                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                    <span className="text-white font-semibold text-sm">+{images.length - 5} more</span>
-                  </div>
-                )}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
               </div>
-            ))}
-          </div>
-        )}
+              
+              {/* Second smaller image - Takes half the height */}
+              {images.length > 2 ? (
+                <div 
+                  className="relative aspect-[4/3] lg:aspect-auto lg:flex-1 lg:min-h-0 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg overflow-hidden group cursor-pointer"
+                  onClick={() => openLightbox(2)}
+                >
+                  <Image
+                    src={getImageUrl(images[2]) || ''}
+                    alt={images[2].alt || propertyTitle}
+                    fill
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    sizes="(max-width: 1024px) 100vw, 38vw"
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                  
+                  {/* Show "+X more" overlay if there are more than 3 images */}
+                  {images.length > 3 && (
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                      <span className="text-white font-semibold text-lg">+{images.length - 3} more</span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="relative aspect-[4/3] lg:aspect-auto lg:flex-1 lg:min-h-0 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <span className="text-gray-400 text-sm">No additional images</span>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              {/* Placeholders when only 1 image */}
+              <div className="relative aspect-[4/3] lg:aspect-auto lg:flex-1 lg:min-h-0 bg-gray-100 rounded-lg flex items-center justify-center">
+                <span className="text-gray-400 text-sm">No additional images</span>
+              </div>
+              <div className="relative aspect-[4/3] lg:aspect-auto lg:flex-1 lg:min-h-0 bg-gray-100 rounded-lg flex items-center justify-center">
+                <span className="text-gray-400 text-sm">No additional images</span>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Lightbox */}

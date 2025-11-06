@@ -65,7 +65,12 @@ export class PlacesService {
     }
 
     const data = await response.json()
+    
+    console.log('🌍 Google Places API response status:', data.status)
+    console.log('🌍 Google Places API predictions:', data.predictions?.length || 0)
+    
     if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
+      console.error('❌ Google Places API error:', data.status, data.error_message)
       throw new Error(`Places API error: ${data.status}`)
     }
 
