@@ -56,7 +56,7 @@ export class EmailService {
       await resend.emails.send({
         from: this.fromEmail,
         to: this.toEmail,
-        replyTo: data.email,
+        reply_to: data.email,
         subject,
         html,
       })
