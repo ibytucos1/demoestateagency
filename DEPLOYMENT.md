@@ -30,6 +30,8 @@ git push -u origin main
    - **Build Command**: `npm run build`
    - **Output Directory**: `.next`
 
+> Need to force a rebuild later? Open the deployment in Vercel, click **Redeploy**, and make sure the trigger branch is `main`.
+
 ### 3. Environment Variables Setup
 
 Add these environment variables in Vercel Dashboard (Settings → Environment Variables):
