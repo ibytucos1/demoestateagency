@@ -63,7 +63,7 @@ export function LocationAutocomplete({
 
   // Close suggestions when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: Event) => {
       if (
         containerRef.current &&
         !containerRef.current.contains(event.target as Node)
