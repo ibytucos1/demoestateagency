@@ -4,7 +4,16 @@ import { ZodError } from 'zod'
 import { getTenant } from '@/lib/tenant'
 import { requireAuth } from '@/lib/rbac'
 import { readLimiter, writeLimiter } from '@/lib/ratelimit'
-import { leaseService, isPropertyManagementEnabled } from '@/lib/property-management'
+import { leaseService, paymentService, isPropertyManagementEnabled } from '@/lib/property-management'
+
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
+interface ListQuery {
+  status?: LeaseStatus[]
+  tenantProfileId?: string
+  unitId?: string
+}
 
 export async function GET(req: NextRequest) {
   try {
