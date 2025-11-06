@@ -226,16 +226,19 @@ export default async function PropertyManagementPage() {
     }
   })
 
-  const maintenanceRows = maintenanceItems.map((item) => ({
-    id: item.id,
-    summary: item.summary,
-    status: item.status,
-    priority: item.priority,
-    propertyName: item.Property.name,
-    unitLabel: item.Unit?.label ?? null,
-    requestedAt: item.requestedAt.toISOString(),
-    assignedAgentId: item.assignedAgentId ?? null,
-  }))
+  const maintenanceRows = maintenanceItems.map((item) => {
+    const itemWithRelations = item as any
+    return {
+      id: item.id,
+      summary: item.summary,
+      status: item.status,
+      priority: item.priority,
+      propertyName: itemWithRelations.Property.name,
+      unitLabel: itemWithRelations.Unit?.label ?? null,
+      requestedAt: item.requestedAt.toISOString(),
+      assignedAgentId: item.assignedAgentId ?? null,
+    }
+  })
 
   const stats = [
     {
