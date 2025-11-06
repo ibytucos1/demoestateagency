@@ -114,16 +114,16 @@ export default async function PropertyDetailPage({ params }: RouteParams) {
             <MapPin className="h-4 w-4" />
             {property.addressLine1}, {property.city}
           </span>
-          {property.ownerEmail && (
+          {(property as any).ownerEmail && (
             <span className="inline-flex items-center gap-1">
               <Mail className="h-4 w-4" />
-              {property.ownerEmail}
+              {(property as any).ownerEmail}
             </span>
           )}
-          {property.ownerPhone && (
+          {(property as any).ownerPhone && (
             <span className="inline-flex items-center gap-1">
               <Phone className="h-4 w-4" />
-              {property.ownerPhone}
+              {(property as any).ownerPhone}
             </span>
           )}
           <Badge variant="outline">Occupancy {occupancy}%</Badge>
