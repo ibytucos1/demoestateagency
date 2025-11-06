@@ -5,6 +5,9 @@ import { writeLimiter } from '@/lib/ratelimit'
 import { db } from '@/lib/db'
 import { Prisma } from '@prisma/client'
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 interface RouteParams {
   params: { id: string }
 }
