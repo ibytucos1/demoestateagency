@@ -74,7 +74,7 @@ export function PostcodeLookup({ onAddressSelect, initialPostcode = '' }: Postco
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPostcode(e.target.value.toUpperCase())}
             onKeyPress={handleKeyPress}
             placeholder="SW1A 1AA"
-            className="flex-1 uppercase"
+            className="flex-1 uppercase text-gray-900"
             disabled={loading}
           />
           <Button

@@ -221,7 +221,7 @@ export function HeroSearch() {
                     value={sellPostcode}
                     onChange={(e) => setSellPostcode(e.target.value)}
                     placeholder="What is the postcode of your home?"
-                    className="w-full h-12 px-4 border border-gray-300 rounded-md sm:rounded-r-none sm:rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-base"
+                    className="w-full h-12 px-4 border border-gray-300 rounded-md sm:rounded-r-none sm:rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-base text-gray-900"
                   />
                 </div>
               </div>
