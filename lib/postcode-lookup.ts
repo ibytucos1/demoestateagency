@@ -1,7 +1,6 @@
 /**
  * UK Postcode Lookup Service
- * Uses getaddress.io API for address lookup
- * Fallback to manual entry if API key not configured
+ * Uses Google Places API for address lookup
  */
 
 export interface UKAddress {
@@ -15,50 +14,95 @@ export interface UKAddress {
 }
 
 /**
- * Lookup addresses for a UK postcode
- * Using getaddress.io API (free tier: 10 lookups/day)
- * Alternative: postcodes.io (free but doesn't give full addresses)
+ * Lookup addresses for a UK postcode using Google Places API
  */
 export async function lookupPostcode(postcode: string): Promise<UKAddress[]> {
-  const apiKey = process.env.NEXT_PUBLIC_GETADDRESS_API_KEY || process.env.GETADDRESS_API_KEY
-  
-  if (!apiKey) {
-    console.warn('No getaddress.io API key configured')
-    return []
-  }
-
   try {
-    // Clean postcode (remove spaces, uppercase)
-    const cleanPostcode = postcode.replace(/\s+/g, '').toUpperCase()
+    // Clean and format postcode
+    const cleanPostcode = postcode.trim().toUpperCase()
     
+    // Use Google Places Autocomplete via our API proxy
     const response = await fetch(
-      `https://api.getaddress.io/find/${cleanPostcode}?api-key=${apiKey}&expand=true`
+      `/api/places?action=autocomplete&input=${encodeURIComponent(cleanPostcode)}&types=address&componentRestrictions=country:uk`
     )
 
     if (!response.ok) {
-      if (response.status === 404) {
-        throw new Error('Postcode not found')
-      }
       throw new Error('Failed to lookup postcode')
     }
 
     const data = await response.json()
     
-    // Parse addresses from getaddress.io format
-    const addresses: UKAddress[] = data.addresses.map((addr: any) => ({
-      line_1: addr.line_1 || '',
-      line_2: addr.line_2 || '',
-      line_3: addr.line_3 || '',
-      town_or_city: addr.town_or_city || '',
-      county: addr.county || '',
-      postcode: addr.postcode || cleanPostcode,
-      formatted_address: addr.formatted_address || [],
-    }))
+    if (!data.predictions || data.predictions.length === 0) {
+      return []
+    }
+
+    // Get place details for each prediction to extract address components
+    const addresses: UKAddress[] = []
+    
+    // Limit to first 10 results for performance
+    const predictions = data.predictions.slice(0, 10)
+    
+    for (const prediction of predictions) {
+      try {
+        const detailsResponse = await fetch(
+          `/api/places?action=details&placeId=${encodeURIComponent(prediction.place_id)}`
+        )
+        
+        if (detailsResponse.ok) {
+          const detailsData = await detailsResponse.json()
+          const result = detailsData.result
+          
+          if (result && result.address_components) {
+            const address = parseGoogleAddress(result.address_components, cleanPostcode)
+            if (address) {
+              addresses.push(address)
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching place details:', err)
+      }
+    }
 
     return addresses
   } catch (error) {
     console.error('Postcode lookup error:', error)
     throw error
+  }
+}
+
+/**
+ * Parse Google Places address components into our UKAddress format
+ */
+function parseGoogleAddress(components: any[], postcode: string): UKAddress | null {
+  const addressMap: Record<string, string> = {}
+  
+  components.forEach((component: any) => {
+    const type = component.types[0]
+    addressMap[type] = component.long_name
+  })
+
+  const streetNumber = addressMap['street_number'] || ''
+  const route = addressMap['route'] || ''
+  const locality = addressMap['locality'] || addressMap['postal_town'] || ''
+  const adminArea = addressMap['administrative_area_level_2'] || ''
+  const postalCode = addressMap['postal_code'] || postcode
+
+  // Only return if we have at least a route (street name)
+  if (!route) {
+    return null
+  }
+
+  const line1 = [streetNumber, route].filter(Boolean).join(' ')
+  
+  return {
+    line_1: line1,
+    line_2: addressMap['sublocality'] || '',
+    line_3: '',
+    town_or_city: locality,
+    county: adminArea,
+    postcode: postalCode,
+    formatted_address: [line1, locality, postalCode].filter(Boolean),
   }
 }
 

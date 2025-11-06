@@ -169,14 +169,14 @@ export default async function ListingDetailPage({
       {/* Image Hero Section - Center of Attention */}
       <div className="bg-white">
         <div className="container mx-auto px-4 py-6">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 lg:items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
             {/* Main Large Image - Left Side (Takes ~60% on desktop) */}
             <div className="lg:col-span-7">
-              <div className="relative aspect-[4/3] lg:aspect-auto lg:h-full bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl overflow-hidden group cursor-pointer">
+              <div className="relative aspect-[4/3] lg:aspect-[3/2] bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl overflow-hidden group cursor-pointer">
                 {media.length > 0 ? (
                   <>
                     <Image
-                      src={media[0]?.url || getPublicUrlSync(media[0]?.key || '')}
+                      src={getPublicUrlSync(media[0]?.key || '')}
                       alt={media[0]?.alt || listing.title}
                       fill
                       className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -208,13 +208,13 @@ export default async function ListingDetailPage({
             </div>
 
             {/* Two Smaller Images - Right Side (Takes ~40% on desktop, stacked vertically) */}
-            <div className="lg:col-span-5 flex flex-col gap-2 lg:h-full">
+            <div className="lg:col-span-5 flex flex-col gap-2">
               {media.length > 1 ? (
                 <>
                   {/* First smaller image */}
-                  <div className="relative flex-1 min-h-0 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg overflow-hidden group cursor-pointer">
+                  <div className="relative aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg overflow-hidden group cursor-pointer">
                     <Image
-                      src={media[1]?.url || getPublicUrlSync(media[1]?.key || '')}
+                      src={getPublicUrlSync(media[1]?.key || '')}
                       alt={media[1]?.alt || listing.title}
                       fill
                       className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -223,9 +223,9 @@ export default async function ListingDetailPage({
                   </div>
                   {/* Second smaller image */}
                   {media.length > 2 ? (
-                    <div className="relative flex-1 min-h-0 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg overflow-hidden group cursor-pointer">
+                    <div className="relative aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg overflow-hidden group cursor-pointer">
                       <Image
-                        src={media[2]?.url || getPublicUrlSync(media[2]?.key || '')}
+                        src={getPublicUrlSync(media[2]?.key || '')}
                         alt={media[2]?.alt || listing.title}
                         fill
                         className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -238,7 +238,7 @@ export default async function ListingDetailPage({
                       )}
                     </div>
                   ) : (
-                    <div className="relative flex-1 min-h-0 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <div className="relative aspect-[4/3] bg-gray-100 rounded-lg flex items-center justify-center">
                       <HomeIcon className="h-8 w-8 text-gray-300" />
                     </div>
                   )}
@@ -246,10 +246,10 @@ export default async function ListingDetailPage({
               ) : (
                 <>
                   {/* Placeholders when only 1 image */}
-                  <div className="relative flex-1 min-h-0 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <div className="relative aspect-[4/3] bg-gray-100 rounded-lg flex items-center justify-center">
                     <HomeIcon className="h-8 w-8 text-gray-300" />
                   </div>
-                  <div className="relative flex-1 min-h-0 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <div className="relative aspect-[4/3] bg-gray-100 rounded-lg flex items-center justify-center">
                     <HomeIcon className="h-8 w-8 text-gray-300" />
                   </div>
                 </>

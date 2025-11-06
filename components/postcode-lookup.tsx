@@ -36,12 +36,14 @@ export function PostcodeLookup({ onAddressSelect, initialPostcode = '' }: Postco
       const results = await lookupPostcode(postcode)
       
       if (results.length === 0) {
-        setError('No addresses found for this postcode')
+        setError('No addresses found for this postcode. Please enter your address manually below.')
       } else {
         setAddresses(results)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to lookup postcode')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to lookup postcode'
+      setError(errorMessage)
+      console.error('Postcode lookup error:', errorMessage)
     } finally {
       setLoading(false)
     }
