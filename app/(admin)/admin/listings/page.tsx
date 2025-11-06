@@ -183,7 +183,7 @@ export default async function ListingsPage() {
           <div className="divide-y divide-gray-100">
             {listings.map((listing) => {
               const media = Array.isArray(listing.media) ? listing.media : []
-              const firstImage = media[0]
+              const firstImage = media[0] as { url?: string; key?: string } | undefined
               
               return (
                 <div 
