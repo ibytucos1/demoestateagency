@@ -103,7 +103,7 @@ export function ListingEditor({ listing }: ListingEditorProps) {
         features: formData.features
           .split(',')
           .map((feature: string) => feature.trim())
-          .filter((feature) => feature.length > 0),
+          .filter((feature: string) => feature.length > 0),
         media: media,
       }
 
