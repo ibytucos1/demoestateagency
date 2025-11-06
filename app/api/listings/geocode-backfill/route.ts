@@ -4,6 +4,9 @@ import { requireAuth } from '@/lib/rbac'
 import { db } from '@/lib/db'
 import { placesService } from '@/lib/places'
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 /**
  * API endpoint to backfill missing lat/lng for existing listings
  * POST /api/listings/geocode-backfill
