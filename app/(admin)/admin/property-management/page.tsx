@@ -4,7 +4,7 @@ import { Building2, Users2, Wrench, AlertTriangle } from 'lucide-react'
 import { db } from '@/lib/db'
 import { getTenant } from '@/lib/tenant'
 import { requireAuth } from '@/lib/rbac'
-import { StatsGrid } from '@/components/property-management/stats-grid'
+import { StatsGrid, type StatItem } from '@/components/property-management/stats-grid'
 import { PropertyTable } from '@/components/property-management/property-table'
 import { MaintenanceBoard } from '@/components/property-management/maintenance-board'
 import { CreateLeaseWizard } from '@/components/property-management/create-lease-wizard'
@@ -240,7 +240,7 @@ export default async function PropertyManagementPage() {
     }
   })
 
-  const stats = [
+  const stats: StatItem[] = [
     {
       label: 'Managed properties',
       value: totalProperties.toString(),
