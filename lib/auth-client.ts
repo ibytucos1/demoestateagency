@@ -20,6 +20,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
  * Create Supabase client for client components
  */
 export function createClient() {
-  return createBrowserClient(supabaseUrl, supabaseAnonKey)
+  return createBrowserClient(supabaseUrl as string, supabaseAnonKey as string)
 }
 
