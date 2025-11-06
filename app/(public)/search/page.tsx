@@ -4,6 +4,8 @@ import { ListingCard } from '@/components/listing-card'
 import { FilterBar } from '@/components/filter-bar'
 import { normalizeCityName } from '@/lib/utils'
 import { env } from '@/lib/env'
+import { db } from '@/lib/db'
+import type { Prisma } from '@prisma/client'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -15,6 +17,31 @@ interface SearchPageProps {
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const tenantIdentifier = await getTenantId()
   const tenant = await getTenant(tenantIdentifier)
+  
+  // Get all tenants for showing all listings
+  const allTenants = await db.tenant.findMany({
+    select: { id: true, slug: true, whatsappNumber: true },
+  })
+  const tenantIds = allTenants.map((t: { id: string }) => t.id)
+
+  const rawCity = searchParams.city
+  const rawLat = searchParams.lat
+  const rawLng = searchParams.lng
+  const rawRadius = searchParams.radius
+  const normalizedCity = rawCity ? normalizeCityName(String(rawCity)) : undefined
+  const parsedLat =
+    typeof rawLat === 'string' ? Number(rawLat) : undefined
+  const parsedLng =
+    typeof rawLng === 'string' ? Number(rawLng) : undefined
+  const parsedRadius =
+    typeof rawRadius === 'string' ? Number(rawRadius) : undefined
+  const hasGeoFilter =
+    parsedLat !== undefined &&
+    !Number.isNaN(parsedLat) &&
+    parsedLng !== undefined &&
+    !Number.isNaN(parsedLng) &&
+    parsedRadius !== undefined &&
+    !Number.isNaN(parsedRadius)
 
   // Parse search parameters
   const filters = {
@@ -26,23 +53,109 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     maxPrice: searchParams.maxPrice ? Number(searchParams.maxPrice) : undefined,
     bedrooms: searchParams.bedrooms ? Number(searchParams.bedrooms) : undefined,
     // Normalize city name to handle "London, UK" -> "London"
-    city: searchParams.city ? normalizeCityName(String(searchParams.city)) : undefined,
+    city: hasGeoFilter ? undefined : normalizedCity,
     propertyType: searchParams.propertyType ? [String(searchParams.propertyType)] : undefined,
     // Keywords can be used for text search (title/description/address)
     keywords: searchParams.keywords ? String(searchParams.keywords) : undefined,
     // Features are comma-separated keywords for feature matching
     features: searchParams.keywords ? String(searchParams.keywords).split(',').map(k => k.trim()).filter(Boolean) : undefined,
-    radius: searchParams.radius ? Number(searchParams.radius) : undefined,
+    radius: hasGeoFilter ? parsedRadius : undefined,
+    lat: hasGeoFilter ? parsedLat : undefined,
+    lng: hasGeoFilter ? parsedLng : undefined,
     // Note: lat/lng would come from geocoding the city if needed
   }
 
-  // Perform search using backend service
-  const result = await searchService.search({
-    tenantId: tenant.id,
-    ...filters,
-    limit: 20,
-    cursor: searchParams.cursor as string | undefined,
+  // Query listings from both tenants
+  // Build where clause for all tenants
+  const where: Prisma.ListingWhereInput = {
+    tenantId: { in: tenantIds }, // Show listings from both tenants
+    ...(filters.status && filters.status.length > 0 && { status: { in: filters.status } }),
+    ...(filters.type && filters.type.length > 0 && { type: { in: filters.type } }),
+    ...(filters.minPrice !== undefined && { price: { gte: filters.minPrice } }),
+    ...(filters.maxPrice !== undefined && { price: { lte: filters.maxPrice } }),
+    ...(filters.bedrooms !== undefined && { bedrooms: { gte: filters.bedrooms } }),
+    ...(filters.propertyType && filters.propertyType.length > 0 && { propertyType: { in: filters.propertyType } }),
+    ...(filters.city && { city: { contains: filters.city, mode: 'insensitive' } }),
+    ...(filters.features && filters.features.length > 0 && { features: { hasSome: filters.features } }),
+    ...(filters.keywords && {
+      OR: [
+        { title: { contains: filters.keywords, mode: 'insensitive' } },
+        { description: { contains: filters.keywords, mode: 'insensitive' } },
+        { addressLine1: { contains: filters.keywords, mode: 'insensitive' } },
+      ],
+    }),
+  }
+
+  // Handle geo filter if present
+  const andConditions: Prisma.ListingWhereInput[] = []
+  if (hasGeoFilter && filters.lat !== undefined && filters.lng !== undefined && filters.radius !== undefined) {
+    const latDelta = filters.radius / 111
+    const lngDenominator = Math.cos((filters.lat * Math.PI) / 180)
+    const lngDelta = filters.radius / (111 * (Math.abs(lngDenominator) < 1e-6 ? 1 : lngDenominator))
+
+    andConditions.push({
+      lat: {
+        gte: filters.lat - latDelta,
+        lte: filters.lat + latDelta,
+      },
+      lng: {
+        gte: filters.lng - lngDelta,
+        lte: filters.lng + lngDelta,
+      },
+    })
+  }
+
+  if (andConditions.length > 0) {
+    where.AND = andConditions
+  }
+
+  // Fetch listings
+  const limit = 20
+  const listings = await db.listing.findMany({
+    where,
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    take: limit + 1, // Fetch one extra to check if there's more
   })
+
+  // Apply radius filter in memory if geo filter is active
+  let filteredListings = listings
+  if (hasGeoFilter && filters.lat !== undefined && filters.lng !== undefined && filters.radius !== undefined) {
+    filteredListings = listings.filter((listing: any) => {
+      if (!listing.lat || !listing.lng) return false
+      // Haversine distance calculation
+      const R = 6371 // Earth's radius in km
+      const dLat = ((listing.lat - filters.lat!) * Math.PI) / 180
+      const dLon = ((listing.lng - filters.lng!) * Math.PI) / 180
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((filters.lat! * Math.PI) / 180) *
+          Math.cos((listing.lat * Math.PI) / 180) *
+          Math.sin(dLon / 2) *
+          Math.sin(dLon / 2)
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+      const distance = R * c
+      return distance <= filters.radius!
+    })
+  }
+
+  const hasMore = filteredListings.length > limit
+  const results = hasMore ? filteredListings.slice(0, limit) : filteredListings
+
+  // Generate next cursor for pagination
+  let nextCursor: string | undefined
+  if (hasMore && results.length > 0) {
+    const last = results[results.length - 1]
+    nextCursor = `${last.createdAt.toISOString()},${last.id}`
+  }
+
+  const result = {
+    listings: results,
+    nextCursor,
+    hasMore,
+  }
+  
+  // Get WhatsApp number from first tenant (or use current tenant's)
+  const whatsappNumber = allTenants[0]?.whatsappNumber || tenant.whatsappNumber
 
   // Debug: Log search results
   if (env.NODE_ENV === 'development') {
@@ -51,11 +164,16 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       tenantSlug: tenant.slug,
       filters,
       resultCount: result.listings.length,
-      listingIds: result.listings.map(l => ({ id: l.id, title: l.title, city: l.city, status: l.status })),
+      listingIds: result.listings.map((l: any) => ({ id: l.id, title: l.title, city: l.city, status: l.status })),
+      geo: {
+        lat: filters.lat,
+        lng: filters.lng,
+        radius: filters.radius,
+      },
     })
     
     // Also check if the specific listing exists
-    const specificListing = result.listings.find(l => l.id === 'cmhmfgz52000diwkf23if6m2j')
+    const specificListing = result.listings.find((l: any) => l.id === 'cmhmfgz52000diwkf23if6m2j')
     if (specificListing) {
       console.log('✅ Found the listing!', specificListing.title)
     } else {
@@ -213,7 +331,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       filtersApplied: filters,
       totalResults: result.listings.length,
       hasMore: result.hasMore,
-      listings: result.listings.map(l => ({
+      listings: result.listings.map((l: any) => ({
         id: l.id,
         title: l.title,
         city: l.city,
@@ -225,7 +343,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   // Build search summary
   const searchSummary = []
-  if (filters.city) searchSummary.push(`in ${filters.city}`)
+  if (normalizedCity) searchSummary.push(`in ${normalizedCity}`)
+  if (hasGeoFilter && filters.radius) {
+    searchSummary.push(`within ${filters.radius}km`)
+  }
   if (filters.type) searchSummary.push(`for ${filters.type[0]}`)
   if (filters.bedrooms) searchSummary.push(`with ${filters.bedrooms}+ bedrooms`)
   if (filters.minPrice || filters.maxPrice) {
@@ -261,16 +382,21 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         <main>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column - Listings */}
-            <div className="lg:col-span-2 space-y-4">
+            <div className="lg:col-span-2 space-y-10">
               {displayListings.length > 0 ? (
                 <>
-                  {displayListings.map((listing: any) => (
-                  <ListingCard
-                    key={listing.id}
-                    listing={listing}
-                    whatsappNumber={tenant.whatsappNumber}
-                  />
-                  ))}
+                  {displayListings.map((listing: any) => {
+                    // Find the tenant for this listing to get the correct WhatsApp number and name
+                    const listingTenant = allTenants.find((t: { id: string; slug: string }) => t.id === listing.tenantId)
+                    return (
+                      <ListingCard
+                        key={listing.id}
+                        listing={listing}
+                        whatsappNumber={listingTenant?.whatsappNumber || whatsappNumber}
+                        tenantName={listingTenant?.slug || null}
+                      />
+                    )
+                  })}
                   {result.listings.length > 0 && result.hasMore && (
                   <div className="text-center pt-4">
                       <form action="/search" method="get">

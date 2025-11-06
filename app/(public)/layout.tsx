@@ -1,4 +1,5 @@
 import { getTenant } from '@/lib/tenant'
+import { BRAND_NAME } from '@/lib/constants'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Home, Search } from 'lucide-react'
@@ -21,7 +22,7 @@ export default async function PublicLayout({
               <div className="bg-primary text-primary-foreground p-2 rounded-lg group-hover:scale-105 transition-transform">
                 <Home className="h-5 w-5" />
               </div>
-              <span className="text-2xl font-bold text-gray-900">{tenant.name}</span>
+              <span className="text-2xl font-bold text-gray-900">{BRAND_NAME}</span>
             </Link>
             <nav className="hidden md:flex items-center gap-6 md:absolute md:left-1/2 md:transform md:-translate-x-1/2">
               <Link
@@ -73,7 +74,7 @@ export default async function PublicLayout({
         <div className="container mx-auto px-4 py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div>
-              <h3 className="text-white font-bold text-lg mb-4">{tenant.name}</h3>
+              <h3 className="text-white font-bold text-lg mb-4">{BRAND_NAME}</h3>
               <p className="text-sm">
                 Your trusted partner in finding the perfect property.
               </p>
@@ -121,7 +122,7 @@ export default async function PublicLayout({
             </div>
           </div>
           <div className="border-t border-gray-800 pt-8 text-center text-sm">
-            © {new Date().getFullYear()} {tenant.name}. All rights reserved.
+            © {new Date().getFullYear()} {BRAND_NAME}. All rights reserved.
           </div>
         </div>
       </footer>

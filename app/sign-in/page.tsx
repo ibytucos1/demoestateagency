@@ -66,7 +66,14 @@ function SignInForm() {
         const createUserData = await createUserResponse.json()
         if (createUserData.success) {
           console.log('User record created/verified:', createUserData.user)
-          await new Promise(resolve => setTimeout(resolve, 1000))
+          
+          // Set tenant cookie from user's tenant (if available)
+          if (createUserData.tenant?.slug) {
+            document.cookie = `x-tenant=${createUserData.tenant.slug}; path=/; max-age=31536000`
+            console.log(`Tenant cookie set to: ${createUserData.tenant.slug}`)
+          }
+          
+          await new Promise(resolve => setTimeout(resolve, 500))
         } else {
           console.warn('Could not create user record:', createUserData.error)
         }
@@ -96,7 +103,7 @@ function SignInForm() {
               id="email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
               required
               autoComplete="email"
               disabled={loading}
@@ -108,7 +115,7 @@ function SignInForm() {
               id="password"
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
               required
               autoComplete="current-password"
               disabled={loading}

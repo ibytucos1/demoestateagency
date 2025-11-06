@@ -1,5 +1,7 @@
 import { getTenant } from '@/lib/tenant'
 import { getCurrentUser } from '@/lib/rbac'
+import { getCurrentUserId } from '@/lib/auth'
+import { db } from '@/lib/db'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -20,9 +22,26 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
-  const tenant = await getTenant()
-  const tenantId = tenant.id
+  // Get user first to determine their tenant
+  const authId = await getCurrentUserId()
   
+  if (!authId) {
+    redirect('/sign-in?redirect_url=/admin')
+  }
+
+  // Get user from DB to find their tenant
+  const userRecord = await db.user.findUnique({
+    where: { authId },
+    include: { Tenant: true },
+  })
+
+  if (!userRecord) {
+    redirect('/sign-in?redirect_url=/admin')
+  }
+
+  // Use the user's actual tenant
+  const tenant = userRecord.Tenant
+  const tenantId = tenant.id
   const user = await getCurrentUser(tenantId)
 
   if (!user) {

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getTenant } from '@/lib/tenant'
 import { requireAuth } from '@/lib/rbac'
-import { writeLimiter } from '@/lib/ratelimit'
 import { db } from '@/lib/db'
+import { env } from '@/lib/env'
 import { placesService } from '@/lib/places'
 
 export const dynamic = 'force-dynamic'
@@ -69,7 +69,9 @@ export async function PATCH(
           updateData.lng = geocodeResult.lng
         }
       } catch (geocodeError) {
-        console.warn('Geocoding failed during update:', geocodeError)
+        if (env.NODE_ENV !== 'production') {
+          console.warn('Geocoding failed during update:', geocodeError)
+        }
       }
     }
     

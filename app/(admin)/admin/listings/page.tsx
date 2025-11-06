@@ -2,6 +2,7 @@ import { Prisma } from '@prisma/client'
 import { getTenant } from '@/lib/tenant'
 import { requireAuth } from '@/lib/rbac'
 import { db } from '@/lib/db'
+import { env } from '@/lib/env'
 import { getPublicUrlSync } from '@/lib/storage-utils'
 import { isPropertyManagementEnabled } from '@/lib/property-management'
 import Link from 'next/link'
@@ -59,7 +60,9 @@ export default async function ListingsPage() {
       throw error
     }
 
-    console.warn('[ListingsPage] Falling back to demo listings due to database connectivity issue')
+    if (env.NODE_ENV !== 'production') {
+      console.warn('[ListingsPage] Falling back to demo listings due to database connectivity issue')
+    }
     listings = [
       {
         id: 'demo-listing-1',

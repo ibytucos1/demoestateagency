@@ -1,4 +1,5 @@
 import { getTenant } from '@/lib/tenant'
+import { BRAND_NAME } from '@/lib/constants'
 import { Metadata } from 'next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -21,20 +22,39 @@ export const metadata: Metadata = {
 
 export default async function ContactPage() {
   const tenant = await getTenant()
+  const { db } = await import('@/lib/db')
+  
+  // Get contact email from tenant's owner/admin user, or generate from tenant slug
+  let contactEmail = `hello@${tenant.slug.toLowerCase().replace(/\s+/g, '-')}.com`
+  try {
+    const adminUser = await db.user.findFirst({
+      where: {
+        tenantId: tenant.id,
+        role: { in: ['owner', 'admin'] },
+      },
+      select: { email: true },
+      orderBy: { createdAt: 'asc' },
+    })
+    if (adminUser?.email) {
+      contactEmail = adminUser.email
+    }
+  } catch (error) {
+    // Fall back to generated email
+  }
 
   const contactInfo = [
     {
       icon: Phone,
       title: 'Phone',
-      content: '+44 (0) 20 1234 5678',
-      link: 'tel:+442012345678',
+      content: tenant.whatsappNumber || '+44 (0) 20 1234 5678',
+      link: tenant.whatsappNumber ? `tel:${tenant.whatsappNumber.replace(/\s+/g, '')}` : 'tel:+442012345678',
       gradient: 'from-blue-500 to-indigo-600',
     },
     {
       icon: Mail,
       title: 'Email',
-      content: 'hello@acme-estate.com',
-      link: 'mailto:hello@acme-estate.com',
+      content: contactEmail,
+      link: `mailto:${contactEmail}`,
       gradient: 'from-blue-500 to-indigo-600',
     },
     {
@@ -65,7 +85,7 @@ export default async function ContactPage() {
               Contact Us
             </h1>
             <p className="text-xl md:text-2xl text-blue-100 mb-8 max-w-3xl mx-auto">
-              Get in touch with {tenant.name}. We're here to help with all your property needs
+              Get in touch with {BRAND_NAME}. We're here to help with all your property needs
             </p>
           </div>
         </div>

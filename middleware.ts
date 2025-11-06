@@ -71,18 +71,19 @@ export async function middleware(request: NextRequest) {
   // Refresh session
   await supabase.auth.getSession()
 
-  // Check tenant from cookie or query param (demo only - use subdomain in production)
-  const tenant = request.cookies.get('x-tenant')?.value || request.nextUrl.searchParams.get('tenant') || 'acme'
+  // Check tenant from cookie or query param
+  // For admin routes, we'll detect user's tenant after auth check
+  // For public routes, no default tenant needed (shows all listings)
+  let tenant = request.cookies.get('x-tenant')?.value || request.nextUrl.searchParams.get('tenant')
   
-  // Set tenant in headers for server components
-  response.headers.set('x-tenant', tenant)
-  response.cookies.set('x-tenant', tenant, { 
-    httpOnly: false, // Allow JS access for switching
-    sameSite: 'lax',
-    path: '/',
-  })
-
-  // Protect admin routes
+  // If admin route and no tenant set, we'll detect it from user's account after auth
+  // For now, leave tenant empty for public pages
+  if (!tenant && request.nextUrl.pathname.startsWith('/admin')) {
+    // Will be set after checking user's tenant
+    tenant = null
+  }
+  
+  // Protect admin routes and detect tenant from user's account
   if (request.nextUrl.pathname.startsWith('/admin')) {
     const {
       data: { session },
@@ -93,6 +94,32 @@ export async function middleware(request: NextRequest) {
       signInUrl.searchParams.set('redirect_url', request.url)
       return NextResponse.redirect(signInUrl)
     }
+    
+    // If no tenant set, get from user's account
+    if (!tenant && session.user?.id) {
+      try {
+        const { db } = await import('@/lib/db')
+        const user = await db.user.findUnique({
+          where: { authId: session.user.id },
+          select: { Tenant: { select: { slug: true } } },
+        })
+        if (user?.Tenant?.slug) {
+          tenant = user.Tenant.slug
+        }
+      } catch (error) {
+        console.warn('[middleware] Could not fetch user tenant:', error)
+      }
+    }
+  }
+  
+  // Set tenant in headers/cookies (only if tenant is determined)
+  if (tenant) {
+    response.headers.set('x-tenant', tenant)
+    response.cookies.set('x-tenant', tenant, { 
+      httpOnly: false,
+      sameSite: 'lax',
+      path: '/',
+    })
   }
 
   return response

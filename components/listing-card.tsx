@@ -29,9 +29,10 @@ interface ListingCardProps {
     createdAt?: Date
   }
   whatsappNumber?: string | null
+  tenantName?: string | null
 }
 
-export function ListingCard({ listing, whatsappNumber }: ListingCardProps) {
+export function ListingCard({ listing, whatsappNumber, tenantName }: ListingCardProps) {
   const [isFavorite, setIsFavorite] = useState(false)
   const media = listing.media as any[]
   const firstImage = media?.[0]
@@ -75,10 +76,10 @@ export function ListingCard({ listing, whatsappNumber }: ListingCardProps) {
 
   return (
     <Link href={`/listing/${listing.slug}`}>
-      <div className="group bg-white rounded-xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 border border-gray-200 hover:border-primary/50">
+      <div className="group bg-white rounded-xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 border border-gray-200 hover:border-primary/50 mb-6">
         <div className="flex flex-col sm:flex-row h-full">
           {/* Image Section - Left */}
-          <div className="relative w-full sm:w-80 h-64 sm:h-auto flex-shrink-0 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+          <div className="relative w-full sm:w-1/2 h-48 sm:h-auto flex-shrink-0 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
             {imageUrl ? (
               <>
                 <Image
@@ -148,17 +149,31 @@ export function ListingCard({ listing, whatsappNumber }: ListingCardProps) {
                 <div className="text-3xl font-bold text-gray-900 tracking-tight">
                   {formatPrice()}
                 </div>
-                {listing.propertyType && (
-                  <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100 capitalize whitespace-nowrap">
-                    {listing.propertyType}
-                  </span>
-                )}
+                <div className="flex items-center gap-2 flex-wrap justify-end">
+                  {tenantName && (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200 uppercase tracking-wide">
+                      {tenantName.toUpperCase()}
+                    </span>
+                  )}
+                  {listing.propertyType && (
+                    <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100 capitalize whitespace-nowrap">
+                      {listing.propertyType}
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Title */}
-              <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-primary transition-colors duration-300 leading-snug">
+              <h3 className="text-base font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-primary transition-colors duration-300 leading-snug">
                 {listing.title}
               </h3>
+
+              {/* Description */}
+              {listing.description && (
+                <p className="text-sm text-gray-600 mb-3 line-clamp-2 leading-relaxed">
+                  {listing.description}
+                </p>
+              )}
 
               {/* Location */}
               <div className="flex items-start gap-2 text-gray-600 mb-5">

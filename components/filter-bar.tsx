@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { LocationAutocomplete } from '@/components/location-autocomplete'
 import {
   Select,
   SelectContent,
@@ -33,6 +32,8 @@ export function FilterBar() {
   const [propertyType, setPropertyType] = useState<string>(searchParams.get('propertyType') || '')
   const [keywords, setKeywords] = useState<string>(searchParams.get('keywords') || '')
   const [showMoreFilters, setShowMoreFilters] = useState(false)
+  const [lat, setLat] = useState<string>(searchParams.get('lat') || '')
+  const [lng, setLng] = useState<string>(searchParams.get('lng') || '')
   const debounceTimerRef = useRef<NodeJS.Timeout>()
 
   const applyFilters = () => {
@@ -41,6 +42,10 @@ export function FilterBar() {
     if (type) params.set('type', type)
     if (city) params.set('city', city)
     if (radius) params.set('radius', radius)
+    if (lat && lng) {
+      params.set('lat', lat)
+      params.set('lng', lng)
+    }
     if (minPrice) params.set('minPrice', minPrice)
     if (maxPrice) params.set('maxPrice', maxPrice)
     if (minBeds) params.set('bedrooms', minBeds) // Use bedrooms for search service compatibility
@@ -75,6 +80,10 @@ export function FilterBar() {
       }
       if (city) params.set('city', city)
       if (radius) params.set('radius', radius)
+      if (lat && lng) {
+        params.set('lat', lat)
+        params.set('lng', lng)
+      }
       if (minPrice) params.set('minPrice', minPrice)
       if (maxPrice) params.set('maxPrice', maxPrice)
       if (minBeds) params.set('bedrooms', minBeds)
@@ -100,6 +109,8 @@ export function FilterBar() {
 
   const clearLocation = () => {
     setCity('')
+    setLat('')
+    setLng('')
   }
 
   const getTypeLabel = (value: string) => {
@@ -135,7 +146,11 @@ export function FilterBar() {
             <input
               type="text"
               value={city}
-              onChange={(e) => setCity(e.target.value)}
+              onChange={(e) => {
+                setCity(e.target.value)
+                setLat('')
+                setLng('')
+              }}
               placeholder="Enter location or postcode"
               className="flex-1 h-10 pl-10 pr-8 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
             />
@@ -155,17 +170,16 @@ export function FilterBar() {
         <Select value={radius || 'any'} onValueChange={(v) => setRadius(v === 'any' ? '' : v)}>
           <SelectTrigger className="h-10 w-[120px] bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 text-sm shadow-sm">
             <SelectValue placeholder="Radius">
-              {radius ? `${radius}mi` : 'Radius'}
+              {radius ? `${radius}km` : 'Radius'}
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="any">Any radius</SelectItem>
-            <SelectItem value="0.5">0.5 miles</SelectItem>
-            <SelectItem value="1">1 mile</SelectItem>
-            <SelectItem value="2">2 miles</SelectItem>
-            <SelectItem value="5">5 miles</SelectItem>
-            <SelectItem value="10">10 miles</SelectItem>
-            <SelectItem value="20">20 miles</SelectItem>
+            <SelectItem value="1">1 km</SelectItem>
+            <SelectItem value="5">5 km</SelectItem>
+            <SelectItem value="10">10 km</SelectItem>
+            <SelectItem value="25">25 km</SelectItem>
+            <SelectItem value="50">50 km</SelectItem>
           </SelectContent>
         </Select>
 

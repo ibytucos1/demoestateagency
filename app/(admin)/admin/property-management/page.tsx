@@ -229,14 +229,14 @@ export default async function PropertyManagementPage() {
   const maintenanceRows = maintenanceItems.map((item) => {
     const itemWithRelations = item as any
     return {
-      id: item.id,
-      summary: item.summary,
-      status: item.status,
-      priority: item.priority,
+    id: item.id,
+    summary: item.summary,
+    status: item.status,
+    priority: item.priority,
       propertyName: itemWithRelations.Property.name,
       unitLabel: itemWithRelations.Unit?.label ?? null,
-      requestedAt: item.requestedAt.toISOString(),
-      assignedAgentId: item.assignedAgentId ?? null,
+    requestedAt: item.requestedAt.toISOString(),
+    assignedAgentId: item.assignedAgentId ?? null,
     }
   })
 
@@ -273,9 +273,9 @@ export default async function PropertyManagementPage() {
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-semibold text-gray-900">Property Management</h1>
-          <p className="text-sm text-gray-600">Portfolio control, maintenance triage, and rent collection in one place.</p>
+      <div className="space-y-2">
+        <h1 className="text-3xl font-semibold text-gray-900">Property Management</h1>
+        <p className="text-sm text-gray-600">Portfolio control, maintenance triage, and rent collection in one place.</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" asChild>

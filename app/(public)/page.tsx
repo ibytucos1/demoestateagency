@@ -1,4 +1,5 @@
 import { getTenant, getTenantId } from '@/lib/tenant'
+import { BRAND_TAGLINE } from '@/lib/constants'
 import { db } from '@/lib/db'
 import { Button } from '@/components/ui/button'
 import { HeroSearch } from '@/components/hero-search'
@@ -12,10 +13,16 @@ export default async function HomePage() {
   const tenantIdentifier = await getTenantId()
   const tenant = await getTenant(tenantIdentifier)
 
-  // Get featured listings
+  // Get all tenant IDs for showing featured listings from all branches
+  const allTenants = await db.tenant.findMany({
+    select: { id: true, slug: true, whatsappNumber: true },
+  })
+  const tenantIds = allTenants.map((t: { id: string }) => t.id)
+
+  // Get featured listings from all tenants
   let featured = await db.listing.findMany({
     where: {
-      tenantId: tenant.id,
+      tenantId: { in: tenantIds },
       status: 'active',
     },
     orderBy: { createdAt: 'desc' },
@@ -208,11 +215,11 @@ export default async function HomePage() {
     ] as any[]
   }
 
-  // Get stats
+  // Get stats from all tenants
   const stats = await db.listing.groupBy({
     by: ['type'],
     where: {
-      tenantId: tenant.id,
+      tenantId: { in: tenantIds },
       status: 'active',
     },
     _count: {
@@ -239,27 +246,22 @@ export default async function HomePage() {
             src="/images/hero-image.jpg"
             alt="Beautiful home"
             fill
-            className="object-cover"
+            className="object-cover object-center"
             priority
             quality={90}
           />
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-600/50 via-blue-700/50 to-indigo-800/50"></div>
+          <div className="absolute inset-0 bg-black/30"></div>
         </div>
-        <div className="absolute inset-0 bg-black/20"></div>
         <div className="relative container mx-auto px-4 py-12 md:py-16">
           <div className="max-w-4xl mx-auto text-center mb-8">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
-            Your next home is just a<br />
-            <span className="text-blue-600">Clicksmove</span> away.
+            {BRAND_TAGLINE}
             </h1>
-            <p className="text-xl md:text-2xl text-blue-100 mb-6">
-            From first click to final keys, we make finding home effortless.
-            </p>
           </div>
 
           {/* Search Bar */}
-          <div className="max-w-3xl mx-auto">
-            <div className="bg-white rounded-2xl shadow-2xl p-6 md:p-8">
+          <div className="max-w-3xl mx-auto mt-8 md:mt-16">
+            <div className="bg-white/50 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 p-6 md:p-8">
               <HeroSearch />
             </div>
           </div>

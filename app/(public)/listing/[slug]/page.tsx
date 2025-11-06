@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { getTenant, getTenantId } from '@/lib/tenant'
+import { BRAND_NAME } from '@/lib/constants'
 import { db } from '@/lib/db'
 import { env } from '@/lib/env'
 import { getWhatsAppTrackingUrl } from '@/lib/whatsapp-utils'
@@ -389,7 +390,7 @@ export default async function ListingDetailPage({
                     <Building className="h-8 w-8 text-primary" />
                   </div>
                   <div>
-                    <CardTitle className="text-lg">{tenant.name}</CardTitle>
+                    <CardTitle className="text-lg">{BRAND_NAME}</CardTitle>
                     <p className="text-sm text-gray-600">Estate Agent</p>
                   </div>
                 </div>

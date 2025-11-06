@@ -1,4 +1,5 @@
 import { getTenant } from '@/lib/tenant'
+import { BRAND_NAME } from '@/lib/constants'
 import { Metadata } from 'next'
 import { ValuationForm } from '@/components/valuation-form'
 
@@ -48,7 +49,7 @@ export default async function ValuationPage() {
                     </div>
                     <div>
                       <strong className="text-gray-900">Expert Analysis</strong>
-                      <p className="text-gray-600 text-sm">Professional assessment from {tenant.name}'s experienced team</p>
+                      <p className="text-gray-600 text-sm">Professional assessment from {BRAND_NAME}'s experienced team</p>
                     </div>
                   </li>
                   <li className="flex items-start">

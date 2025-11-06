@@ -1,4 +1,5 @@
 import { getTenant } from '@/lib/tenant'
+import { BRAND_NAME } from '@/lib/constants'
 import { Metadata } from 'next'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -103,7 +104,7 @@ export default async function MarketAppraisalsPage() {
               no-obligation market valuation.
             </p>
             <p className="text-lg text-gray-700 leading-relaxed">
-              {tenant.name} has a team of extremely experienced property experts with detailed knowledge 
+              {BRAND_NAME} has a team of extremely experienced property experts with detailed knowledge 
               of the local property market. We'll take time to listen to what you want or need to achieve 
               from your property sale and then compare your property with similar properties in the area 
               to find an accurate valuation of your home.

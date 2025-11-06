@@ -360,13 +360,17 @@ async function seedLondonProperties() {
   try {
     console.log('🌱 Starting to seed London properties...')
 
-    // Get tenant
-    const tenant = await prisma.tenant.findFirst({
-      where: { slug: 'acme' },
-    })
+    // Get tenant (use first tenant or allow override via env)
+    const tenantSlug = process.env.TENANT_SLUG
+    const tenant = tenantSlug
+      ? await prisma.tenant.findUnique({ where: { slug: tenantSlug } })
+      : await prisma.tenant.findFirst({ orderBy: { createdAt: 'asc' } })
 
     if (!tenant) {
       console.error('❌ Tenant not found. Please run the main seed script first.')
+      if (tenantSlug) {
+        console.error(`   Looking for tenant slug: ${tenantSlug}`)
+      }
       process.exit(1)
     }
 

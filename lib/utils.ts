@@ -15,8 +15,7 @@ export function cn(...inputs: ClassValue[]) {
  */
 export function normalizeCityName(city: string): string {
   if (!city) return city
-  
-  // Remove common country suffixes
+
   const suffixes = [
     /,\s*UK$/i,
     /,\s*United Kingdom$/i,
@@ -25,21 +24,31 @@ export function normalizeCityName(city: string): string {
     /,\s*USA$/i,
     /,\s*United States$/i,
     /,\s*US$/i,
-    // Remove state/province suffixes (e.g., "New York, NY" -> "New York")
     /,\s*[A-Z]{2}$/, // Two-letter state codes
     /,\s*[A-Z]{2},\s*[A-Z]{2,3}$/, // State + Country (e.g., "NY, USA")
   ]
-  
+
   let normalized = city.trim()
-  
-  // Apply each suffix pattern
+
+  const segments = normalized
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean)
+
+  if (segments.length > 1) {
+    const locality = segments.find(
+      (part) => /[a-zA-Z]/.test(part) && !/\d/.test(part)
+    )
+
+    normalized = (locality ?? segments[0]).trim()
+  }
+
   for (const suffix of suffixes) {
     normalized = normalized.replace(suffix, '')
   }
-  
-  // Clean up any trailing commas or spaces
+
   normalized = normalized.replace(/,\s*$/, '').trim()
-  
+
   return normalized
 }
 

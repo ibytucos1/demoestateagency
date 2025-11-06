@@ -1,6 +1,10 @@
 /**
  * Add London properties via the API endpoint
  * This bypasses direct database connection issues
+ * 
+ * Usage:
+ *   TENANT_SLUG=bluebird node scripts/add-properties-via-api.ts
+ *   or: node scripts/add-properties-via-api.ts bluebird
  */
 
 const properties = [
@@ -37,7 +41,17 @@ const properties = [
 ]
 
 async function addPropertiesViaAPI() {
-  console.log('🌱 Adding properties via API...\n')
+  // Get tenant slug from env var or command line arg
+  const tenantSlug = process.env.TENANT_SLUG || process.argv[2]
+  
+  if (!tenantSlug) {
+    console.error('❌ Please provide tenant slug:')
+    console.error('   TENANT_SLUG=bluebird node scripts/add-properties-via-api.ts')
+    console.error('   or: node scripts/add-properties-via-api.ts bluebird')
+    process.exit(1)
+  }
+  
+  console.log(`🌱 Adding properties via API for tenant: ${tenantSlug}...\n`)
 
   for (const property of properties) {
     try {
@@ -45,7 +59,7 @@ async function addPropertiesViaAPI() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-tenant': 'acme',
+          'x-tenant': tenantSlug,
         },
         body: JSON.stringify(property),
       })

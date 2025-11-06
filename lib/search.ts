@@ -1,4 +1,5 @@
 import { db } from './db'
+import { env } from './env'
 import type { Prisma } from '@prisma/client'
 
 export interface SearchFilters {
@@ -90,6 +91,40 @@ export class DBSearchService implements ISearchService {
       }),
     }
 
+    const andConditions: Prisma.ListingWhereInput[] = []
+    if (where.AND) {
+      if (Array.isArray(where.AND)) {
+        andConditions.push(...where.AND)
+      } else {
+        andConditions.push(where.AND)
+      }
+      delete where.AND
+    }
+
+    const geoFilterActive =
+      radius !== undefined &&
+      radius > 0 &&
+      lat !== undefined &&
+      lng !== undefined
+
+    if (geoFilterActive) {
+      const latDelta = radius / 111
+      const cosLat = Math.cos((lat * Math.PI) / 180)
+      const lngScale = Math.max(Math.abs(cosLat), 0.01)
+      const lngDelta = radius / (111 * lngScale)
+
+      andConditions.push({
+        lat: {
+          gte: lat - latDelta,
+          lte: lat + latDelta,
+        },
+        lng: {
+          gte: lng - lngDelta,
+          lte: lng + lngDelta,
+        },
+      })
+    }
+
     // Handle cursor pagination - combine with existing where clause
     if (cursorCreatedAt) {
       const cursorCondition: Prisma.ListingWhereInput = {
@@ -98,12 +133,11 @@ export class DBSearchService implements ISearchService {
           { createdAt: cursorCreatedAt, id: { lt: cursorId } },
         ],
       }
-      const existingAnd = Array.isArray(where.AND)
-        ? where.AND
-        : where.AND
-        ? [where.AND]
-        : []
-      where.AND = [...existingAnd, cursorCondition]
+      andConditions.push(cursorCondition)
+    }
+
+    if (andConditions.length > 0) {
+      where.AND = andConditions
     }
 
     // If radius search, add haversine filter
@@ -120,19 +154,19 @@ export class DBSearchService implements ISearchService {
     })
 
     // Debug logging in development
-    if (process.env.NODE_ENV === 'development') {
+    if (env.NODE_ENV === 'development') {
       console.log('Search query debug:', {
         tenantId,
         whereClause: JSON.stringify(where, null, 2),
         foundCount: listings.length,
-        listingIds: listings.map(l => ({ id: l.id, title: l.title, status: l.status, city: l.city })),
+      listingIds: listings.map((l: any) => ({ id: l.id, title: l.title, status: l.status, city: l.city })),
       })
     }
 
     // Apply radius filter if needed (in-memory for now)
     let filteredListings = listings
-    if (radius && lat !== undefined && lng !== undefined) {
-      filteredListings = listings.filter((listing) => {
+    if (geoFilterActive) {
+      filteredListings = listings.filter((listing: any) => {
         if (!listing.lat || !listing.lng) return false
         const distance = this.haversineDistance(lat, lng, listing.lat, listing.lng)
         return distance <= radius

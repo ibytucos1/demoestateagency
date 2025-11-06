@@ -1,4 +1,5 @@
 import { getTenant } from '@/lib/tenant'
+import { BRAND_NAME } from '@/lib/constants'
 import { Metadata } from 'next'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -91,7 +92,7 @@ export default async function MortgagesPage() {
               deal can be time-consuming. Why not let a broker do it for you?
             </p>
             <p className="text-lg text-gray-700 leading-relaxed">
-              {tenant.name} can refer you to an excellent independent mortgage broker who will get to know 
+              {BRAND_NAME} can refer you to an excellent independent mortgage broker who will get to know 
               you, understand how much you're looking to borrow and your personal requirements before 
               searching the markets to find you that perfect deal to help you make your move.
             </p>

@@ -3,11 +3,18 @@
  * 
  * Usage:
  * 1. First, sign up at /sign-up with an email and password
- * 2. Get your Supabase auth ID from Supabase dashboard or use the script below
- * 3. Run: pnpm tsx scripts/create-test-user.ts
+ * 2. Run: npm run create-user <email> <name> <role> <tenant-slug>
  * 
- * Or use the simpler approach: sign up via /sign-up, then run this script
- * with your email and it will find your auth ID automatically.
+ * Examples:
+ *   npm run create-user admin@bluebird.com "Bluebird Admin" admin bluebird test123
+ *   npm run create-user admin@acme.com "ACME Admin" owner acme
+ * 
+ * Parameters:
+ *   email (required): Email address of the user
+ *   name (optional): Display name (default: "Admin User")
+ *   role (optional): 'owner' | 'admin' | 'agent' (default: 'admin')
+ *   tenant-slug (optional): 'acme' | 'bluebird' (default: 'acme')
+ *   password (optional): Password for Supabase Auth (if provided, creates user automatically)
  */
 
 import { db } from '../lib/db'
@@ -18,17 +25,36 @@ async function createTestUser() {
   const email = process.argv[2] || 'admin@example.com'
   const name = process.argv[3] || 'Admin User'
   const role = (process.argv[4] as 'owner' | 'admin' | 'agent') || 'admin'
-
-  console.log(`Creating test user: ${email}...`)
+  const tenantSlug = process.argv[5] // Tenant slug - required if not provided, will use first tenant
+  const password = process.argv[6] // Optional password - if provided, will create Supabase Auth user
 
   try {
-    // Get tenant ID (default 'acme')
+    // Get all available tenants
+    const allTenants = await db.tenant.findMany({
+      select: { id: true, slug: true, name: true },
+      orderBy: { createdAt: 'asc' },
+    })
+
+    if (allTenants.length === 0) {
+      console.error('❌ No tenants found in database.')
+      console.error('   Please run seed script first: npm run db:seed')
+      process.exit(1)
+    }
+
+    // If no tenant slug provided, use the first tenant
+    const requestedSlug = tenantSlug || allTenants[0].slug
+    console.log(`Creating test user: ${email} for tenant: ${requestedSlug}...`)
+
+    // Get tenant ID by slug
     const tenant = await db.tenant.findUnique({
-      where: { slug: 'acme' },
+      where: { slug: requestedSlug },
     })
 
     if (!tenant) {
-      console.error('❌ Tenant "acme" not found. Please run seed script first: pnpm db:seed')
+      const availableSlugs = allTenants.map(t => t.slug).join(', ')
+      console.error(`❌ Tenant "${requestedSlug}" not found.`)
+      console.error(`   Available tenants: ${availableSlugs}`)
+      console.error('   Please run seed script first: npm run db:seed')
       process.exit(1)
     }
 
@@ -46,11 +72,33 @@ async function createTestUser() {
       process.exit(1)
     }
 
-    const supabaseUser = users.find(u => u.email === email)
+    let supabaseUser = users.find(u => u.email === email)
+
+    // If user doesn't exist and password is provided, create the user
+    if (!supabaseUser && password) {
+      console.log(`📝 Creating Supabase Auth user with email: ${email}...`)
+      const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true, // Auto-confirm email
+        user_metadata: {
+          name,
+        },
+      })
+
+      if (createError || !newUser.user) {
+        console.error(`❌ Error creating Supabase Auth user:`, createError?.message)
+        process.exit(1)
+      }
+
+      supabaseUser = newUser.user
+      console.log(`✅ Supabase Auth user created successfully`)
+    }
 
     if (!supabaseUser) {
       console.error(`❌ No Supabase user found with email: ${email}`)
       console.log('\n📝 Please sign up first at /sign-up with this email, then run this script again.')
+      console.log('   Or provide a password as the 6th argument to create the user automatically.')
       process.exit(1)
     }
 
@@ -59,13 +107,24 @@ async function createTestUser() {
     // Check if user already exists
     const existingUser = await db.user.findUnique({
       where: { authId },
+      include: { Tenant: true },
     })
 
     if (existingUser) {
-      console.log(`✅ User already exists: ${existingUser.email} (${existingUser.role})`)
-      console.log(`   ID: ${existingUser.id}`)
-      console.log(`   Tenant: ${tenant.name}`)
-      return
+      if (existingUser.tenantId === tenant.id) {
+        console.log(`✅ User already exists for this tenant: ${existingUser.email} (${existingUser.role})`)
+        console.log(`   ID: ${existingUser.id}`)
+        console.log(`   Tenant: ${tenant.name}`)
+        return
+      } else {
+        console.log(`⚠️  User already exists but for a different tenant:`)
+        console.log(`   Email: ${existingUser.email}`)
+        console.log(`   Current Tenant: ${existingUser.Tenant.name} (${existingUser.Tenant.slug})`)
+        console.log(`   Requested Tenant: ${tenant.name} (${tenant.slug})`)
+        console.log(`\n   To create a user for ${tenant.name}, use a different email address.`)
+        console.log(`   Or update the existing user's tenantId manually in the database.`)
+        process.exit(1)
+      }
     }
 
     // Create user in database

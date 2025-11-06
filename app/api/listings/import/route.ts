@@ -43,7 +43,9 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
       }
     } catch (rateLimitError) {
-      console.warn('Rate limiting error (continuing):', rateLimitError)
+      if (env.NODE_ENV !== 'production') {
+        console.warn('Rate limiting error (continuing):', rateLimitError)
+      }
     }
 
     const formData = await req.formData()
@@ -167,8 +169,10 @@ export async function POST(req: NextRequest) {
               lng = geocodeResult.lng
             }
           } catch (geocodeError) {
-            // Don't fail listing creation if geocoding fails, just log it
-            console.warn(`Geocoding failed for row ${rowNumber}:`, geocodeError)
+            // Don't fail listing creation if geocoding fails, just log it in non-production environments
+            if (env.NODE_ENV !== 'production') {
+              console.warn(`Geocoding failed for row ${rowNumber}:`, geocodeError)
+            }
           }
         }
 

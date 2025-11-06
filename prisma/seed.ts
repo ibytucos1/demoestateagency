@@ -2,13 +2,36 @@ import { PrismaClient, Prisma } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-const propertyTypes = ['house', 'apartment', 'condo', 'villa', 'townhouse']
+const propertyTypes = ['house', 'apartment', 'flat', 'terraced', 'semi-detached', 'detached', 'bungalow']
 const features = [
-  'parking', 'garden', 'balcony', 'pool', 'gym', 'elevator',
-  'fireplace', 'hardwood floors', 'central heating', 'air conditioning',
+  'parking', 'garden', 'balcony', 'garage', 'double-glazing',
+  'fireplace', 'period-features', 'central heating', 'modern', 'character',
 ]
 
-const cities = ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix', 'San Antonio']
+// Real UK locations with coordinates (lat, lng)
+const ukLocations = [
+  { city: 'Hayes', postcode: 'UB3', lat: 51.5031, lng: -0.4203 },
+  { city: 'Southall', postcode: 'UB1', lat: 51.5060, lng: -0.3772 },
+  { city: 'Ealing', postcode: 'W5', lat: 51.5150, lng: -0.3018 },
+  { city: 'Hounslow', postcode: 'TW3', lat: 51.4659, lng: -0.3615 },
+  { city: 'Uxbridge', postcode: 'UB8', lat: 51.5448, lng: -0.4762 },
+  { city: 'Slough', postcode: 'SL1', lat: 51.5105, lng: -0.5950 },
+  { city: 'Reading', postcode: 'RG1', lat: 51.4543, lng: -0.9781 },
+  { city: 'Maidenhead', postcode: 'SL6', lat: 51.5224, lng: -0.7224 },
+  { city: 'Windsor', postcode: 'SL4', lat: 51.4839, lng: -0.6078 },
+  { city: 'Richmond', postcode: 'TW9', lat: 51.4613, lng: -0.3037 },
+  { city: 'Kingston upon Thames', postcode: 'KT1', lat: 51.4123, lng: -0.3007 },
+  { city: 'Twickenham', postcode: 'TW1', lat: 51.4447, lng: -0.3370 },
+  { city: 'Fulham', postcode: 'SW6', lat: 51.4800, lng: -0.1950 },
+  { city: 'Hammersmith', postcode: 'W6', lat: 51.4926, lng: -0.2229 },
+  { city: 'Chiswick', postcode: 'W4', lat: 51.4921, lng: -0.2558 },
+]
+
+const ukStreets = [
+  'High Street', 'Church Road', 'Station Road', 'Park Road', 'Victoria Road',
+  'London Road', 'Main Road', 'Green Lane', 'Oak Avenue', 'Elm Close',
+  'Cedar Drive', 'Maple Way', 'Willow Road', 'Beech Street', 'Ash Grove',
+]
 
 function randomElement<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)]
@@ -16,6 +39,13 @@ function randomElement<T>(arr: T[]): T {
 
 function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min
+}
+
+function randomUKPostcode(area: string): string {
+  // Generate a realistic UK postcode format: Area + random numbers + letters
+  const numbers = randomInt(1, 9).toString() + randomInt(0, 9).toString()
+  const letters = String.fromCharCode(65 + randomInt(0, 25)) + String.fromCharCode(65 + randomInt(0, 25))
+  return `${area} ${numbers} ${letters}`
 }
 
 async function main() {
@@ -60,32 +90,37 @@ async function main() {
 
   console.log('Created tenants:', acme.slug, bluebird.slug)
 
-  // Create sample listings for ACME
+  // Create sample listings for ACME with UK locations
   const acmeListings = []
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < 20; i++) {
+    const location = randomElement(ukLocations)
     const type = randomElement(['sale', 'rent'])
     const price = type === 'sale'
-      ? randomInt(200000, 2000000)
-      : randomInt(1500, 8000)
+      ? randomInt(250000, 1200000) // UK house prices
+      : randomInt(1200, 3500) // UK rent prices per month
+    
+    const bedrooms = randomInt(1, 5)
+    const bathrooms = randomInt(1, 3)
+    const propertyType = randomElement(propertyTypes)
 
     const listing = await prisma.listing.create({
       data: {
         tenantId: acme.id,
-        slug: `property-${i + 1}`,
-        title: `${randomElement(['Beautiful', 'Stunning', 'Luxurious', 'Modern'])} ${randomElement(propertyTypes)} in ${randomElement(cities)}`,
+        slug: `${location.city.toLowerCase().replace(/\s+/g, '-')}-${propertyType}-${i + 1}-${acme.id.slice(0, 8)}`,
+        title: `${randomElement(['Beautiful', 'Stunning', 'Luxurious', 'Modern', 'Spacious', 'Charming'])} ${bedrooms}-Bedroom ${propertyType.charAt(0).toUpperCase() + propertyType.slice(1)} in ${location.city}`,
         status: randomElement(['active', 'active', 'active', 'draft', 'sold']),
         type,
         price,
-        currency: 'USD',
-        bedrooms: randomInt(1, 5),
-        bathrooms: randomInt(1, 4),
-        propertyType: randomElement(propertyTypes),
-        addressLine1: `${randomInt(100, 9999)} ${randomElement(['Main St', 'Oak Ave', 'Park Blvd', 'Maple Dr'])}`,
-        city: randomElement(cities),
-        postcode: `${randomInt(10000, 99999)}`,
-        lat: randomInt(34000, 42000) / 1000, // Approx US latitudes
-        lng: -(randomInt(70000, 120000) / 1000), // Approx US longitudes
-        description: `This ${randomElement(['stunning', 'beautiful', 'spacious', 'modern'])} property features ${randomInt(1, 4)} bedrooms and ${randomInt(1, 3)} bathrooms. Located in a ${randomElement(['desirable', 'prestigious', 'convenient'])} neighborhood with easy access to ${randomElement(['schools', 'shopping', 'transportation', 'parks'])}.`,
+        currency: 'GBP',
+        bedrooms,
+        bathrooms,
+        propertyType,
+        addressLine1: `${randomInt(1, 199)} ${randomElement(ukStreets)}`,
+        city: location.city,
+        postcode: randomUKPostcode(location.postcode),
+        lat: location.lat + (Math.random() - 0.5) * 0.01, // Small variation around location
+        lng: location.lng + (Math.random() - 0.5) * 0.01,
+        description: `This ${randomElement(['stunning', 'beautiful', 'spacious', 'modern', 'well-presented'])} ${bedrooms}-bedroom ${propertyType} is located in the ${randomElement(['desirable', 'popular', 'convenient', 'sought-after'])} area of ${location.city}. The property features ${bathrooms} ${bathrooms === 1 ? 'bathroom' : 'bathrooms'} and is within easy reach of ${randomElement(['local amenities', 'transport links', 'excellent schools', 'shopping centres', 'parks and green spaces'])}.`,
         features: Array.from(new Set([
           ...Array(randomInt(2, 5)).fill(0).map(() => randomElement(features)),
         ])),
@@ -108,32 +143,37 @@ async function main() {
     acmeListings.push(listing)
   }
 
-  // Create sample listings for Bluebird
+  // Create sample listings for Bluebird with UK locations
   const bluebirdListings = []
-  for (let i = 0; i < 15; i++) {
+  for (let i = 0; i < 18; i++) {
+    const location = randomElement(ukLocations)
     const type = randomElement(['sale', 'rent'])
     const price = type === 'sale'
-      ? randomInt(150000, 1500000)
-      : randomInt(1200, 6000)
+      ? randomInt(200000, 1000000) // UK house prices
+      : randomInt(1000, 3000) // UK rent prices per month
+    
+    const bedrooms = randomInt(1, 4)
+    const bathrooms = randomInt(1, 3)
+    const propertyType = randomElement(propertyTypes)
 
     const listing = await prisma.listing.create({
       data: {
         tenantId: bluebird.id,
-        slug: `property-${i + 1}`,
-        title: `${randomElement(['Elegant', 'Cozy', 'Spacious', 'Charming'])} ${randomElement(propertyTypes)} in ${randomElement(cities)}`,
+        slug: `${location.city.toLowerCase().replace(/\s+/g, '-')}-${propertyType}-${i + 1}-${bluebird.id.slice(0, 8)}`,
+        title: `${randomElement(['Elegant', 'Cozy', 'Spacious', 'Charming', 'Well-Maintained'])} ${bedrooms}-Bedroom ${propertyType.charAt(0).toUpperCase() + propertyType.slice(1)} in ${location.city}`,
         status: randomElement(['active', 'active', 'active', 'draft']),
         type,
         price,
-        currency: 'USD',
-        bedrooms: randomInt(1, 4),
-        bathrooms: randomInt(1, 3),
-        propertyType: randomElement(propertyTypes),
-        addressLine1: `${randomInt(100, 9999)} ${randomElement(['Elm St', 'Pine Ave', 'Cedar Ln', 'Birch Way'])}`,
-        city: randomElement(cities),
-        postcode: `${randomInt(10000, 99999)}`,
-        lat: randomInt(34000, 42000) / 1000,
-        lng: -(randomInt(70000, 120000) / 1000),
-        description: `A ${randomElement(['charming', 'elegant', 'welcoming', 'stylish'])} home with ${randomInt(1, 4)} bedrooms. Perfect for ${randomElement(['families', 'professionals', 'retirees'])} seeking ${randomElement(['comfort', 'convenience', 'luxury', 'value'])}.`,
+        currency: 'GBP',
+        bedrooms,
+        bathrooms,
+        propertyType,
+        addressLine1: `${randomInt(1, 199)} ${randomElement(ukStreets)}`,
+        city: location.city,
+        postcode: randomUKPostcode(location.postcode),
+        lat: location.lat + (Math.random() - 0.5) * 0.01, // Small variation around location
+        lng: location.lng + (Math.random() - 0.5) * 0.01,
+        description: `A ${randomElement(['charming', 'elegant', 'welcoming', 'stylish', 'well-appointed'])} ${bedrooms}-bedroom ${propertyType} situated in ${location.city}. This property offers ${bathrooms} ${bathrooms === 1 ? 'bathroom' : 'bathrooms'} and is ideal for ${randomElement(['families', 'professionals', 'first-time buyers', 'investors'])} looking for ${randomElement(['comfort', 'convenience', 'value', 'a great location'])}.`,
         features: Array.from(new Set([
           ...Array(randomInt(2, 4)).fill(0).map(() => randomElement(features)),
         ])),
@@ -153,7 +193,7 @@ async function main() {
   console.log(`Created ${acmeListings.length} listings for ACME`)
   console.log(`Created ${bluebirdListings.length} listings for Bluebird`)
 
-  // Seed property management data for ACME
+  // Seed property management data for ACME (UK location)
   const acmeProperty = await prisma.property.upsert({
     where: {
       tenantId_code: {
@@ -166,14 +206,14 @@ async function main() {
       tenantId: acme.id,
       name: 'ACME Residences',
       code: 'ACME-HQ',
-      description: 'Downtown mixed-use building managed by ACME.',
-      addressLine1: '123 Market Street',
-      city: 'New York',
-      postcode: '10001',
-      country: 'USA',
-      lat: 40.7538,
-      lng: -73.9976,
-      ownerName: 'ACME Holdings LLC',
+      description: 'Modern residential building managed by ACME in Hayes.',
+      addressLine1: '45 High Street',
+      city: 'Hayes',
+      postcode: 'UB3 1AB',
+      country: 'UK',
+      lat: 51.5031,
+      lng: -0.4203,
+      ownerName: 'ACME Holdings Ltd',
       ownerEmail: 'owners@acme.co',
       metadata: {
         featureFlag: true,

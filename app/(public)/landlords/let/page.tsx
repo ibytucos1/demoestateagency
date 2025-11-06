@@ -1,4 +1,5 @@
 import { getTenant } from '@/lib/tenant'
+import { BRAND_NAME } from '@/lib/constants'
 import { Metadata } from 'next'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -92,9 +93,9 @@ export default async function LetPage() {
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">Why Choose {tenant.name}?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">Why Choose {BRAND_NAME}?</h2>
             <p className="text-lg text-gray-700 mb-6 leading-relaxed">
-              At {tenant.name} we pride ourselves in offering Landlords an exceptional Lettings and Management Service. 
+              At {BRAND_NAME} we pride ourselves in offering Landlords an exceptional Lettings and Management Service. 
               We will look after your interests and make letting your property as stress-free as possible by taking care 
               of everything – from the initial market appraisal to repairing a faulty boiler or fitting a new kitchen.
             </p>

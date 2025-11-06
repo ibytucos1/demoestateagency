@@ -110,8 +110,10 @@ export async function POST(req: NextRequest) {
           finalLng = geocodeResult.lng
         }
       } catch (geocodeError) {
-        // Don't fail listing creation if geocoding fails, just log it
-        console.warn('Geocoding failed for address:', addressLine1, city, geocodeError)
+        // Don't fail listing creation if geocoding fails, just log it in non-production environments
+        if (env.NODE_ENV !== 'production') {
+          console.warn('Geocoding failed for address:', addressLine1, city, geocodeError)
+        }
       }
     }
 

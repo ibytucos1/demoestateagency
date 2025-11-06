@@ -115,9 +115,9 @@ export function UnitOverview({ units }: UnitOverviewProps) {
                 )}
                 {unit.leaseId && (
                   <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link href={`/admin/property-management/leases/${unit.leaseId}`}>View lease</Link>
-                    </Button>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link href={`/admin/property-management/leases/${unit.leaseId}`}>View lease</Link>
+                  </Button>
                     <TerminateLeaseButton
                       leaseId={unit.leaseId}
                       tenantName={unit.tenantName}

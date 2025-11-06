@@ -1,4 +1,5 @@
 import { getTenant } from '@/lib/tenant'
+import { BRAND_NAME } from '@/lib/constants'
 import { Metadata } from 'next'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -167,7 +168,7 @@ export default async function LandlordsPage() {
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                Why Choose {tenant.name}?
+                Why Choose {BRAND_NAME}?
               </h2>
               <p className="text-lg text-gray-600">
                 We're committed to delivering exceptional service and maximizing your rental returns
