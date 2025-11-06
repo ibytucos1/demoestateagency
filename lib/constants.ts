@@ -3,5 +3,5 @@
  */
 
 export const BRAND_NAME = 'Clicksmove'
-export const BRAND_TAGLINE = 'Find. Click. Move. Home.'
+export const BRAND_TAGLINE = 'Dominate the Market'
 

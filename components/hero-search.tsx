@@ -15,6 +15,7 @@ export function HeroSearch() {
   const [city, setCity] = useState('')
   const [selectedTab, setSelectedTab] = useState<'buy' | 'rent' | 'sell'>('buy')
   const [selectedLocation, setSelectedLocation] = useState<LocationSelection | undefined>(undefined)
+  const [sellPostcode, setSellPostcode] = useState('')
 
   // Initialize tab and city from URL params
   useEffect(() => {
@@ -84,6 +85,19 @@ export function HeroSearch() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // If "Sell My Home" tab is selected, redirect to valuation page
+    if (selectedTab === 'sell') {
+      const trimmedPostcode = sellPostcode.trim()
+      if (trimmedPostcode) {
+        router.push(`/valuation?postcode=${encodeURIComponent(trimmedPostcode)}`)
+      } else {
+        router.push('/valuation')
+      }
+      return
+    }
+    
+    // Otherwise, handle regular property search
     const params = new URLSearchParams()
     const trimmedCity = city.trim()
     
@@ -138,7 +152,6 @@ export function HeroSearch() {
     } else if (selectedTab === 'rent') {
       params.set('type', 'rent')
     }
-    // 'sell' tab doesn't add a type parameter
     
     // Navigate to search page with both location and type
     router.push(`/search?${params.toString()}`)
@@ -198,23 +211,49 @@ export function HeroSearch() {
       {/* Search Form */}
       <form onSubmit={handleSubmit} className="w-full">
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-0">
-          <div className="flex-1">
-            <LocationAutocomplete
-              id="city"
-              value={city}
-              onChange={setCity}
-              onLocationSelect={setSelectedLocation}
-              placeholder="Enter city or postcode"
-              className="rounded-md sm:rounded-r-none sm:rounded-l-md"
-            />
-          </div>
-          <Button 
-            type="submit" 
-            className="h-12 px-6 sm:px-4 rounded-md sm:rounded-l-none sm:rounded-r-md flex-shrink-0 w-full sm:w-auto"
-          >
-            <Search className="h-5 w-5 mr-2 sm:mr-0" />
-            <span className="sm:hidden">Search</span>
-          </Button>
+          {selectedTab === 'sell' ? (
+            <>
+              {/* Sell My Home - Postcode Input */}
+              <div className="flex-1">
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={sellPostcode}
+                    onChange={(e) => setSellPostcode(e.target.value)}
+                    placeholder="What is the postcode of your home?"
+                    className="w-full h-12 px-4 border border-gray-300 rounded-md sm:rounded-r-none sm:rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-base"
+                  />
+                </div>
+              </div>
+              <Button 
+                type="submit" 
+                className="h-12 px-6 sm:px-4 rounded-md sm:rounded-l-none sm:rounded-r-md flex-shrink-0 w-full sm:w-auto"
+              >
+                <span>Get Free Valuation</span>
+              </Button>
+            </>
+          ) : (
+            <>
+              {/* Buy/Rent - Location Search */}
+              <div className="flex-1">
+                <LocationAutocomplete
+                  id="city"
+                  value={city}
+                  onChange={setCity}
+                  onLocationSelect={setSelectedLocation}
+                  placeholder="Enter city or postcode"
+                  className="rounded-md sm:rounded-r-none sm:rounded-l-md"
+                />
+              </div>
+              <Button 
+                type="submit" 
+                className="h-12 px-6 sm:px-4 rounded-md sm:rounded-l-none sm:rounded-r-md flex-shrink-0 w-full sm:w-auto"
+              >
+                <Search className="h-5 w-5 mr-2 sm:mr-0" />
+                <span className="sm:hidden">Search</span>
+              </Button>
+            </>
+          )}
         </div>
       </form>
     </div>

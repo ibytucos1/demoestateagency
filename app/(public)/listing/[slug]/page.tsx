@@ -6,10 +6,10 @@ import { BRAND_NAME } from '@/lib/constants'
 import { db } from '@/lib/db'
 import { env } from '@/lib/env'
 import { getWhatsAppTrackingUrl } from '@/lib/whatsapp-utils'
+import { getPublicUrlSync } from '@/lib/storage-utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { LeadForm } from '@/components/lead-form'
-import { PropertyGallery } from '@/components/property-gallery'
 import { StickyCTABar } from '@/components/sticky-cta-bar'
 import {
   Accordion,
@@ -148,29 +148,123 @@ export default async function ListingDetailPage({
       {/* Breadcrumbs */}
       <div className="bg-gray-50 border-b border-gray-200">
         <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Link href="/" className="hover:text-primary transition-colors">
-              Home
-            </Link>
-            <ChevronRight className="h-4 w-4" />
-            <Link href="/search" className="hover:text-primary transition-colors">
-              Search
-            </Link>
-            <ChevronRight className="h-4 w-4" />
-            <span className="text-gray-900 font-medium truncate max-w-xs sm:max-w-md">{listing.title}</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Link href="/search" className="hover:text-primary transition-colors">
+                Back to search results
+              </Link>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <Share2 className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <Heart className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Hero Section */}
-      <div className="bg-white border-b border-gray-200">
+      {/* Image Hero Section - Center of Attention */}
+      <div className="bg-white">
+        <div className="container mx-auto px-4 py-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 lg:items-stretch">
+            {/* Main Large Image - Left Side (Takes ~60% on desktop) */}
+            <div className="lg:col-span-7">
+              <div className="relative aspect-[4/3] lg:aspect-auto lg:h-full bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl overflow-hidden group cursor-pointer">
+                {media.length > 0 ? (
+                  <>
+                    <Image
+                      src={media[0]?.url || getPublicUrlSync(media[0]?.key || '')}
+                      alt={media[0]?.alt || listing.title}
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      priority
+                      sizes="(max-width: 1024px) 100vw, 58vw"
+                    />
+                    {/* Image Counter Badge */}
+                    {media.length > 1 && (
+                      <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm text-gray-900 px-3 py-1.5 rounded-lg text-sm font-semibold shadow-lg">
+                        {media.length} Photos
+                      </div>
+                    )}
+                    {/* Type Badge */}
+                    <div className="absolute top-4 right-4">
+                      <span className={`px-3 py-1.5 rounded-lg text-xs font-bold text-white shadow-lg ${getTypeColor()}`}>
+                        {getTypeLabel()}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex items-center justify-center text-gray-400">
+                    <div className="text-center">
+                      <HomeIcon className="h-16 w-16 mx-auto mb-2" />
+                      <p className="text-sm font-medium">No Image Available</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Two Smaller Images - Right Side (Takes ~40% on desktop, stacked vertically) */}
+            <div className="lg:col-span-5 flex flex-col gap-2 lg:h-full">
+              {media.length > 1 ? (
+                <>
+                  {/* First smaller image */}
+                  <div className="relative flex-1 min-h-0 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg overflow-hidden group cursor-pointer">
+                    <Image
+                      src={media[1]?.url || getPublicUrlSync(media[1]?.key || '')}
+                      alt={media[1]?.alt || listing.title}
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      sizes="(max-width: 1024px) 100vw, 38vw"
+                    />
+                  </div>
+                  {/* Second smaller image */}
+                  {media.length > 2 ? (
+                    <div className="relative flex-1 min-h-0 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg overflow-hidden group cursor-pointer">
+                      <Image
+                        src={media[2]?.url || getPublicUrlSync(media[2]?.key || '')}
+                        alt={media[2]?.alt || listing.title}
+                        fill
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        sizes="(max-width: 1024px) 100vw, 38vw"
+                      />
+                      {media.length > 3 && (
+                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                          <span className="text-white font-semibold text-sm">+{media.length - 3} more</span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="relative flex-1 min-h-0 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <HomeIcon className="h-8 w-8 text-gray-300" />
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  {/* Placeholders when only 1 image */}
+                  <div className="relative flex-1 min-h-0 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <HomeIcon className="h-8 w-8 text-gray-300" />
+                  </div>
+                  <div className="relative flex-1 min-h-0 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <HomeIcon className="h-8 w-8 text-gray-300" />
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Property Details Below Images */}
+      <div className="bg-white border-t border-gray-200">
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 mb-3 flex-wrap">
-                <span className={`px-3 py-1.5 rounded-lg text-xs font-bold text-white ${getTypeColor()}`}>
-                  {getTypeLabel()}
-                </span>
                 {listing.propertyType && (
                   <span className="px-3 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700 capitalize">
                     {listing.propertyType}
@@ -225,8 +319,6 @@ export default async function ListingDetailPage({
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
-            {/* Gallery */}
-            <PropertyGallery images={media} propertyTitle={listing.title} />
 
             {/* Key Features Summary */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-6 bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200">

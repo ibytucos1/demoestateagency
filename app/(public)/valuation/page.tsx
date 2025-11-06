@@ -8,8 +8,13 @@ export const metadata: Metadata = {
   description: 'Get a free, no-obligation property valuation from our expert team',
 }
 
-export default async function ValuationPage() {
+interface ValuationPageProps {
+  searchParams: { postcode?: string }
+}
+
+export default async function ValuationPage({ searchParams }: ValuationPageProps) {
   const tenant = await getTenant()
+  const postcode = searchParams.postcode || ''
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
@@ -98,7 +103,7 @@ export default async function ValuationPage() {
 
             {/* Form */}
             <div className="bg-white rounded-xl shadow-lg p-8">
-              <ValuationForm />
+              <ValuationForm initialPostcode={postcode} />
             </div>
           </div>
 

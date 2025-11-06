@@ -7,12 +7,17 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Turnstile } from '@marsidev/react-turnstile'
 
-export function ValuationForm() {
+interface ValuationFormProps {
+  initialPostcode?: string
+}
+
+export function ValuationForm({ initialPostcode = '' }: ValuationFormProps) {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   const turnstileRef = useRef<any>(null)
+  const [postcode, setPostcode] = useState(initialPostcode)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -24,6 +29,7 @@ export function ValuationForm() {
       name: formData.get('name') as string,
       email: formData.get('email') as string,
       phone: formData.get('phone') as string,
+      postcode: formData.get('postcode') as string,
       message: formData.get('message') as string,
       turnstileToken: turnstileToken || '',
     }
@@ -127,13 +133,25 @@ export function ValuationForm() {
           />
         </div>
         <div>
+          <Label htmlFor="postcode">Property Postcode *</Label>
+          <Input
+            id="postcode"
+            name="postcode"
+            required
+            value={postcode}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPostcode(e.target.value)}
+            placeholder="SW1A 1AA"
+            className="mt-1 uppercase"
+          />
+        </div>
+        <div>
           <Label htmlFor="message">Property Address & Details *</Label>
           <Textarea
             id="message"
             name="message"
             required
             rows={4}
-            placeholder="Please provide your property address and any relevant details (e.g., number of bedrooms, property type)..."
+            placeholder="Please provide your full property address and any relevant details (e.g., number of bedrooms, property type)..."
             className="mt-1"
           />
         </div>
