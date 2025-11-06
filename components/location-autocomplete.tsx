@@ -158,7 +158,7 @@ export function LocationAutocomplete({
 
   return (
     <div ref={containerRef} className="relative w-full">
-      <div className="relative flex items-center rounded-md border border-input overflow-hidden">
+      <div className={cn("relative flex items-center border border-input overflow-hidden", className)}>
         <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5 z-10" />
         <Input
           ref={inputRef}
@@ -180,7 +180,7 @@ export function LocationAutocomplete({
             }, 200)
           }}
           placeholder={placeholder}
-          className={cn('pl-10 h-12 text-gray-900 rounded-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0', className)}
+          className={cn('pl-10 h-12 text-gray-900 rounded-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0', rightButton ? '' : 'pr-3')}
           autoComplete="off"
         />
         {isLoading && (

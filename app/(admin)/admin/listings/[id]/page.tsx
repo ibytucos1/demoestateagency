@@ -1,4 +1,4 @@
-import { getTenantId } from '@/lib/tenant'
+import { getTenant } from '@/lib/tenant'
 import { requireAuth } from '@/lib/rbac'
 import { db } from '@/lib/db'
 import { notFound, redirect } from 'next/navigation'
@@ -9,7 +9,8 @@ export default async function EditListingPage({
 }: {
   params: { id: string }
 }) {
-  const tenantId = await getTenantId()
+  const tenant = await getTenant()
+  const tenantId = tenant.id
   await requireAuth(tenantId, ['owner', 'admin', 'agent'])
 
   const listing = await db.listing.findUnique({

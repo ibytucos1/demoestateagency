@@ -4,6 +4,15 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent } from '@/components/ui/card'
+import { 
+  Mail, 
+  Phone, 
+  MapPin, 
+  Clock, 
+  Send,
+  MessageCircle
+} from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Contact Us',
@@ -13,43 +22,199 @@ export const metadata: Metadata = {
 export default async function ContactPage() {
   const tenant = await getTenant()
 
+  const contactInfo = [
+    {
+      icon: Phone,
+      title: 'Phone',
+      content: '+44 (0) 20 1234 5678',
+      link: 'tel:+442012345678',
+      gradient: 'from-blue-500 to-indigo-600',
+    },
+    {
+      icon: Mail,
+      title: 'Email',
+      content: 'hello@acme-estate.com',
+      link: 'mailto:hello@acme-estate.com',
+      gradient: 'from-blue-500 to-indigo-600',
+    },
+    {
+      icon: MapPin,
+      title: 'Address',
+      content: '123 High Street, London, UK',
+      link: 'https://maps.google.com',
+      gradient: 'from-blue-500 to-indigo-600',
+    },
+    {
+      icon: Clock,
+      title: 'Office Hours',
+      content: 'Mon-Fri: 9am-6pm, Sat: 10am-4pm',
+      gradient: 'from-blue-500 to-indigo-600',
+    },
+  ]
+
   return (
-    <div className="container mx-auto px-4 py-16">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-4xl font-bold mb-6">Contact Us</h1>
-        <p className="text-lg text-gray-600 mb-8">
-          Get in touch with {tenant.name}. We're here to help with all your property needs.
-        </p>
-        <div className="bg-white rounded-lg shadow-md p-8">
-          <form className="space-y-6">
-            <div>
-              <Label htmlFor="name">Name</Label>
-              <Input id="name" type="text" placeholder="Your name" required />
+    <>
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-br from-blue-600 to-indigo-700 py-20 md:py-28">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-2xl mb-6">
+              <MessageCircle className="h-8 w-8 text-white" />
             </div>
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="your.email@example.com" required />
-            </div>
-            <div>
-              <Label htmlFor="phone">Phone</Label>
-              <Input id="phone" type="tel" placeholder="Your phone number" />
-            </div>
-            <div>
-              <Label htmlFor="message">Message</Label>
-              <Textarea
-                id="message"
-                placeholder="Tell us how we can help..."
-                rows={6}
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full">
-              Send Message
-            </Button>
-          </form>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
+              Contact Us
+            </h1>
+            <p className="text-xl md:text-2xl text-blue-100 mb-8 max-w-3xl mx-auto">
+              Get in touch with {tenant.name}. We're here to help with all your property needs
+            </p>
+          </div>
         </div>
-      </div>
-    </div>
+      </section>
+
+      {/* Contact Info Cards */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+              {contactInfo.map((info, idx) => {
+                const Icon = info.icon
+                return (
+                  <Card key={idx} className="border-2 hover:border-blue-500 hover:shadow-xl transition-all duration-300">
+                    <CardContent className="p-6 text-center">
+                      <div className={`w-14 h-14 bg-gradient-to-br ${info.gradient} rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg`}>
+                        <Icon className="h-7 w-7 text-white" strokeWidth={2} />
+                      </div>
+                      <h3 className="font-bold text-lg mb-2 text-gray-900">{info.title}</h3>
+                      {info.link ? (
+                        <a 
+                          href={info.link} 
+                          className="text-gray-600 hover:text-blue-600 transition-colors text-sm"
+                          target={info.link.startsWith('http') ? '_blank' : undefined}
+                          rel={info.link.startsWith('http') ? 'noopener noreferrer' : undefined}
+                        >
+                          {info.content}
+                        </a>
+                      ) : (
+                        <p className="text-gray-600 text-sm">{info.content}</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                )
+              })}
+            </div>
+
+            {/* Contact Form Section */}
+            <div className="grid lg:grid-cols-2 gap-12">
+              {/* Left Column - Info */}
+              <div>
+                <h2 className="text-3xl font-bold mb-6">Send us a Message</h2>
+                <p className="text-lg text-gray-700 mb-8 leading-relaxed">
+                  Whether you're looking to buy, sell, rent, or need property management services, 
+                  our experienced team is ready to assist you. Fill out the form and we'll get back 
+                  to you as soon as possible.
+                </p>
+                
+                <div className="space-y-6">
+                  <div className="flex items-start gap-4 p-4 bg-blue-50 rounded-lg">
+                    <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Clock className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-gray-900 mb-1">Quick Response</h4>
+                      <p className="text-sm text-gray-600">We typically respond within 24 hours</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-4 p-4 bg-indigo-50 rounded-lg">
+                    <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <MessageCircle className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-gray-900 mb-1">Expert Advice</h4>
+                      <p className="text-sm text-gray-600">Professional guidance from our experienced team</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column - Form */}
+              <Card className="border-2">
+                <CardContent className="p-8">
+                  <form className="space-y-6">
+                    <div>
+                      <Label htmlFor="name" className="text-base font-semibold">Name *</Label>
+                      <Input 
+                        id="name" 
+                        type="text" 
+                        placeholder="Your name" 
+                        required 
+                        className="mt-2 h-12"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="email" className="text-base font-semibold">Email *</Label>
+                      <Input 
+                        id="email" 
+                        type="email" 
+                        placeholder="your.email@example.com" 
+                        required 
+                        className="mt-2 h-12"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="phone" className="text-base font-semibold">Phone</Label>
+                      <Input 
+                        id="phone" 
+                        type="tel" 
+                        placeholder="Your phone number" 
+                        className="mt-2 h-12"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="message" className="text-base font-semibold">Message *</Label>
+                      <Textarea
+                        id="message"
+                        placeholder="Tell us how we can help..."
+                        rows={6}
+                        required
+                        className="mt-2"
+                      />
+                    </div>
+                    
+                    <Button type="submit" className="w-full h-12 text-lg" size="lg">
+                      <Send className="mr-2 h-5 w-5" />
+                      Send Message
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Map Section (Optional) */}
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto">
+            <Card className="border-2 overflow-hidden">
+              <CardContent className="p-0">
+                <div className="bg-gradient-to-br from-blue-100 to-indigo-100 h-96 flex items-center justify-center">
+                  <div className="text-center">
+                    <MapPin className="h-16 w-16 text-blue-600 mx-auto mb-4" />
+                    <p className="text-gray-600 text-lg">Map integration available</p>
+                    <p className="text-sm text-gray-500 mt-2">Connect Google Maps or similar service</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+    </>
   )
 }
 

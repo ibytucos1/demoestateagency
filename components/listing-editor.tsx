@@ -1,13 +1,24 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Upload, X, Image as ImageIcon } from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+interface MediaItem {
+  key: string
+  url: string
+  width?: number | null
+  height?: number | null
+  alt?: string
+}
 
 interface ListingEditorProps {
   listing?: any
@@ -15,8 +26,11 @@ interface ListingEditorProps {
 
 export function ListingEditor({ listing }: ListingEditorProps) {
   const router = useRouter()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [media, setMedia] = useState<MediaItem[]>(Array.isArray(listing?.media) ? listing.media : [])
   const [formData, setFormData] = useState({
     title: listing?.title || '',
     slug: listing?.slug || '',
@@ -34,6 +48,47 @@ export function ListingEditor({ listing }: ListingEditorProps) {
     features: (listing?.features || []).join(', '),
   })
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    setUploading(true)
+    setError(null)
+
+    try {
+      const uploadPromises = Array.from(files).map(async (file) => {
+        const formData = new FormData()
+        formData.append('file', file)
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || 'Upload failed')
+        }
+
+        const data = await response.json()
+        return data.media
+      })
+
+      const uploadedMedia = await Promise.all(uploadPromises)
+      setMedia((prev) => [...prev, ...uploadedMedia])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to upload images')
+    } finally {
+      setUploading(false)
+      // Reset file input
+      e.target.value = ''
+    }
+  }
+
+  const handleRemoveMedia = (index: number) => {
+    setMedia((prev) => prev.filter((_, i) => i !== index))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -46,7 +101,7 @@ export function ListingEditor({ listing }: ListingEditorProps) {
         bedrooms: formData.bedrooms ? Number(formData.bedrooms) : null,
         bathrooms: formData.bathrooms ? Number(formData.bathrooms) : null,
         features: formData.features.split(',').map(f => f.trim()).filter(Boolean),
-        media: listing?.media || [],
+        media: media,
       }
 
       const url = listing
@@ -61,7 +116,8 @@ export function ListingEditor({ listing }: ListingEditorProps) {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to save listing')
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to save listing')
       }
 
       router.push('/admin/listings')
@@ -258,7 +314,91 @@ export function ListingEditor({ listing }: ListingEditorProps) {
           </CardContent>
         </Card>
 
-        {error && <p className="text-destructive">{error}</p>}
+        <Card>
+          <CardHeader>
+            <CardTitle>Photos</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="photo-upload">Upload Photos</Label>
+              <div className="mt-2">
+                <Input
+                  ref={fileInputRef}
+                  id="photo-upload"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleFileUpload}
+                  disabled={uploading || loading}
+                  className="sr-only"
+                />
+                <label
+                  htmlFor="photo-upload"
+                  className={cn(
+                    "flex items-center justify-center gap-2 h-10 px-4 py-2 border border-dashed rounded-md transition-colors cursor-pointer",
+                    uploading || loading
+                      ? "opacity-50 cursor-not-allowed pointer-events-none"
+                      : "hover:bg-accent hover:border-primary"
+                  )}
+                >
+                  <Upload className="h-4 w-4" />
+                  <span className="text-sm font-medium">
+                    {uploading ? 'Uploading...' : 'Click to select images'}
+                  </span>
+                </label>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Upload one or more images. Maximum 10MB per file.
+                </p>
+              </div>
+            </div>
+
+            {media.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {media.map((item, index) => (
+                  <div key={item.key || index} className="relative group">
+                    <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
+                      {item.url ? (
+                        <Image
+                          src={item.url}
+                          alt={item.alt || `Property image ${index + 1}`}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <ImageIcon className="h-8 w-8 text-gray-400" />
+                        </div>
+                      )}
+                    </div>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => handleRemoveMedia(index)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {media.length === 0 && (
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                <ImageIcon className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-600">No photos uploaded yet</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {error && (
+          <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-md">
+            <p className="font-medium">{error}</p>
+          </div>
+        )}
         <div className="flex gap-4">
           <Button type="submit" disabled={loading}>
             {loading ? 'Saving...' : 'Save Listing'}

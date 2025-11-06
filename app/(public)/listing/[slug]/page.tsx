@@ -1,21 +1,61 @@
-import { getTenantId } from '@/lib/tenant'
-import { db } from '@/lib/db'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
+import Link from 'next/link'
+import { getTenant, getTenantId } from '@/lib/tenant'
+import { db } from '@/lib/db'
+import { env } from '@/lib/env'
+import { getWhatsAppTrackingUrl } from '@/lib/whatsapp-utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { LeadForm } from '@/components/lead-form'
+import { PropertyGallery } from '@/components/property-gallery'
+import { StickyCTABar } from '@/components/sticky-cta-bar'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import {
+  MapPin,
+  Bed,
+  Bath,
+  Home as HomeIcon,
+  Share2,
+  Heart,
+  Calendar,
+  Check,
+  ChevronRight,
+  MessageCircle,
+  Phone,
+  Mail,
+  Car,
+  Ruler,
+  Zap,
+  Info,
+  Building,
+  MapPinned,
+  Clock
+} from 'lucide-react'
+
+type ListingMedia = {
+  key: string
+  width?: number
+  height?: number
+  alt?: string
+}
 
 export default async function ListingDetailPage({
   params,
 }: {
   params: { slug: string }
 }) {
-  const tenantId = await getTenantId()
+  const tenantIdentifier = await getTenantId()
+  const tenant = await getTenant(tenantIdentifier)
   const listing = await db.listing.findUnique({
     where: {
       tenantId_slug: {
-        tenantId,
+        tenantId: tenant.id,
         slug: params.slug,
       },
     },
@@ -28,8 +68,50 @@ export default async function ListingDetailPage({
     notFound()
   }
 
-  const media = listing.media as any[]
-  const features = listing.features || []
+  const media = Array.isArray(listing.media) ? (listing.media as ListingMedia[]) : []
+  const features = Array.isArray(listing.features) ? (listing.features as string[]) : []
+  const appUrl = env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  const whatsappNumber = tenant.whatsappNumber || null
+  const whatsappMessage = `Hi, I'm interested in ${listing.title}`
+  const whatsappLink = whatsappNumber
+    ? getWhatsAppTrackingUrl(whatsappNumber, whatsappMessage, listing.id)
+    : null
+  
+  const formatPrice = () => {
+    const formatted = listing.price.toLocaleString()
+    if (listing.type === 'rent') {
+      return `£${formatted} pcm`
+    }
+    return `£${formatted}`
+  }
+  
+  const getTypeLabel = () => {
+    switch (listing.type) {
+      case 'rent': return 'TO RENT'
+      case 'sale': return 'FOR SALE'
+      case 'commercial': return 'COMMERCIAL'
+      default: return 'FOR SALE'
+    }
+  }
+  
+  const getTypeColor = () => {
+    switch (listing.type) {
+      case 'rent': return 'bg-emerald-600'
+      case 'sale': return 'bg-primary'
+      case 'commercial': return 'bg-amber-600'
+      default: return 'bg-primary'
+    }
+  }
+  
+  // Calculate days since added
+  const daysSinceAdded = Math.floor(
+    (new Date().getTime() - new Date(listing.createdAt).getTime()) / (1000 * 60 * 60 * 24)
+  )
+  const timeIndicator = daysSinceAdded === 0 
+    ? 'Added today' 
+    : daysSinceAdded === 1 
+    ? 'Added yesterday' 
+    : `Added ${daysSinceAdded} days ago`
 
   // JSON-LD for SEO
   const jsonLd = {
@@ -37,6 +119,7 @@ export default async function ListingDetailPage({
     '@type': 'RealEstateListing',
     name: listing.title,
     description: listing.description,
+    url: `${appUrl}/listing/${listing.slug}`,
     address: {
       '@type': 'PostalAddress',
       streetAddress: listing.addressLine1,
@@ -60,41 +143,128 @@ export default async function ListingDetailPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      
+      {/* Breadcrumbs */}
+      <div className="bg-gray-50 border-b border-gray-200">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <Link href="/" className="hover:text-primary transition-colors">
+              Home
+            </Link>
+            <ChevronRight className="h-4 w-4" />
+            <Link href="/search" className="hover:text-primary transition-colors">
+              Search
+            </Link>
+            <ChevronRight className="h-4 w-4" />
+            <span className="text-gray-900 font-medium truncate max-w-xs sm:max-w-md">{listing.title}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Hero Section */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3 mb-3 flex-wrap">
+                <span className={`px-3 py-1.5 rounded-lg text-xs font-bold text-white ${getTypeColor()}`}>
+                  {getTypeLabel()}
+                </span>
+                {listing.propertyType && (
+                  <span className="px-3 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700 capitalize">
+                    {listing.propertyType}
+                  </span>
+                )}
+                <span className="px-3 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700 flex items-center gap-1.5">
+                  <Clock className="h-3 w-3" />
+                  {timeIndicator}
+                </span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+                {listing.title}
+              </h1>
+              <div className="flex items-start gap-2 text-gray-600 mb-4">
+                <MapPin className="h-5 w-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                <span className="text-base sm:text-lg">
+                  {listing.addressLine1}, {listing.city}
+                  {listing.postcode && `, ${listing.postcode}`}
+                </span>
+              </div>
+              <div className="text-3xl sm:text-4xl font-bold text-primary">
+                {formatPrice()}
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2 md:flex-col md:items-stretch">
+              <Button variant="outline" size="lg" className="flex-1 md:flex-none">
+                <Share2 className="h-4 w-4 mr-2" />
+                Share
+              </Button>
+              <Button variant="outline" size="lg" className="flex-1 md:flex-none">
+                <Heart className="h-4 w-4 mr-2" />
+                Save
+              </Button>
+              {whatsappLink && (
+                <Button size="lg" variant="outline" className="flex-1 md:flex-none border-emerald-500 text-emerald-600 hover:bg-emerald-50" asChild>
+                  <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    WhatsApp
+                  </a>
+                </Button>
+              )}
+              <Button size="lg" className="w-full md:w-auto">
+                <Calendar className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Arrange Viewing</span>
+                <span className="sm:hidden">Book Viewing</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
             {/* Gallery */}
-            {media.length > 0 && (
-              <div className="grid grid-cols-2 gap-2">
-                {media.map((img, idx) => (
-                  <div
-                    key={idx}
-                    className={`relative aspect-video bg-muted ${idx === 0 ? 'col-span-2' : ''}`}
-                  >
-                    {img?.key ? (
-                      <Image
-                        src={img.key}
-                        alt={img.alt || listing.title}
-                        fill
-                        className="object-cover rounded-lg"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                        No Image
-                      </div>
-                    )}
+            <PropertyGallery images={media} propertyTitle={listing.title} />
+
+            {/* Key Features Summary */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-6 bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200">
+              {listing.bedrooms !== undefined && listing.bedrooms !== null && (
+                <div className="flex flex-col items-center text-center p-4 bg-white rounded-lg shadow-sm">
+                  <div className="p-3 rounded-full bg-primary/10 mb-3">
+                    <Bed className="h-6 w-6 text-primary" />
                   </div>
-                ))}
-              </div>
-            )}
+                  <div className="text-2xl font-bold text-gray-900">{listing.bedrooms}</div>
+                  <div className="text-sm text-gray-600">Bedrooms</div>
+                </div>
+              )}
+              {listing.bathrooms !== undefined && listing.bathrooms !== null && (
+                <div className="flex flex-col items-center text-center p-4 bg-white rounded-lg shadow-sm">
+                  <div className="p-3 rounded-full bg-primary/10 mb-3">
+                    <Bath className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">{listing.bathrooms}</div>
+                  <div className="text-sm text-gray-600">Bathrooms</div>
+                </div>
+              )}
+              {listing.propertyType && (
+                <div className="flex flex-col items-center text-center p-4 bg-white rounded-lg shadow-sm col-span-2 sm:col-span-1">
+                  <div className="p-3 rounded-full bg-primary/10 mb-3">
+                    <HomeIcon className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900 capitalize">{listing.propertyType}</div>
+                  <div className="text-sm text-gray-600">Property Type</div>
+                </div>
+              )}
+            </div>
 
             {/* Description */}
             <Card>
               <CardHeader>
-                <CardTitle>Description</CardTitle>
+                <CardTitle>Property Description</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="whitespace-pre-wrap">{listing.description}</p>
+                <p className="whitespace-pre-wrap text-gray-700 leading-relaxed">{listing.description}</p>
               </CardContent>
             </Card>
 
@@ -102,62 +272,156 @@ export default async function ListingDetailPage({
             {features.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Features</CardTitle>
+                  <CardTitle>Key Features</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {features.map((feature, idx) => (
-                      <span
+                      <div
                         key={idx}
-                        className="px-3 py-1 bg-secondary rounded-full text-sm"
+                        className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                       >
-                        {feature}
-                      </span>
+                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Check className="h-4 w-4 text-primary" />
+                        </div>
+                        <span className="text-sm text-gray-700 capitalize">
+                          {feature.replace(/-/g, ' ')}
+                        </span>
+                      </div>
                     ))}
                   </div>
                 </CardContent>
               </Card>
             )}
+
+            {/* Collapsible Sections */}
+            <Card>
+              <CardContent className="pt-6">
+                <Accordion type="single" collapsible className="w-full">
+                  <AccordionItem value="location">
+                    <AccordionTrigger className="text-lg font-semibold">
+                      <div className="flex items-center gap-2">
+                        <MapPinned className="h-5 w-5 text-primary" />
+                        Location & Area
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-4">
+                        {/* Map Placeholder */}
+                        {listing.lat && listing.lng && (
+                          <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center text-gray-500">
+                            <div className="text-center">
+                              <MapPinned className="h-12 w-12 mx-auto mb-2 text-gray-400" />
+                              <p className="text-sm">Map showing property location</p>
+                              <p className="text-xs text-gray-400 mt-1">
+                                {listing.lat.toFixed(4)}, {listing.lng.toFixed(4)}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                        <div className="text-sm text-gray-600">
+                          <p className="mb-2">
+                            <strong>Address:</strong> {listing.addressLine1}, {listing.city}
+                            {listing.postcode && `, ${listing.postcode}`}
+                          </p>
+                          <p>This property is located in a desirable area with excellent transport links and local amenities.</p>
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="details">
+                    <AccordionTrigger className="text-lg font-semibold">
+                      <div className="flex items-center gap-2">
+                        <Info className="h-5 w-5 text-primary" />
+                        Property Details
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-gray-600">Property Type</span>
+                          <p className="font-semibold capitalize">{listing.propertyType || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Listing Type</span>
+                          <p className="font-semibold capitalize">{listing.type}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Bedrooms</span>
+                          <p className="font-semibold">{listing.bedrooms || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Bathrooms</span>
+                          <p className="font-semibold">{listing.bathrooms || 'N/A'}</p>
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="epc">
+                    <AccordionTrigger className="text-lg font-semibold">
+                      <div className="flex items-center gap-2">
+                        <Zap className="h-5 w-5 text-primary" />
+                        Energy Performance
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="text-sm text-gray-600">
+                        <p>Energy Performance Certificate (EPC) information will be available soon.</p>
+                        <p className="mt-2 text-xs text-gray-500">
+                          An EPC gives you an idea of running costs and environmental impact of the property.
+                        </p>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </CardContent>
+            </Card>
           </div>
 
           <aside className="space-y-6">
-            {/* Key Facts */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-3xl">${listing.price.toLocaleString()}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  {listing.bedrooms && (
-                    <div>
-                      <span className="text-muted-foreground">Bedrooms</span>
-                      <p className="font-semibold">{listing.bedrooms}</p>
-                    </div>
-                  )}
-                  {listing.bathrooms && (
-                    <div>
-                      <span className="text-muted-foreground">Bathrooms</span>
-                      <p className="font-semibold">{listing.bathrooms}</p>
-                    </div>
-                  )}
-                  {listing.propertyType && (
-                    <div>
-                      <span className="text-muted-foreground">Type</span>
-                      <p className="font-semibold capitalize">{listing.propertyType}</p>
-                    </div>
-                  )}
+            {/* Agent Card */}
+            <Card className="shadow-lg border-primary/20">
+              <CardHeader className="bg-gradient-to-br from-primary/5 to-primary/10 border-b">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
+                    <Building className="h-8 w-8 text-primary" />
+                  </div>
                   <div>
-                    <span className="text-muted-foreground">Listing Type</span>
-                    <p className="font-semibold capitalize">{listing.type}</p>
+                    <CardTitle className="text-lg">{tenant.name}</CardTitle>
+                    <p className="text-sm text-gray-600">Estate Agent</p>
                   </div>
                 </div>
-                <div className="pt-4 border-t">
-                  <p className="text-sm text-muted-foreground">Address</p>
-                  <p className="font-medium">
-                    {listing.addressLine1}
-                    <br />
-                    {listing.city}
-                    {listing.postcode && `, ${listing.postcode}`}
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="space-y-3">
+                  <Button size="lg" className="w-full text-base">
+                    <Calendar className="h-5 w-5 mr-2" />
+                    Arrange a Viewing
+                  </Button>
+                  <Button variant="outline" size="lg" className="w-full text-base">
+                    <Phone className="h-5 w-5 mr-2" />
+                    Call Agent
+                  </Button>
+                  {whatsappLink && (
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="w-full text-base border-emerald-500 text-emerald-600 hover:bg-emerald-50"
+                      asChild
+                    >
+                      <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
+                        <MessageCircle className="h-5 w-5 mr-2" />
+                        Chat on WhatsApp
+                      </a>
+                    </Button>
+                  )}
+                  <div className="text-center text-sm text-gray-600 pt-2">
+                    or
+                  </div>
+                  <p className="text-center text-sm text-gray-600">
+                    Get in touch for more information
                   </p>
                 </div>
               </CardContent>
@@ -168,7 +432,9 @@ export default async function ListingDetailPage({
           </aside>
         </div>
       </div>
+
+      {/* Sticky Mobile CTA Bar */}
+      <StickyCTABar price={formatPrice()} whatsappLink={whatsappLink} />
     </>
   )
 }
-

@@ -2,10 +2,10 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { Button } from '@/components/ui/button'
-import { MapPin, Bed, Bath, Square, Heart, Share2, Eye } from 'lucide-react'
+import { MapPin, Bed, Bath, Heart, Eye } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
+import { getPublicUrlSync } from '@/lib/storage-utils'
 
 interface ListingCardProps {
   listing: {
@@ -24,15 +24,27 @@ interface ListingCardProps {
     description?: string | null
     features?: string[] | null
     media: any
+    lat?: number | null
+    lng?: number | null
     createdAt?: Date
   }
+  whatsappNumber?: string | null
 }
 
-export function ListingCard({ listing }: ListingCardProps) {
+export function ListingCard({ listing, whatsappNumber }: ListingCardProps) {
   const [isFavorite, setIsFavorite] = useState(false)
   const media = listing.media as any[]
   const firstImage = media?.[0]
   const imageCount = media?.length || 0
+  
+  // Get image URL - use url if available, otherwise construct from key
+  const getImageUrl = (image: any) => {
+    if (image?.url) return image.url
+    if (image?.key) return getPublicUrlSync(image.key)
+    return null
+  }
+  
+  const imageUrl = firstImage ? getImageUrl(firstImage) : null
   
   const formatPrice = () => {
     const formatted = listing.price.toLocaleString()
@@ -53,131 +65,162 @@ export function ListingCard({ listing }: ListingCardProps) {
 
   const getTypeColor = () => {
     switch (listing.type) {
-      case 'rent': return 'bg-blue-600'
-      case 'sale': return 'bg-indigo-700'
-      case 'commercial': return 'bg-blue-700'
-      default: return 'bg-indigo-700'
+      case 'rent': return 'bg-emerald-600'
+      case 'sale': return 'bg-primary'
+      case 'commercial': return 'bg-amber-600'
+      default: return 'bg-primary'
     }
   }
 
-  const description = listing.description ? listing.description.substring(0, 120) + '...' : ''
 
   return (
-    <div className="bg-white rounded-xl border-2 border-blue-200 hover:border-blue-400 transition-all duration-300 overflow-hidden shadow-md hover:shadow-xl">
-      <Link href={`/listing/${listing.slug}`}>
-        <div className="flex flex-row">
+    <Link href={`/listing/${listing.slug}`}>
+      <div className="group bg-white rounded-xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 border border-gray-200 hover:border-primary/50">
+        <div className="flex flex-col sm:flex-row h-full">
           {/* Image Section - Left */}
-          <div className="relative w-64 h-52 flex-shrink-0 bg-gradient-to-br from-gray-200 to-gray-300">
-            {firstImage?.key ? (
+          <div className="relative w-full sm:w-80 h-64 sm:h-auto flex-shrink-0 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+            {imageUrl ? (
               <>
                 <Image
-                  src={firstImage.key}
+                  src={imageUrl}
                   alt={firstImage.alt || listing.title}
                   fill
-                  className="object-cover"
+                  className="object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                 />
-                {/* Image Counter Overlay */}
+                
+                {/* Gradient overlay for better text readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+                
+                {/* Image Counter Overlay - Top Left */}
                 {imageCount > 1 && (
-                  <div className="absolute top-1 left-1 bg-blue-600/90 backdrop-blur-sm text-white px-1.5 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1">
-                    <Eye className="h-2.5 w-2.5" />
-                    {imageCount}
+                  <div className="absolute top-4 left-4 bg-black/75 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 shadow-lg">
+                    <Eye className="h-4 w-4" />
+                    <span>{imageCount} photos</span>
                   </div>
                 )}
-                {/* Favorite Button */}
+                
+                {/* Favorite Button - Top Right */}
                 <button
                   onClick={(e) => {
                     e.preventDefault()
                     e.stopPropagation()
                     setIsFavorite(!isFavorite)
                   }}
-                  className="absolute top-1 right-1 bg-white/90 backdrop-blur-sm p-1 rounded-full hover:bg-white transition-colors shadow-lg"
+                  className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm p-2.5 rounded-full hover:bg-white transition-all duration-300 shadow-lg hover:scale-110 z-10"
+                  aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
                 >
                   <Heart
                     className={cn(
-                      'h-3 w-3 transition-colors',
-                      isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-700'
+                      'h-5 w-5 transition-all duration-300',
+                      isFavorite ? 'fill-red-500 text-red-500 scale-110' : 'text-gray-700 hover:text-red-500'
                     )}
                   />
                 </button>
+                
+                {/* Type Badge - Bottom Left */}
+                <div className="absolute bottom-4 left-4">
+                  <span
+                    className={cn(
+                      'px-3.5 py-1.5 rounded-lg text-xs font-bold text-white shadow-lg backdrop-blur-sm',
+                      getTypeColor()
+                    )}
+                  >
+                    {getTypeLabel()}
+                  </span>
+                </div>
               </>
             ) : (
               <div className="w-full h-full flex items-center justify-center text-gray-400">
                 <div className="text-center">
-                  <div className="text-4xl mb-2">🏠</div>
-                  <p className="text-sm">No Image Available</p>
+                  <div className="text-5xl mb-2">🏠</div>
+                  <p className="text-sm font-medium">No Image Available</p>
                 </div>
               </div>
             )}
           </div>
 
           {/* Details Section - Right */}
-          <div className="flex-1 p-4 flex flex-col min-w-0">
+          <div className="flex-1 p-6 flex flex-col min-w-0">
             {/* Top Section */}
             <div className="flex-1">
-              {/* Type Badges */}
-              <div className="flex items-center gap-2 mb-2">
-                <span
-                  className={cn(
-                    'px-2 py-0.5 rounded-full text-xs font-bold text-white',
-                    getTypeColor()
-                  )}
-                >
-                  {getTypeLabel()}
-                </span>
+              {/* Price & Property Type */}
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="text-3xl font-bold text-gray-900 tracking-tight">
+                  {formatPrice()}
+                </div>
                 {listing.propertyType && (
-                  <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 capitalize">
+                  <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100 capitalize whitespace-nowrap">
                     {listing.propertyType}
                   </span>
                 )}
               </div>
 
-              {/* Price */}
-              <div className="text-xl font-bold text-gray-900 mb-1">
-                {formatPrice()}
-              </div>
-
               {/* Title */}
-              <h3 className="text-base font-bold text-gray-900 mb-2 line-clamp-1">
+              <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-primary transition-colors duration-300 leading-snug">
                 {listing.title}
               </h3>
 
               {/* Location */}
-              <div className="flex items-center gap-1 text-gray-600 mb-2">
-                <MapPin className="h-3 w-3 text-blue-600 flex-shrink-0" />
-                <span className="text-xs line-clamp-1">
+              <div className="flex items-start gap-2 text-gray-600 mb-5">
+                <MapPin className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                <span className="text-sm font-medium line-clamp-2">
                   {listing.addressLine1}, {listing.city}
                 </span>
               </div>
 
-              {/* Features */}
-              <div className="flex items-center gap-3 mb-2 text-gray-700">
+              {/* Features - Bedrooms & Bathrooms */}
+              <div className="flex items-center gap-6">
                 {listing.bedrooms !== undefined && listing.bedrooms !== null && (
-                  <div className="flex items-center gap-1">
-                    <Bed className="h-3 w-3 text-blue-600" />
-                    <span className="text-xs">{listing.bedrooms}</span>
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-blue-50 border border-blue-100">
+                      <Bed className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-lg font-bold text-gray-900">{listing.bedrooms}</span>
+                      <span className="text-xs text-gray-500">Beds</span>
+                    </div>
                   </div>
                 )}
                 {listing.bathrooms !== undefined && listing.bathrooms !== null && (
-                  <div className="flex items-center gap-1">
-                    <Bath className="h-3 w-3 text-blue-600" />
-                    <span className="text-xs">{listing.bathrooms}</span>
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-blue-50 border border-blue-100">
+                      <Bath className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-lg font-bold text-gray-900">{listing.bathrooms}</span>
+                      <span className="text-xs text-gray-500">Baths</span>
+                    </div>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Bottom Section - Action Button */}
-            <div className="mt-auto pt-2">
-              <Button
-                asChild
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-1.5 h-8"
-              >
-                <span>View Details</span>
-              </Button>
+            <div className="mt-6 pt-5 border-t-2 border-gray-100">
+              <div className="flex items-center justify-between group/button cursor-pointer">
+                <span className="text-sm font-bold text-primary group-hover/button:text-blue-700 transition-colors">
+                  View full details
+                </span>
+                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white group-hover/button:bg-blue-700 transition-all duration-300 group-hover/button:scale-110 shadow-md group-hover/button:shadow-lg">
+                  <svg
+                    className="w-5 h-5 group-hover/button:translate-x-0.5 transition-transform"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2.5}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </Link>
-    </div>
+      </div>
+    </Link>
   )
 }

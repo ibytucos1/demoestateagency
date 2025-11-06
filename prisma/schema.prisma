@@ -6,8 +6,52 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UnitStatus {
+  VACANT
+  OCCUPIED
+  MAINTENANCE
+  RESERVED
+}
+
+enum LeaseStatus {
+  DRAFT
+  ACTIVE
+  TERMINATED
+  EXPIRED
+}
+
+enum LeaseBillingInterval {
+  MONTHLY
+  QUARTERLY
+  ANNUALLY
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  PARTIAL
+  FAILED
+  WAIVED
+}
+
+enum MaintenancePriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum MaintenanceStatus {
+  OPEN
+  IN_PROGRESS
+  ON_HOLD
+  RESOLVED
+  CLOSED
 }
 
 model Tenant {
@@ -15,10 +59,19 @@ model Tenant {
   slug      String   @unique
   name      String
   theme     Json     // { primaryColor, logo, etc }
+  whatsappNumber String?
   createdAt DateTime @default(now())
   Users     User[]
   Listings  Listing[]
   Leads     Lead[]
+  WhatsAppClicks WhatsAppClick[]
+  Properties Property[]
+  Units     Unit[]
+  TenantProfiles TenantProfile[]
+  Leases    Lease[]
+  Payments  Payment[]
+  MaintenanceRequests MaintenanceRequest[]
+  LeaseRevisions LeaseRevision[]
 }
 
 model User {
@@ -57,16 +110,20 @@ model Listing {
   description  String   @db.Text
   features     String[] // tags like ['parking', 'garden', 'balcony']
   media        Json     // [{key,width,height,alt}]
+  propertyId   String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   Tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  Property     Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
   Leads        Lead[]
+  WhatsAppClicks WhatsAppClick[]
 
   @@unique([tenantId, slug])
   @@index([tenantId, status, type])
   @@index([tenantId, city, status])
   @@index([tenantId, createdAt])
   @@index([tenantId, lat, lng])
+  @@index([tenantId, propertyId])
   @@index([features], type: Gin)
 }
 
@@ -85,5 +142,193 @@ model Lead {
 
   @@index([tenantId, createdAt])
   @@index([listingId])
+}
+
+model WhatsAppClick {
+  id        String    @id @default(cuid())
+  tenantId  String
+  listingId String?
+  userAgent String?
+  ipAddress String?
+  createdAt DateTime  @default(now())
+  Listing   Listing?  @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  Tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+  @@index([listingId])
+  @@index([tenantId, listingId])
+}
+
+model Property {
+  id          String   @id @default(cuid())
+  tenantId    String
+  name        String
+  code        String?
+  description String?
+  addressLine1 String
+  addressLine2 String?
+  city        String
+  postcode    String?
+  country     String?
+  lat         Float?
+  lng         Float?
+  ownerName   String?
+  ownerEmail  String?
+  metadata    Json?
+  externalId  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  Tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  Units       Unit[]
+  Listings    Listing[]
+  Maintenance MaintenanceRequest[]
+
+  @@index([tenantId, name])
+  @@index([tenantId, city])
+  @@unique([tenantId, code])
+  @@unique([tenantId, externalId])
+}
+
+model Unit {
+  id          String     @id @default(cuid())
+  tenantId    String
+  propertyId  String
+  label       String
+  floor       String?
+  bedrooms    Int?
+  bathrooms   Int?
+  squareFeet  Int?
+  status      UnitStatus @default(VACANT)
+  rentAmount  Decimal?   @db.Decimal(12, 2)
+  deposit     Decimal?   @db.Decimal(12, 2)
+  availableFrom DateTime?
+  notes       String?    @db.Text
+  externalId  String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  Tenant      Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  Property    Property   @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  Leases      Lease[]
+  Maintenance MaintenanceRequest[]
+
+  @@index([tenantId, propertyId, status])
+  @@unique([tenantId, propertyId, label])
+  @@unique([tenantId, externalId])
+}
+
+model TenantProfile {
+  id           String   @id @default(cuid())
+  tenantId     String
+  firstName    String
+  lastName     String
+  email        String?
+  phone        String?
+  alternateContact Json?
+  dateOfBirth  DateTime?
+  notes        String?  @db.Text
+  externalId   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  Tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  Leases       Lease[]
+  Maintenance  MaintenanceRequest[]
+
+  @@index([tenantId, lastName])
+  @@unique([tenantId, externalId])
+}
+
+model Lease {
+  id             String               @id @default(cuid())
+  tenantId       String
+  unitId         String
+  tenantProfileId String
+  startDate      DateTime
+  endDate        DateTime?
+  rentAmount     Decimal              @db.Decimal(12, 2)
+  depositAmount  Decimal?             @db.Decimal(12, 2)
+  status         LeaseStatus          @default(DRAFT)
+  billingInterval LeaseBillingInterval @default(MONTHLY)
+  autoRentIncrease Boolean            @default(false)
+  noticePeriodDays Int?               @default(30)
+  metadata       Json?
+  externalId     String?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  Tenant         Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  Unit           Unit                 @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  TenantProfile  TenantProfile        @relation(fields: [tenantProfileId], references: [id], onDelete: Cascade)
+  Payments       Payment[]
+  Revisions      LeaseRevision[]
+
+  @@index([tenantId, status, startDate])
+  @@index([tenantId, unitId])
+  @@unique([tenantId, externalId])
+}
+
+model Payment {
+  id           String        @id @default(cuid())
+  tenantId     String
+  leaseId      String
+  dueDate      DateTime
+  amountDue    Decimal       @db.Decimal(12, 2)
+  amountPaid   Decimal?      @db.Decimal(12, 2)
+  paidAt       DateTime?
+  status       PaymentStatus @default(PENDING)
+  method       String?
+  reference    String?
+  notes        String?       @db.Text
+  externalId   String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  Tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  Lease        Lease         @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, dueDate, status])
+  @@index([tenantId, leaseId])
+  @@unique([tenantId, externalId])
+}
+
+model MaintenanceRequest {
+  id             String             @id @default(cuid())
+  tenantId       String
+  propertyId     String
+  unitId         String?
+  tenantProfileId String?
+  summary        String
+  description    String?            @db.Text
+  priority       MaintenancePriority @default(MEDIUM)
+  status         MaintenanceStatus   @default(OPEN)
+  requestedAt    DateTime            @default(now())
+  scheduledAt    DateTime?
+  resolvedAt     DateTime?
+  assignedAgentId String?
+  cost           Decimal?           @db.Decimal(12, 2)
+  attachments    Json?
+  feedback       String?            @db.Text
+  externalId     String?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  Tenant         Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  Property       Property           @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  Unit           Unit?              @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  TenantProfile  TenantProfile?     @relation(fields: [tenantProfileId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, status, priority])
+  @@index([tenantId, propertyId])
+  @@index([tenantId, unitId])
+  @@unique([tenantId, externalId])
+}
+
+model LeaseRevision {
+  id        String   @id @default(cuid())
+  tenantId  String
+  leaseId   String
+  change    Json
+  changedAt DateTime @default(now())
+  createdBy String?
+  Tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  Lease     Lease    @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, leaseId, changedAt])
 }
 

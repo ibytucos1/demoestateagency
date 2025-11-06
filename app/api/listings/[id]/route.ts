@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getTenantId } from '@/lib/tenant'
 import { requireAuth } from '@/lib/rbac'
 import { db } from '@/lib/db'
+import { placesService } from '@/lib/places'
 
 export async function GET(
   req: NextRequest,
@@ -18,7 +19,7 @@ export async function GET(
     }
 
     return NextResponse.json({ listing })
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Listing fetch error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -44,13 +45,36 @@ export async function PATCH(
     }
 
     const body = await req.json()
+    
+    // Auto-geocode address if lat/lng are missing in update
+    let updateData = { ...body }
+    if (updateData.lat === undefined || updateData.lng === undefined || 
+        (updateData.addressLine1 && (!updateData.lat || !updateData.lng))) {
+      try {
+        const addressParts = [
+          updateData.addressLine1 || listing.addressLine1,
+          updateData.city || listing.city,
+          updateData.postcode || listing.postcode
+        ].filter(Boolean)
+        const addressString = addressParts.join(', ')
+        
+        const geocodeResult = await placesService.geocode(addressString)
+        if (geocodeResult) {
+          updateData.lat = geocodeResult.lat
+          updateData.lng = geocodeResult.lng
+        }
+      } catch (geocodeError) {
+        console.warn('Geocoding failed during update:', geocodeError)
+      }
+    }
+    
     const updated = await db.listing.update({
       where: { id: params.id },
-      data: body,
+      data: updateData,
     })
 
     return NextResponse.json({ listing: updated })
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof Error && error.message === 'Unauthorized') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -83,7 +107,7 @@ export async function DELETE(
     })
 
     return NextResponse.json({ success: true })
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof Error && error.message === 'Unauthorized') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

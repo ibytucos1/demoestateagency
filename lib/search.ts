@@ -13,6 +13,7 @@ export interface SearchFilters {
   lat?: number
   lng?: number
   features?: string[]
+  keywords?: string // Text search for title/description
 }
 
 export interface SearchParams extends SearchFilters {
@@ -55,6 +56,7 @@ export class DBSearchService implements ISearchService {
       lat,
       lng,
       features,
+      keywords,
       limit = 20,
       cursor,
     } = params
@@ -79,12 +81,25 @@ export class DBSearchService implements ISearchService {
       ...(propertyType && propertyType.length > 0 && { propertyType: { in: propertyType } }),
       ...(city && { city: { contains: city, mode: 'insensitive' } }),
       ...(features && features.length > 0 && { features: { hasSome: features } }),
-      ...(cursorCreatedAt && {
+      ...(keywords && {
+        OR: [
+          { title: { contains: keywords, mode: 'insensitive' } },
+          { description: { contains: keywords, mode: 'insensitive' } },
+          { addressLine1: { contains: keywords, mode: 'insensitive' } },
+        ],
+      }),
+    }
+
+    // Handle cursor pagination - combine with existing where clause
+    if (cursorCreatedAt) {
+      const cursorCondition: Prisma.ListingWhereInput = {
         OR: [
           { createdAt: { lt: cursorCreatedAt } },
           { createdAt: cursorCreatedAt, id: { lt: cursorId } },
         ],
-      }),
+      }
+      // Combine with existing where clause using AND
+      where.AND = where.AND ? [...where.AND, cursorCondition] : [cursorCondition]
     }
 
     // If radius search, add haversine filter
@@ -99,6 +114,16 @@ export class DBSearchService implements ISearchService {
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: limit + 1, // Fetch one extra to check if there's more
     })
+
+    // Debug logging in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Search query debug:', {
+        tenantId,
+        whereClause: JSON.stringify(where, null, 2),
+        foundCount: listings.length,
+        listingIds: listings.map(l => ({ id: l.id, title: l.title, status: l.status, city: l.city })),
+      })
+    }
 
     // Apply radius filter if needed (in-memory for now)
     let filteredListings = listings

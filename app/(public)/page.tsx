@@ -9,13 +9,13 @@ import Image from 'next/image'
 import { Home } from 'lucide-react'
 
 export default async function HomePage() {
-  const tenantId = await getTenantId()
-  const tenant = await getTenant(tenantId)
+  const tenantIdentifier = await getTenantId()
+  const tenant = await getTenant(tenantIdentifier)
 
   // Get featured listings
   let featured = await db.listing.findMany({
     where: {
-      tenantId,
+      tenantId: tenant.id,
       status: 'active',
     },
     orderBy: { createdAt: 'desc' },
@@ -53,7 +53,7 @@ export default async function HomePage() {
         ],
         createdAt: new Date(),
         updatedAt: new Date(),
-        tenantId,
+        tenantId: tenant.id,
       },
       {
         id: 'mock-2',
@@ -83,7 +83,7 @@ export default async function HomePage() {
         ],
         createdAt: new Date(),
         updatedAt: new Date(),
-        tenantId,
+        tenantId: tenant.id,
       },
       {
         id: 'mock-3',
@@ -113,7 +113,7 @@ export default async function HomePage() {
         ],
         createdAt: new Date(),
         updatedAt: new Date(),
-        tenantId,
+        tenantId: tenant.id,
       },
       {
         id: 'mock-4',
@@ -143,7 +143,7 @@ export default async function HomePage() {
         ],
         createdAt: new Date(),
         updatedAt: new Date(),
-        tenantId,
+        tenantId: tenant.id,
       },
       {
         id: 'mock-5',
@@ -173,7 +173,7 @@ export default async function HomePage() {
         ],
         createdAt: new Date(),
         updatedAt: new Date(),
-        tenantId,
+        tenantId: tenant.id,
       },
       {
         id: 'mock-6',
@@ -203,7 +203,7 @@ export default async function HomePage() {
         ],
         createdAt: new Date(),
         updatedAt: new Date(),
-        tenantId,
+        tenantId: tenant.id,
       },
     ] as any[]
   }
@@ -212,7 +212,7 @@ export default async function HomePage() {
   const stats = await db.listing.groupBy({
     by: ['type'],
     where: {
-      tenantId,
+      tenantId: tenant.id,
       status: 'active',
     },
     _count: {
@@ -220,12 +220,19 @@ export default async function HomePage() {
     },
   })
 
-  const totalListings = stats.reduce((sum, stat) => sum + stat._count.id, 0)
+  type ListingStat = {
+    type: string
+    _count: {
+      id: number
+    }
+  }
+
+  const listingStats = stats as ListingStat[]
 
   return (
     <div className="min-h-screen">
       {/* Hero Section with Search */}
-      <section className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white overflow-hidden">
+      <section className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white">
         {/* Background Image */}
         <div className="absolute inset-0">
           <Image
@@ -255,16 +262,6 @@ export default async function HomePage() {
             <div className="bg-white rounded-2xl shadow-2xl p-6 md:p-8">
               <HeroSearch />
             </div>
-          </div>
-
-          {/* Quick Stats */}
-          <div className="max-w-4xl mx-auto mt-8 grid grid-cols-3 gap-6 text-center">
-            {stats.map((stat) => (
-              <div key={stat.type} className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                <div className="text-3xl font-bold">{stat._count.id}</div>
-                <div className="text-sm text-blue-100 capitalize">{stat.type} properties</div>
-              </div>
-            ))}
           </div>
         </div>
       </section>
@@ -302,7 +299,7 @@ export default async function HomePage() {
         </div>
 
         {featured.length > 0 ? (
-          <FeaturedPropertiesCarousel listings={featured} />
+          <FeaturedPropertiesCarousel listings={featured} whatsappNumber={tenant.whatsappNumber ?? null} />
         ) : (
           <div className="text-center py-16 bg-gray-50 rounded-xl">
             <Home className="h-16 w-16 text-gray-400 mx-auto mb-4" />

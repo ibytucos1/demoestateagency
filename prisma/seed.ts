@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, Prisma } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
@@ -32,7 +32,11 @@ async function main() {
       theme: {
         primaryColor: '#3b82f6',
         logo: '/logo-acme.png',
+        features: {
+          propertyManagement: true,
+        },
       },
+      whatsappNumber: '+447700900123',
     },
   })
 
@@ -46,7 +50,11 @@ async function main() {
       theme: {
         primaryColor: '#10b981',
         logo: '/logo-bluebird.png',
+        features: {
+          propertyManagement: true,
+        },
       },
+      whatsappNumber: '+447700900456',
     },
   })
 
@@ -144,6 +152,140 @@ async function main() {
 
   console.log(`Created ${acmeListings.length} listings for ACME`)
   console.log(`Created ${bluebirdListings.length} listings for Bluebird`)
+
+  // Seed property management data for ACME
+  const acmeProperty = await prisma.property.upsert({
+    where: {
+      tenantId_code: {
+        tenantId: acme.id,
+        code: 'ACME-HQ',
+      },
+    },
+    update: {},
+    create: {
+      tenantId: acme.id,
+      name: 'ACME Residences',
+      code: 'ACME-HQ',
+      description: 'Downtown mixed-use building managed by ACME.',
+      addressLine1: '123 Market Street',
+      city: 'New York',
+      postcode: '10001',
+      country: 'USA',
+      lat: 40.7538,
+      lng: -73.9976,
+      ownerName: 'ACME Holdings LLC',
+      ownerEmail: 'owners@acme.co',
+      metadata: {
+        featureFlag: true,
+      },
+    },
+    include: {
+      Units: true,
+    },
+  })
+
+  const unitLabels = ['1A', '1B', '2A']
+  const units = []
+  for (const label of unitLabels) {
+    const unit = await prisma.unit.upsert({
+      where: {
+        tenantId_propertyId_label: {
+          tenantId: acme.id,
+          propertyId: acmeProperty.id,
+          label,
+        },
+      },
+      update: {},
+      create: {
+        tenantId: acme.id,
+        propertyId: acmeProperty.id,
+        label,
+        bedrooms: randomInt(1, 3),
+        bathrooms: randomInt(1, 2),
+        squareFeet: randomInt(600, 1200),
+        rentAmount: new Prisma.Decimal(randomInt(2000, 4000)),
+        deposit: new Prisma.Decimal(randomInt(2000, 4000)),
+        availableFrom: new Date(),
+      },
+    })
+    units.push(unit)
+  }
+
+  const tenantProfile = await prisma.tenantProfile.upsert({
+    where: {
+      tenantId_externalId: {
+        tenantId: acme.id,
+        externalId: 'tenant-john-doe',
+      },
+    },
+    update: {},
+    create: {
+      tenantId: acme.id,
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'john.doe@example.com',
+      phone: '+15550001111',
+      externalId: 'tenant-john-doe',
+    },
+  })
+
+  const lease = await prisma.lease.upsert({
+    where: {
+      tenantId_externalId: {
+        tenantId: acme.id,
+        externalId: 'lease-1A-2024',
+      },
+    },
+    update: {},
+    create: {
+      tenantId: acme.id,
+      unitId: units[0]?.id ?? acmeProperty.Units[0]?.id!,
+      tenantProfileId: tenantProfile.id,
+      startDate: new Date(new Date().getFullYear(), 0, 1),
+      endDate: new Date(new Date().getFullYear(), 11, 31),
+      rentAmount: new Prisma.Decimal(3200),
+      depositAmount: new Prisma.Decimal(3200),
+      status: 'ACTIVE',
+      billingInterval: 'MONTHLY',
+      externalId: 'lease-1A-2024',
+    },
+  })
+
+  await prisma.payment.createMany({
+    data: Array.from({ length: 3 }).map((_, index) => ({
+      tenantId: acme.id,
+      leaseId: lease.id,
+      dueDate: new Date(new Date().getFullYear(), index, 1),
+      amountDue: new Prisma.Decimal(3200),
+      amountPaid: index === 0 ? new Prisma.Decimal(3200) : null,
+      paidAt: index === 0 ? new Date(new Date().getFullYear(), index, 3) : null,
+      status: index === 0 ? 'PAID' : 'PENDING',
+      method: index === 0 ? 'manual' : null,
+    })),
+    skipDuplicates: true,
+  })
+
+  await prisma.maintenanceRequest.upsert({
+    where: {
+      tenantId_externalId: {
+        tenantId: acme.id,
+        externalId: 'maint-1A-heat',
+      },
+    },
+    update: {},
+    create: {
+      tenantId: acme.id,
+      propertyId: acmeProperty.id,
+      unitId: units[0]?.id ?? null,
+      tenantProfileId: tenantProfile.id,
+      summary: 'Heating not working',
+      description: 'Tenant reported that the heating system stopped working on the 3rd floor.',
+      priority: 'HIGH',
+      status: 'IN_PROGRESS',
+      assignedAgentId: 'agent-123',
+      externalId: 'maint-1A-heat',
+    },
+  })
 
   // Note: Users should be created via Clerk and then synced to DB
   // For demo, we'll just log a note

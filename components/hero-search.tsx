@@ -11,7 +11,7 @@ export function HeroSearch() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [city, setCity] = useState('')
-  const [selectedTab, setSelectedTab] = useState<'buy' | 'rent' | 'sell' | 'commercial'>('buy')
+  const [selectedTab, setSelectedTab] = useState<'buy' | 'rent' | 'sell'>('buy')
 
   // Initialize tab and city from URL params
   useEffect(() => {
@@ -22,8 +22,6 @@ export function HeroSearch() {
       setSelectedTab('rent')
     } else if (type === 'sale') {
       setSelectedTab('buy')
-    } else if (type === 'commercial') {
-      setSelectedTab('commercial')
     } else {
       setSelectedTab('buy')
     }
@@ -33,7 +31,7 @@ export function HeroSearch() {
     }
   }, [searchParams])
 
-  const handleTabClick = (tab: 'buy' | 'rent' | 'sell' | 'commercial') => {
+  const handleTabClick = (tab: 'buy' | 'rent' | 'sell') => {
     // Only update the selected tab state, don't navigate
     setSelectedTab(tab)
   }
@@ -52,8 +50,6 @@ export function HeroSearch() {
       params.set('type', 'sale')
     } else if (selectedTab === 'rent') {
       params.set('type', 'rent')
-    } else if (selectedTab === 'commercial') {
-      params.set('type', 'commercial')
     }
     // 'sell' tab doesn't add a type parameter
     
@@ -64,12 +60,12 @@ export function HeroSearch() {
   return (
     <div className="w-full">
       {/* Navigation Tabs */}
-      <div className="flex items-center gap-6 mb-6 border-b border-gray-200">
+      <div className="flex items-center gap-2 sm:gap-4 md:gap-6 mb-4 sm:mb-6 border-b border-gray-200 overflow-x-auto scrollbar-hide">
         <button
           type="button"
           onClick={() => handleTabClick('sell')}
           className={cn(
-            'pb-3 px-1 text-base font-medium transition-colors relative',
+            'pb-3 px-2 sm:px-3 text-sm sm:text-base font-medium transition-colors relative whitespace-nowrap flex-shrink-0',
             selectedTab === 'sell'
               ? 'text-gray-600'
               : 'text-gray-900 hover:text-gray-600'
@@ -84,7 +80,7 @@ export function HeroSearch() {
           type="button"
           onClick={() => handleTabClick('buy')}
           className={cn(
-            'pb-3 px-1 text-base font-medium transition-colors relative',
+            'pb-3 px-2 sm:px-3 text-sm sm:text-base font-medium transition-colors relative whitespace-nowrap flex-shrink-0',
             selectedTab === 'buy'
               ? 'text-gray-600'
               : 'text-gray-900 hover:text-gray-600'
@@ -99,7 +95,7 @@ export function HeroSearch() {
           type="button"
           onClick={() => handleTabClick('rent')}
           className={cn(
-            'pb-3 px-1 text-base font-medium transition-colors relative',
+            'pb-3 px-2 sm:px-3 text-sm sm:text-base font-medium transition-colors relative whitespace-nowrap flex-shrink-0',
             selectedTab === 'rent'
               ? 'text-gray-600'
               : 'text-gray-900 hover:text-gray-600'
@@ -110,21 +106,6 @@ export function HeroSearch() {
             <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-400"></span>
           )}
         </button>
-        <button
-          type="button"
-          onClick={() => handleTabClick('commercial')}
-          className={cn(
-            'pb-3 px-1 text-base font-medium transition-colors relative',
-            selectedTab === 'commercial'
-              ? 'text-gray-600'
-              : 'text-gray-900 hover:text-gray-600'
-          )}
-        >
-          Commercial Properties
-          {selectedTab === 'commercial' && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-400"></span>
-          )}
-        </button>
       </div>
 
       {/* Search Form */}
@@ -132,21 +113,24 @@ export function HeroSearch() {
         <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
           Location
         </label>
-        <LocationAutocomplete
-          id="city"
-          value={city}
-          onChange={setCity}
-          placeholder="Enter city or postcode"
-          className="pr-0"
-          rightButton={
-            <Button 
-              type="submit" 
-              className="h-12 px-4 rounded-r-md rounded-l-none flex-shrink-0"
-            >
-              <Search className="h-5 w-5" />
-            </Button>
-          }
-        />
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-0">
+          <div className="flex-1">
+            <LocationAutocomplete
+              id="city"
+              value={city}
+              onChange={setCity}
+              placeholder="Enter city or postcode"
+              className="rounded-md sm:rounded-r-none sm:rounded-l-md"
+            />
+          </div>
+          <Button 
+            type="submit" 
+            className="h-12 px-6 sm:px-4 rounded-md sm:rounded-l-none sm:rounded-r-md flex-shrink-0 w-full sm:w-auto"
+          >
+            <Search className="h-5 w-5 mr-2 sm:mr-0" />
+            <span className="sm:hidden">Search</span>
+          </Button>
+        </div>
       </form>
     </div>
   )

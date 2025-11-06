@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getTenantId } from '@/lib/tenant'
+import { getTenant } from '@/lib/tenant'
 import { db } from '@/lib/db'
 import { emailService } from '@/lib/email'
 import { writeLimiter } from '@/lib/ratelimit'
@@ -14,7 +14,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
     }
 
-    const tenantId = await getTenantId()
+    const tenant = await getTenant()
+    const tenantId = tenant.id
     const body = await req.json()
 
     const { listingId, name, email, phone, message, turnstileToken } = body
@@ -63,12 +64,6 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // Get tenant info for email
-    const tenant = await db.tenant.findUnique({
-      where: { id: tenantId },
-      select: { name: true },
-    })
-
     // Send email notification (non-blocking)
     if (listingId) {
       const listing = await db.listing.findUnique({
@@ -76,7 +71,7 @@ export async function POST(req: NextRequest) {
         select: { title: true, slug: true },
       })
       emailService.sendLeadNotification({
-        tenantName: tenant?.name || 'Real Estate',
+        tenantName: tenant.name || 'Real Estate',
         listingTitle: listing?.title,
         listingSlug: listing?.slug,
         name,
@@ -86,7 +81,7 @@ export async function POST(req: NextRequest) {
       }).catch(console.error)
     } else {
       emailService.sendLeadNotification({
-        tenantName: tenant?.name || 'Real Estate',
+        tenantName: tenant.name || 'Real Estate',
         name,
         email,
         phone,

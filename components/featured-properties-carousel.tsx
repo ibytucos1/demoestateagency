@@ -5,6 +5,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Home, MapPin, Bed, Bath, Square, ChevronLeft, ChevronRight } from 'lucide-react'
+import { getPublicUrlSync } from '@/lib/storage-utils'
+import { getWhatsAppTrackingUrl } from '@/lib/whatsapp-utils'
 
 interface Listing {
   id: string
@@ -22,10 +24,18 @@ interface Listing {
 
 interface FeaturedPropertiesCarouselProps {
   listings: Listing[]
+  whatsappNumber?: string | null
 }
 
-export function FeaturedPropertiesCarousel({ listings }: FeaturedPropertiesCarouselProps) {
+export function FeaturedPropertiesCarousel({ listings, whatsappNumber }: FeaturedPropertiesCarouselProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  // Get image URL helper
+  const getImageUrl = (image: any) => {
+    if (image?.url) return image.url
+    if (image?.key) return getPublicUrlSync(image.key)
+    return null
+  }
 
   const scroll = (direction: 'left' | 'right') => {
     if (!scrollContainerRef.current) return
@@ -72,25 +82,28 @@ export function FeaturedPropertiesCarousel({ listings }: FeaturedPropertiesCarou
           const media = listing.media as any[]
           const firstImage = media?.[0]
           return (
-            <Link
+            <div
               key={listing.id}
-              href={`/listing/${listing.slug}`}
               className="group bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 flex-shrink-0 w-full sm:w-[400px] snap-start"
             >
+              <Link href={`/listing/${listing.slug}`} className="block">
               {/* Image */}
               <div className="relative h-64 bg-gradient-to-br from-gray-200 to-gray-300 overflow-hidden">
-                {firstImage?.key ? (
-                  <Image
-                    src={firstImage.key}
-                    alt={firstImage.alt || listing.title}
-                    fill
-                    className="object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Home className="h-16 w-16 text-gray-400" />
-                  </div>
-                )}
+                {(() => {
+                  const imageUrl = firstImage ? getImageUrl(firstImage) : null
+                  return imageUrl ? (
+                    <Image
+                      src={imageUrl}
+                      alt={firstImage.alt || listing.title}
+                      fill
+                      className="object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Home className="h-16 w-16 text-gray-400" />
+                    </div>
+                  )
+                })()}
                 {/* Badge */}
                 <div className="absolute top-4 left-4">
                   <span className="bg-white px-3 py-1 rounded-full text-sm font-semibold text-gray-800 capitalize shadow-md">
@@ -138,6 +151,25 @@ export function FeaturedPropertiesCarousel({ listings }: FeaturedPropertiesCarou
                 </div>
               </div>
             </Link>
+
+              {whatsappNumber && (
+                <div className="px-5 pb-5">
+                  <a
+                    href={getWhatsAppTrackingUrl(
+                      whatsappNumber,
+                      `Hi, I'm interested in ${listing.title}`,
+                      listing.id
+                    )}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex w-full items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 px-4 py-2 text-sm font-semibold hover:bg-emerald-100 transition-colors"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    Contact on WhatsApp
+                  </a>
+                </div>
+              )}
+            </div>
           )
         })}
       </div>
