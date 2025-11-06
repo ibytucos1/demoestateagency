@@ -98,7 +98,7 @@ export function LeadForm({ listingId, listingTitle }: LeadFormProps) {
             <div>
               <Turnstile
                 ref={turnstileRef}
-                sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+                siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
                 onSuccess={(token) => setTurnstileToken(token)}
                 onError={() => setTurnstileToken(null)}
                 onExpire={() => setTurnstileToken(null)}
