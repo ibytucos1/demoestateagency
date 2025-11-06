@@ -7,6 +7,9 @@ import { readLimiter } from '@/lib/ratelimit'
 import { env } from '@/lib/env'
 import { placesService } from '@/lib/places'
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 export async function GET(req: NextRequest) {
   try {
     // Rate limiting for read operations
