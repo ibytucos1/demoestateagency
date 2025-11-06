@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { LeadForm } from '@/components/lead-form'
 import { PropertyGallery } from '@/components/property-gallery'
 import { StickyCTABar } from '@/components/sticky-cta-bar'
+import { AgentCTAButtons } from '@/components/agent-cta-buttons'
 import {
   Accordion,
   AccordionContent,
@@ -27,17 +28,12 @@ import {
   Heart,
   Calendar,
   Check,
-  ChevronRight,
-  MessageCircle,
-  Phone,
-  Mail,
-  Car,
-  Ruler,
   Zap,
   Info,
   Building,
   MapPinned,
-  Clock
+  Clock,
+  MessageCircle
 } from 'lucide-react'
 
 type ListingMedia = {
@@ -393,7 +389,7 @@ export default async function ListingDetailPage({
             </Card>
           </div>
 
-          <aside className="space-y-6">
+          <aside className="space-y-6 sticky top-6 self-start">
             {/* Agent Card */}
             <Card className="shadow-lg border-primary/20">
               <CardHeader className="bg-gradient-to-br from-primary/5 to-primary/10 border-b">
@@ -408,35 +404,10 @@ export default async function ListingDetailPage({
                 </div>
               </CardHeader>
               <CardContent className="pt-6">
-                <div className="space-y-3">
-                  <Button size="lg" className="w-full text-base">
-                    <Calendar className="h-5 w-5 mr-2" />
-                    Arrange a Viewing
-                  </Button>
-                  <Button variant="outline" size="lg" className="w-full text-base">
-                    <Phone className="h-5 w-5 mr-2" />
-                    Call Agent
-                  </Button>
-                  {whatsappLink && (
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      className="w-full text-base border-emerald-500 text-emerald-600 hover:bg-emerald-50"
-                      asChild
-                    >
-                      <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
-                        <MessageCircle className="h-5 w-5 mr-2" />
-                        Chat on WhatsApp
-                      </a>
-                    </Button>
-                  )}
-                  <div className="text-center text-sm text-gray-600 pt-2">
-                    or
-                  </div>
-                  <p className="text-center text-sm text-gray-600">
-                    Get in touch for more information
-                  </p>
-                </div>
+                <AgentCTAButtons 
+                  whatsappLink={whatsappLink} 
+                  phoneNumber={whatsappNumber}
+                />
               </CardContent>
             </Card>
 

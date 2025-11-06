@@ -72,7 +72,7 @@ export function LeadForm({ listingId, listingTitle }: LeadFormProps) {
   }
 
   return (
-    <Card>
+    <Card id="enquiry-form">
       <CardHeader>
         <CardTitle>Enquire About This Property</CardTitle>
       </CardHeader>
