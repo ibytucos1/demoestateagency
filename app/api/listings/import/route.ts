@@ -7,6 +7,9 @@ import { env } from '@/lib/env'
 import { parse } from 'csv-parse/sync'
 import { placesService } from '@/lib/places'
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 interface CSVRow {
   title: string
   slug: string
