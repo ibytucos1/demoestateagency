@@ -173,6 +173,7 @@ export const maintenanceCreateSchema = z.object({
 export const maintenanceUpdateSchema = maintenanceCreateSchema.partial().extend({
   propertyId: z.string().cuid().optional(),
   summary: z.string().trim().min(1).optional(),
+  status: z.nativeEnum(MaintenanceStatusEnum).optional(),
 })
 
 export const maintenanceAssignSchema = z.object({

@@ -270,4 +270,9 @@ If any requirement is unclear, reply with:
 - Include a clear summary of what was changed in the commit message
 - Example format: `feat: add Google Places autocomplete to location search`
 - Always commit changes before user requests new features
+- Standard commit flow:
+  1. Run `git status` to review changes
+  2. Stage with `git add <paths>` (or `git add .` for all tracked changes)
+  3. Commit with `git commit -m "type: short summary"`
+  4. Push using `git push origin <branch>` (usually `main`)
 

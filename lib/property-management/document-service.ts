@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto'
+import { Buffer } from 'buffer'
 import type { UploadOptions } from '@/lib/storage'
 import { storage } from '@/lib/storage'
 
@@ -37,13 +38,13 @@ class DocumentService {
   async upload({ tenantId, entity, entityId, fileName, file, options }: UploadDocumentParams) {
     const key = buildStorageKey(tenantId, entity, entityId, fileName)
     const payload = normalizeFile(file)
-    const arrayBuffer = payload.buffer.slice(payload.byteOffset, payload.byteOffset + payload.byteLength)
+    const buffer = Buffer.from(payload)
     const uploadOptions: UploadOptions = {
       cacheControl: 'public, max-age=31536000',
       ...options,
     }
 
-    const { url } = await storage.upload(arrayBuffer, key, uploadOptions)
+    const { url } = await storage.upload(buffer, key, uploadOptions)
     return { key, url }
   }
 

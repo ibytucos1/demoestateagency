@@ -1,4 +1,4 @@
-import { MaintenancePriority, MaintenanceStatus } from '@prisma/client'
+import { Prisma, MaintenancePriority, MaintenanceStatus } from '@prisma/client'
 import { db } from '@/lib/db'
 import {
   maintenanceAssignSchema,
@@ -64,7 +64,10 @@ class MaintenanceService {
         description: data.description ?? null,
         priority: data.priority ?? MaintenancePriority.MEDIUM,
         scheduledAt: data.scheduledAt ? new Date(data.scheduledAt) : null,
-        attachments: data.attachments ?? null,
+        attachments:
+          data.attachments !== undefined
+            ? (data.attachments as Prisma.InputJsonValue)
+            : Prisma.JsonNull,
         externalId: data.externalId ?? null,
       },
     })
@@ -94,7 +97,10 @@ class MaintenanceService {
         priority: data.priority ?? undefined,
         scheduledAt: data.scheduledAt ? new Date(data.scheduledAt) : undefined,
         status: data.status ?? undefined,
-        attachments: data.attachments ?? undefined,
+        attachments:
+          data.attachments !== undefined
+            ? (data.attachments as Prisma.InputJsonValue)
+            : undefined,
         externalId: data.externalId ?? undefined,
       },
       select: { id: true, status: true, updatedAt: true },
@@ -117,9 +123,8 @@ class MaintenanceService {
 
   async updateStatus(tenantId: string, requestId: string, status: MaintenanceStatus) {
     await this.ensureOwnership(tenantId, requestId)
-    const completedAt = [MaintenanceStatus.RESOLVED, MaintenanceStatus.CLOSED].includes(status)
-      ? new Date()
-      : null
+    const completedAt =
+      status === MaintenanceStatus.RESOLVED || status === MaintenanceStatus.CLOSED ? new Date() : null
 
     return db.maintenanceRequest.update({
       where: { id: requestId },

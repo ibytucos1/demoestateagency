@@ -11,6 +11,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
   )
 }
 
+const SUPABASE_URL = supabaseUrl as string
+const SUPABASE_ANON_KEY = supabaseAnonKey as string
+
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
     request: {
@@ -20,8 +23,8 @@ export async function middleware(request: NextRequest) {
 
   // Create Supabase client for middleware
   const supabase = createServerClient(
-    supabaseUrl,
-    supabaseAnonKey,
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY,
     {
       cookies: {
         get(name: string) {

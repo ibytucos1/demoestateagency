@@ -71,7 +71,10 @@ class LeaseService {
         billingInterval: data.billingInterval ?? LeaseBillingInterval.MONTHLY,
         autoRentIncrease: data.autoRentIncrease ?? false,
         noticePeriodDays: data.noticePeriodDays ?? 30,
-        metadata: data.metadata ?? null,
+        metadata:
+          data.metadata !== undefined
+            ? (data.metadata as Prisma.InputJsonValue)
+            : Prisma.JsonNull,
         externalId: data.externalId ?? null,
       },
     })
@@ -118,7 +121,8 @@ class LeaseService {
         billingInterval: data.billingInterval ?? undefined,
         autoRentIncrease: data.autoRentIncrease ?? undefined,
         noticePeriodDays: data.noticePeriodDays ?? undefined,
-        metadata: data.metadata ?? undefined,
+        metadata:
+          data.metadata !== undefined ? (data.metadata as Prisma.InputJsonValue) : undefined,
         externalId: data.externalId ?? undefined,
       },
       select: { id: true, status: true, updatedAt: true, unitId: true },
@@ -129,7 +133,7 @@ class LeaseService {
       await unitService.setStatus(tenantId, updated.unitId, UnitStatus.OCCUPIED)
     }
     // If lease is terminated/expired, set unit back to VACANT
-    else if (data.status && [LeaseStatus.TERMINATED, LeaseStatus.EXPIRED].includes(data.status)) {
+    else if (data.status === LeaseStatus.TERMINATED || data.status === LeaseStatus.EXPIRED) {
       await unitService.setStatus(tenantId, updated.unitId, UnitStatus.VACANT)
     }
 
@@ -145,7 +149,7 @@ class LeaseService {
         status: LeaseStatus.TERMINATED,
         metadata: {
           terminatedAt: terminatedAt.toISOString(),
-        },
+        } as Prisma.InputJsonValue,
       },
       select: { id: true, status: true, unitId: true },
     })
@@ -156,15 +160,19 @@ class LeaseService {
     return updated
   }
 
-  async recordRevision(tenantId: string, leaseId: string, change: Record<string, unknown>, userId?: string, reason?: string) {
+  async recordRevision(
+    tenantId: string,
+    leaseId: string,
+    change: Record<string, unknown>,
+    userId?: string,
+  ) {
     await this.ensureLeaseOwnership(tenantId, leaseId)
     return db.leaseRevision.create({
       data: {
         tenantId,
         leaseId,
-        change,
+        change: change as Prisma.InputJsonValue,
         createdBy: userId ?? null,
-        reason: reason ?? null,
       },
     })
   }
@@ -174,7 +182,7 @@ class LeaseService {
       where: {
         tenantId,
         unitId,
-        status: { in: [LeaseStatus.ACTIVE, LeaseStatus.PENDING] },
+        status: { in: [LeaseStatus.ACTIVE, LeaseStatus.DRAFT] },
       },
       orderBy: { startDate: 'desc' },
     })

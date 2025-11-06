@@ -98,8 +98,12 @@ export class DBSearchService implements ISearchService {
           { createdAt: cursorCreatedAt, id: { lt: cursorId } },
         ],
       }
-      // Combine with existing where clause using AND
-      where.AND = where.AND ? [...where.AND, cursorCondition] : [cursorCondition]
+      const existingAnd = Array.isArray(where.AND)
+        ? where.AND
+        : where.AND
+        ? [where.AND]
+        : []
+      where.AND = [...existingAnd, cursorCondition]
     }
 
     // If radius search, add haversine filter

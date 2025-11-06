@@ -1,4 +1,5 @@
 import { db } from '@/lib/db'
+import { LeaseStatus } from '@prisma/client'
 import {
   propertyCreateSchema,
   propertyUpdateSchema,
@@ -110,7 +111,7 @@ class PropertyService {
         where: {
           tenantId: listing.tenantId,
           Unit: { propertyId: listing.propertyId },
-          status: { in: ['ACTIVE', 'PENDING'] },
+          status: { in: [LeaseStatus.ACTIVE] },
         },
         select: { id: true },
       })
