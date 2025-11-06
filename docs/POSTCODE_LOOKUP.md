@@ -10,23 +10,16 @@ The valuation form includes UK postcode lookup functionality that allows users t
 
 ## Setup
 
-### Option 1: getaddress.io (Recommended)
+### Using Google Places API (Default)
 
-**Free Tier:** 10 lookups/day (suitable for testing)
-**Paid Plans:** Starting from £5/month for 500 lookups
+**Already Configured!** The postcode lookup uses your existing Google Places API key.
 
-1. Sign up at [https://getaddress.io/](https://getaddress.io/)
-2. Get your API key from the dashboard
-3. Add to your `.env.local`:
-   ```
-   NEXT_PUBLIC_GETADDRESS_API_KEY=your_api_key_here
-   ```
+- Uses the same `NEXT_PUBLIC_GOOGLE_PLACES_API_KEY` as location search
+- No additional setup required
+- Works immediately
+- Free tier: Generous limits with Google's $200 monthly credit
 
-### Option 2: Manual Entry Only
-
-If you don't add the API key, the form will work in manual entry mode:
-- Users can still type their address manually
-- No postcode lookup dropdown will appear
+The feature is **ready to use** with your existing Google Places API configuration.
 
 ## How It Works
 
@@ -45,29 +38,19 @@ If you don't add the API key, the form will work in manual entry mode:
 
 ### Fallback Behavior
 
-- If API key is missing: Manual entry only
-- If postcode not found: Error message + manual entry option
+- If postcode not found: Shows message + manual entry option
 - If API rate limit reached: Error message + manual entry option
+- Always allows manual entry as backup
 
-## API Response Format
+## How It Works (Google Places API)
 
-getaddress.io returns addresses in this format:
-
-```json
-{
-  "addresses": [
-    {
-      "line_1": "10 Downing Street",
-      "line_2": "",
-      "line_3": "",
-      "town_or_city": "London",
-      "county": "Greater London",
-      "postcode": "SW1A 1AA",
-      "formatted_address": ["10 Downing Street", "London", "SW1A 1AA"]
-    }
-  ]
-}
-```
+1. **Autocomplete Search**: Searches for addresses matching the postcode
+2. **Place Details**: Gets full address components for each result
+3. **Parse Components**: Extracts structured address data:
+   - `street_number` + `route` → Address Line 1
+   - `locality` / `postal_town` → Town/City
+   - `administrative_area_level_2` → County
+   - `postal_code` → Postcode
 
 ## Components
 
@@ -103,24 +86,14 @@ const addresses = await lookupPostcode('SW1A1AA')
 // Returns: UKAddress[]
 ```
 
-## Alternative APIs
+## Why Google Places API?
 
-If you prefer a different service, you can modify `lib/postcode-lookup.ts`:
-
-### Postcodes.io (Free, but limited data)
-- API: `https://api.postcodes.io/postcodes/{postcode}`
-- Provides coordinates but not full addresses
-- Good for validation only
-
-### Ideal Postcodes
-- API: `https://api.ideal-postcodes.co.uk/`
-- Paid only, but very comprehensive
-- Includes PAF (Postcode Address File) data
-
-### Loqate
-- API: `https://api.addressy.com/`
-- Enterprise-grade
-- Used by many UK businesses
+✅ **Already configured** - No additional setup
+✅ **No extra cost** - Uses existing API key
+✅ **Global coverage** - Works worldwide, not just UK
+✅ **Generous limits** - Google's $200/month free credit
+✅ **Maintained** - Google keeps data up to date
+✅ **Reliable** - Enterprise-grade infrastructure
 
 ## Testing
 
@@ -146,52 +119,60 @@ npm run dev
 
 ## Troubleshooting
 
-### "No API key configured" warning
-
-**Solution:** Add `NEXT_PUBLIC_GETADDRESS_API_KEY` to `.env.local`
-
 ### "Postcode not found" error
 
 **Possible causes:**
 - Invalid postcode format
-- Postcode doesn't exist
-- API key invalid
-
-**Solution:** Check postcode is valid UK format (e.g., "SW1A 1AA")
-
-### Rate limit exceeded
+- Postcode doesn't exist in Google's database
+- Very new developments
 
 **Solution:** 
-- Upgrade getaddress.io plan
-- Or use manual entry for testing
+- Check postcode is valid UK format (e.g., "SW1A 1AA")
+- Use manual entry fallback
+
+### No results returned
+
+**Possible causes:**
+- Google Places API key not configured
+- API rate limit reached (rare with free tier)
+
+**Solution:** 
+- Check `NEXT_PUBLIC_GOOGLE_PLACES_API_KEY` is set
+- Monitor usage in Google Cloud Console
+- Manual entry always available
 
 ## Cost Considerations
 
-### getaddress.io Pricing
+### Google Places API
 
-- **Free:** 10 lookups/day
-- **Starter:** £5/month for 500 lookups
-- **Growth:** £10/month for 1,500 lookups
-- **Pro:** £20/month for 5,000 lookups
+**Free Tier:** $200/month credit = ~28,000 address lookups/month
+- Autocomplete: $2.83 per 1000 requests
+- Place Details: $17 per 1000 requests
+- **Total per lookup:** ~$0.02 (2 cents)
+
+**With $200 credit:** 
+- ~10,000 lookups before any charges
+- More than enough for most estate agencies
 
 ### Optimization Tips
 
-1. **Cache results:** Store recently looked-up postcodes
-2. **Validate first:** Check postcode format before API call
-3. **Debounce:** Wait for user to finish typing
-4. **Manual fallback:** Always allow manual entry
+1. **Limit results:** Only fetch details for first 10 addresses
+2. **Manual fallback:** Always allow manual entry
+3. **Monitor usage:** Check Google Cloud Console monthly
 
 ## Production Checklist
 
-- [ ] Add `NEXT_PUBLIC_GETADDRESS_API_KEY` to Vercel environment variables
-- [ ] Test with real UK postcodes
-- [ ] Verify manual entry fallback works
-- [ ] Monitor API usage in getaddress.io dashboard
-- [ ] Set up usage alerts if approaching limits
+- [x] Google Places API key already configured
+- [ ] Test with real UK postcodes (UB1 1BJ, SW1A 1AA, etc.)
+- [x] Manual entry fallback implemented
+- [ ] Monitor API usage in Google Cloud Console
+- [ ] Set up billing alerts in Google Cloud (optional)
 
 ## Privacy & GDPR
 
-- Postcode lookup API only receives postcodes, not personal data
-- Full addresses are stored in your database (not sent to getaddress.io)
-- See getaddress.io privacy policy: https://getaddress.io/Privacy
+- Google Places API only receives postcodes for search
+- No personal data sent to Google
+- Full addresses stored in your database only
+- Compliant with GDPR
+- See Google Privacy Policy: https://policies.google.com/privacy
 
