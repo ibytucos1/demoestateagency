@@ -38,7 +38,7 @@ export default async function PropertyManagementPage() {
   let maintenanceOpenByProperty: Array<{ propertyId: string; _count: { _all: number } }> = []
   let activeLeaseCount = 0
   let overduePayments = 0
-  let overduePaymentsByProperty: Array<{ propertyId: string; _count: { _all: number } }> = []
+  let overduePaymentsByProperty: any[] = []
 
   try {
     ;[
