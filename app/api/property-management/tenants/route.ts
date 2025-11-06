@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
         lastName: data.lastName,
         email: data.email ?? null,
         phone: data.phone ?? null,
-        alternateContact: data.alternateContact ?? null,
+        alternateContact: data.alternateContact ?? undefined,
         dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : null,
         notes: data.notes ?? null,
         externalId: data.externalId ?? null,
