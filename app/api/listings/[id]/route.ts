@@ -1,15 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getTenantId } from '@/lib/tenant'
+import { getTenant } from '@/lib/tenant'
 import { requireAuth } from '@/lib/rbac'
+import { writeLimiter } from '@/lib/ratelimit'
 import { db } from '@/lib/db'
 import { placesService } from '@/lib/places'
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
+interface RouteParams {
+  params: { id: string }
+}
+
+export async function GET(req: NextRequest, { params }: RouteParams) {
   try {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenant()
     const listing = await db.listing.findUnique({
       where: { id: params.id },
     })
@@ -30,10 +35,10 @@ export async function GET(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   try {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenant()
     await requireAuth(tenantId, ['owner', 'admin', 'agent'])
 
     const listing = await db.listing.findUnique({
@@ -88,10 +93,10 @@ export async function PATCH(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   try {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenant()
     await requireAuth(tenantId, ['owner', 'admin'])
 
     const listing = await db.listing.findUnique({
