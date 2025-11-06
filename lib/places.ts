@@ -46,7 +46,7 @@ export class PlacesService {
     options?: { types?: string; location?: string; radius?: number; components?: string }
   ): Promise<PlaceAutocompleteResult[]> {
     const cacheKey = `places:autocomplete:${input}:${JSON.stringify(options)}`
-    const cached = await redis.get<PlaceAutocompleteResult[]>(cacheKey)
+    const cached = (await redis.get(cacheKey)) as PlaceAutocompleteResult[] | null
     if (cached) return cached
 
     const params = new URLSearchParams({
@@ -79,7 +79,7 @@ export class PlacesService {
    */
   async geocode(address: string): Promise<GeocodeResult | null> {
     const cacheKey = `places:geocode:${address}`
-    const cached = await redis.get<GeocodeResult>(cacheKey)
+    const cached = (await redis.get(cacheKey)) as GeocodeResult | null
     if (cached) return cached
 
     const params = new URLSearchParams({
@@ -114,7 +114,7 @@ export class PlacesService {
    */
   async getPlaceDetails(placeId: string, sessionToken?: string): Promise<PlaceDetails | null> {
     const cacheKey = `places:details:${placeId}`
-    const cached = await redis.get<PlaceDetails>(cacheKey)
+    const cached = (await redis.get(cacheKey)) as PlaceDetails | null
     if (cached) return cached
 
     const params = new URLSearchParams({
