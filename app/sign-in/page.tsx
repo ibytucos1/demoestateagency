@@ -3,14 +3,14 @@
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
-export default function SignInPage() {
+function SignInForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
@@ -48,10 +48,8 @@ export default function SignInPage() {
 
       console.log('Sign-in successful, session created:', !!data.session)
 
-      // Wait a moment for cookies to be set
       await new Promise(resolve => setTimeout(resolve, 200))
 
-      // Verify session is set
       const { data: { session: verifySession } } = await supabase.auth.getSession()
       if (!verifySession) {
         console.error('Session not found after sign-in')
@@ -60,7 +58,6 @@ export default function SignInPage() {
         return
       }
 
-      // Try to create user record if it doesn't exist
       try {
         const createUserResponse = await fetch('/api/users/create', {
           method: 'POST',
@@ -69,17 +66,14 @@ export default function SignInPage() {
         const createUserData = await createUserResponse.json()
         if (createUserData.success) {
           console.log('User record created/verified:', createUserData.user)
-          // Wait longer to ensure database transaction is committed and server picks it up
           await new Promise(resolve => setTimeout(resolve, 1000))
         } else {
           console.warn('Could not create user record:', createUserData.error)
         }
       } catch (err) {
         console.warn('Error creating user record:', err)
-        // Continue anyway - user might already exist
       }
 
-      // Force a full page reload to ensure server components refresh
       window.location.replace(redirectUrl)
     } catch (err: any) {
       console.error('Unexpected sign-in error:', err)
@@ -139,6 +133,14 @@ export default function SignInPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center">Loading...</div>}>
+      <SignInForm />
+    </Suspense>
   )
 }
 
