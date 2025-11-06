@@ -5,6 +5,9 @@ import { emailService } from '@/lib/email'
 import { writeLimiter } from '@/lib/ratelimit'
 import { verifyTurnstileToken } from '@/lib/turnstile'
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 export async function POST(req: NextRequest) {
   try {
     // Rate limiting
