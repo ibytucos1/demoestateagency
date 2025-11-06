@@ -100,7 +100,10 @@ export function ListingEditor({ listing }: ListingEditorProps) {
         price: Number(formData.price),
         bedrooms: formData.bedrooms ? Number(formData.bedrooms) : null,
         bathrooms: formData.bathrooms ? Number(formData.bathrooms) : null,
-        features: formData.features.split(',').map(f => f.trim()).filter(Boolean),
+        features: formData.features
+          .split(',')
+          .map((feature: string) => feature.trim())
+          .filter((feature) => feature.length > 0),
         media: media,
       }
 
