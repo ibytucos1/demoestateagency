@@ -6,6 +6,9 @@ import { requireAuth } from '@/lib/rbac'
 import { readLimiter, writeLimiter } from '@/lib/ratelimit'
 import { maintenanceService, isPropertyManagementEnabled } from '@/lib/property-management'
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 export async function GET(req: NextRequest) {
   try {
     const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'
