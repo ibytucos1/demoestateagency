@@ -37,12 +37,13 @@ class DocumentService {
   async upload({ tenantId, entity, entityId, fileName, file, options }: UploadDocumentParams) {
     const key = buildStorageKey(tenantId, entity, entityId, fileName)
     const payload = normalizeFile(file)
+    const arrayBuffer = payload.buffer.slice(payload.byteOffset, payload.byteOffset + payload.byteLength)
     const uploadOptions: UploadOptions = {
       cacheControl: 'public, max-age=31536000',
       ...options,
     }
 
-    const { url } = await storage.upload(payload, key, uploadOptions)
+    const { url } = await storage.upload(arrayBuffer, key, uploadOptions)
     return { key, url }
   }
 
