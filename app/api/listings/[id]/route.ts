@@ -14,12 +14,12 @@ interface RouteParams {
 
 export async function GET(req: NextRequest, { params }: RouteParams) {
   try {
-    const tenantId = await getTenant()
-    const listing = await db.listing.findUnique({
-      where: { id: params.id },
+    const tenant = await getTenant()
+    const listing = await db.listing.findFirst({
+      where: { id: params.id, tenantId: tenant.id },
     })
 
-    if (!listing || listing.tenantId !== tenantId) {
+    if (!listing) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 })
     }
 
@@ -38,14 +38,14 @@ export async function PATCH(
   { params }: RouteParams
 ) {
   try {
-    const tenantId = await getTenant()
-    await requireAuth(tenantId, ['owner', 'admin', 'agent'])
+    const tenant = await getTenant()
+    await requireAuth(tenant.id, ['owner', 'admin', 'agent'])
 
-    const listing = await db.listing.findUnique({
-      where: { id: params.id },
+    const listing = await db.listing.findFirst({
+      where: { id: params.id, tenantId: tenant.id },
     })
 
-    if (!listing || listing.tenantId !== tenantId) {
+    if (!listing) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 })
     }
 
@@ -96,14 +96,14 @@ export async function DELETE(
   { params }: RouteParams
 ) {
   try {
-    const tenantId = await getTenant()
-    await requireAuth(tenantId, ['owner', 'admin'])
+    const tenant = await getTenant()
+    await requireAuth(tenant.id, ['owner', 'admin'])
 
-    const listing = await db.listing.findUnique({
-      where: { id: params.id },
+    const listing = await db.listing.findFirst({
+      where: { id: params.id, tenantId: tenant.id },
     })
 
-    if (!listing || listing.tenantId !== tenantId) {
+    if (!listing) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 })
     }
 
