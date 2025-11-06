@@ -6,6 +6,9 @@ import { requireAuth } from '@/lib/rbac'
 import { readLimiter, writeLimiter } from '@/lib/ratelimit'
 import { paymentService, isPropertyManagementEnabled } from '@/lib/property-management'
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 interface RouteParams {
   params: { id: string }
 }
