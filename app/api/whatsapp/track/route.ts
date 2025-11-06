@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getTenant } from '@/lib/tenant'
 import { db } from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 /**
  * Track WhatsApp clicks and redirect to WhatsApp
  * This allows us to count how many people click WhatsApp links

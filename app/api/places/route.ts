@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { placesService } from '@/lib/places'
 import { readLimiter } from '@/lib/ratelimit'
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 export async function GET(req: NextRequest) {
   try {
     // Rate limiting

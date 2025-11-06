@@ -6,6 +6,9 @@ import { readLimiter } from '@/lib/ratelimit'
 import { isPropertyManagementEnabled } from '@/lib/property-management'
 import { db } from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 export async function GET(req: NextRequest) {
   try {
     const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'

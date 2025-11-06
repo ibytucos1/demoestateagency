@@ -3,6 +3,9 @@ import { getTenant } from '@/lib/tenant'
 import { requireAuth } from '@/lib/rbac'
 import { db } from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 export async function GET(req: NextRequest) {
   try {
     const tenant = await getTenant()
