@@ -50,12 +50,21 @@ export default async function LeadsPage() {
       Promise.all([
         // Total leads
         db.lead.count({ where: { tenantId } }),
-        // Leads by status
-        db.lead.groupBy({
-          by: ['status'],
-          where: { tenantId },
-          _count: { status: true },
-        }),
+        // Leads by status (with fallback for unmigrated DB)
+        (async () => {
+          try {
+            return await db.lead.groupBy({
+              by: ['status'],
+              where: { tenantId },
+              _count: { status: true },
+            })
+          } catch (error) {
+            // Fallback if status column doesn't exist yet
+            console.warn('[LeadsPage] Status field not available, using fallback')
+            const totalLeads = await db.lead.count({ where: { tenantId } })
+            return [{ status: 'new', _count: { status: totalLeads } }]
+          }
+        })(),
         // Leads in last 7 days
         db.lead.count({
           where: {
