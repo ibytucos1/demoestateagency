@@ -54,18 +54,38 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Create lead
-    const lead = await db.lead.create({
-      data: {
-        tenantId,
-        listingId: listingId || null,
-        name,
-        email,
-        phone: phone || null,
-        message,
-        source: 'form',
-      },
-    })
+    // Create lead (with backward compatibility for unmigrated DB)
+    const leadData: any = {
+      tenantId,
+      listingId: listingId || null,
+      name,
+      email,
+      phone: phone || null,
+      message,
+      source: body.source || 'form',
+    }
+    
+    // Try to add new fields if they exist (post-migration)
+    let lead
+    try {
+      lead = await db.lead.create({
+        data: {
+          ...leadData,
+          status: 'new', // Add default status if field exists
+        },
+      })
+    } catch (error: any) {
+      // If status field doesn't exist, create without it (pre-migration)
+      if (error?.code === 'P2009' || error?.message?.includes('status')) {
+        console.warn('[Lead Creation] Status field not available, creating without it')
+        lead = await db.lead.create({
+          data: leadData,
+        })
+      } else {
+        // If it's a different error, throw it
+        throw error
+      }
+    }
 
     // Send email notification (non-blocking)
     if (listingId) {
