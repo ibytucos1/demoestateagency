@@ -160,40 +160,19 @@ export default async function LeadsPage() {
       ]),
     ])
   } catch (error) {
-    if (!isConnectionIssue(error)) {
-      throw error
-    }
+    // Log error but don't throw - return empty state for graceful degradation
+    console.error('[LeadsPage] Error fetching leads data:', error)
+    console.warn('[LeadsPage] Falling back to empty state. This is expected if database migration has not been run yet.')
 
-    console.warn('[LeadsPage] Falling back to demo data due to database connectivity issue')
-
-    leads = [
-      {
-        id: 'demo-lead-1',
-        tenantId,
-        listingId: null,
-        assignedTo: null,
-        name: 'Jane Doe',
-        email: 'jane@example.com',
-        phone: '+44 20 7946 0000',
-        message: 'Interested in scheduling a viewing for the demo property.',
-        source: 'form',
-        status: 'new',
-        notes: null,
-        createdAt: new Date('2024-01-10T09:00:00Z'),
-        updatedAt: new Date('2024-01-10T09:00:00Z'),
-        Listing: null,
-        AssignedUser: null,
-      },
-    ] as any
-
+    // Return empty state instead of demo data to avoid schema mismatches
+    leads = [] as any
     agents = []
-
     metrics = [
-      1, // totalLeads
-      [{ status: 'new', _count: { status: 1 } }], // leadsByStatus
+      0, // totalLeads
+      [], // leadsByStatus
       0, // leadsLast7Days
       0, // leadsLast30Days
-      [{ source: 'form', _count: { source: 1 } }], // leadsBySource
+      [], // leadsBySource
       0, // whatsappClicksTotal
       0, // whatsappClicksLast7Days
       0, // whatsappClicksLast30Days
