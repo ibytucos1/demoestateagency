@@ -1,17 +1,13 @@
 import { getTenant } from '@/lib/tenant'
 import { BRAND_NAME } from '@/lib/constants'
 import { Metadata } from 'next'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
+import { ContactForm } from '@/components/contact-form'
 import { 
   Mail, 
   Phone, 
   MapPin, 
-  Clock, 
-  Send,
+  Clock,
   MessageCircle
 } from 'lucide-react'
 
@@ -160,55 +156,7 @@ export default async function ContactPage() {
               {/* Right Column - Form */}
               <Card className="border-2">
                 <CardContent className="p-8">
-                  <form className="space-y-6">
-                    <div>
-                      <Label htmlFor="name" className="text-base font-semibold">Name *</Label>
-                      <Input 
-                        id="name" 
-                        type="text" 
-                        placeholder="Your name" 
-                        required 
-                        className="mt-2 h-12"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="email" className="text-base font-semibold">Email *</Label>
-                      <Input 
-                        id="email" 
-                        type="email" 
-                        placeholder="your.email@example.com" 
-                        required 
-                        className="mt-2 h-12"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="phone" className="text-base font-semibold">Phone</Label>
-                      <Input 
-                        id="phone" 
-                        type="tel" 
-                        placeholder="Your phone number" 
-                        className="mt-2 h-12"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="message" className="text-base font-semibold">Message *</Label>
-                      <Textarea
-                        id="message"
-                        placeholder="Tell us how we can help..."
-                        rows={6}
-                        required
-                        className="mt-2"
-                      />
-                    </div>
-                    
-                    <Button type="submit" className="w-full h-12 text-lg" size="lg">
-                      <Send className="mr-2 h-5 w-5" />
-                      Send Message
-                    </Button>
-                  </form>
+                  <ContactForm />
                 </CardContent>
               </Card>
             </div>

@@ -54,9 +54,8 @@ export function ValuationForm({ initialPostcode = '' }: ValuationFormProps) {
       name: formData.get('name') as string,
       email: formData.get('email') as string,
       phone: formData.get('phone') as string,
-      postcode: postcode,
-      address: fullAddress,
-      message: formData.get('message') as string,
+      message: `Valuation Request for: ${fullAddress}\n\n${formData.get('message') || 'No additional details provided.'}`,
+      source: 'valuation',
       turnstileToken: turnstileToken || '',
     }
 
