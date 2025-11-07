@@ -54,51 +54,18 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Create lead (with backward compatibility for unmigrated DB)
-    const leadData: any = {
-      tenantId,
-      listingId: listingId || null,
-      name,
-      email,
-      phone: phone || null,
-      message,
-      source: body.source || 'form',
-    }
-    
-    // Try to add new fields if they exist (post-migration)
-    let lead
-    try {
-      lead = await db.lead.create({
-        data: {
-          ...leadData,
-          status: 'new', // Add default status if field exists
-        },
-      })
-    } catch (error: any) {
-      // If status field doesn't exist, create without it (pre-migration)
-      // Check for various Prisma error indicators
-      const errorMessage = error?.message?.toLowerCase() || ''
-      const isSchemaError = 
-        error?.code === 'P2009' || 
-        error?.code === 'P2002' ||
-        errorMessage.includes('status') ||
-        errorMessage.includes('column') ||
-        errorMessage.includes('field') ||
-        errorMessage.includes('unknown')
-      
-      if (isSchemaError) {
-        console.warn('[Lead Creation] New schema fields not available, creating with base fields only')
-        console.warn('[Lead Creation] Error details:', error?.code, error?.message?.substring(0, 100))
-        
-        lead = await db.lead.create({
-          data: leadData,
-        })
-      } else {
-        // If it's a different error, throw it
-        console.error('[Lead Creation] Unexpected error:', error)
-        throw error
-      }
-    }
+    // Create lead
+    const lead = await db.lead.create({
+      data: {
+        tenantId,
+        listingId: listingId || null,
+        name,
+        email,
+        phone: phone || null,
+        message,
+        source: body.source || 'form',
+      },
+    })
 
     // Send email notification (non-blocking)
     if (listingId) {
