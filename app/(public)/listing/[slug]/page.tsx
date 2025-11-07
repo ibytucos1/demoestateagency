@@ -48,23 +48,26 @@ export default async function ListingDetailPage({
 }: {
   params: { slug: string }
 }) {
-  const tenantIdentifier = await getTenantId()
-  const tenant = await getTenant(tenantIdentifier)
-  const listing = await db.listing.findUnique({
+  // For public pages, search across ALL tenants to find the listing
+  const listing = await db.listing.findFirst({
     where: {
-      tenantId_slug: {
-        tenantId: tenant.id,
-        slug: params.slug,
-      },
+      slug: params.slug,
+      status: 'active', // Only show active listings
     },
     include: {
       Tenant: true,
     },
+    orderBy: {
+      createdAt: 'desc', // If multiple tenants have same slug, show most recent
+    },
   })
 
-  if (!listing || listing.status !== 'active') {
+  if (!listing) {
     notFound()
   }
+
+  // Use the tenant from the listing itself (not from logged-in user)
+  const tenant = listing.Tenant
 
   const media = Array.isArray(listing.media) ? (listing.media as ListingMedia[]) : []
   const features = Array.isArray(listing.features) ? (listing.features as string[]) : []
