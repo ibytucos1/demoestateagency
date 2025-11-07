@@ -19,7 +19,7 @@ export default async function LeadsPage() {
 
   // Fetch leads with metrics
   let leads: Awaited<ReturnType<typeof db.lead.findMany>> = []
-  let agents: Awaited<ReturnType<typeof db.user.findMany>> = []
+  let agents: { id: string; name: string | null; email: string }[] = []
   let metrics: any[] = []
 
   try {

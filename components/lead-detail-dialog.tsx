@@ -83,6 +83,7 @@ export function LeadDetailDialog({
     if (leadId && open) {
       fetchLead()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leadId, open])
 
   const fetchLead = async () => {
