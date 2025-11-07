@@ -76,13 +76,26 @@ export async function POST(req: NextRequest) {
       })
     } catch (error: any) {
       // If status field doesn't exist, create without it (pre-migration)
-      if (error?.code === 'P2009' || error?.message?.includes('status')) {
-        console.warn('[Lead Creation] Status field not available, creating without it')
+      // Check for various Prisma error indicators
+      const errorMessage = error?.message?.toLowerCase() || ''
+      const isSchemaError = 
+        error?.code === 'P2009' || 
+        error?.code === 'P2002' ||
+        errorMessage.includes('status') ||
+        errorMessage.includes('column') ||
+        errorMessage.includes('field') ||
+        errorMessage.includes('unknown')
+      
+      if (isSchemaError) {
+        console.warn('[Lead Creation] New schema fields not available, creating with base fields only')
+        console.warn('[Lead Creation] Error details:', error?.code, error?.message?.substring(0, 100))
+        
         lead = await db.lead.create({
           data: leadData,
         })
       } else {
         // If it's a different error, throw it
+        console.error('[Lead Creation] Unexpected error:', error)
         throw error
       }
     }
