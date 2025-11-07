@@ -24,19 +24,37 @@ export default async function LeadsPage() {
 
   try {
     ;[leads, agents, metrics] = await Promise.all([
-      db.lead.findMany({
-        where: { tenantId },
-        include: {
-          Listing: {
-            select: { title: true, slug: true },
-          },
-          AssignedUser: {
-            select: { id: true, name: true, email: true },
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-        take: 100,
-      }),
+      // Fetch leads with graceful handling for unmigrated DB
+      (async () => {
+        try {
+          return await db.lead.findMany({
+            where: { tenantId },
+            include: {
+              Listing: {
+                select: { title: true, slug: true },
+              },
+              AssignedUser: {
+                select: { id: true, name: true, email: true },
+              },
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 100,
+          })
+        } catch (error) {
+          // Fallback if AssignedUser relation doesn't exist yet
+          console.warn('[LeadsPage] AssignedUser field not available, fetching without assignment')
+          return await db.lead.findMany({
+            where: { tenantId },
+            include: {
+              Listing: {
+                select: { title: true, slug: true },
+              },
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 100,
+          }) as any // Cast to any to match expected type with AssignedUser
+        }
+      })(),
       // Fetch agents for assignment
       db.user.findMany({
         where: { 

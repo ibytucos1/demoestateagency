@@ -417,12 +417,42 @@ export function LeadsClient({ initialLeads, agents, metrics }: LeadsClientProps)
                   <div className="flex-1 space-y-3">
                     <div className="flex items-start gap-3">
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
                           <h3 className="font-semibold text-lg">{lead.name}</h3>
                           <Badge className={statusColors[lead.status as keyof typeof statusColors]}>
                             {statusLabels[lead.status as keyof typeof statusLabels]}
                           </Badge>
+                          {lead.Listing ? (
+                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                              Property Enquiry
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
+                              General Enquiry
+                            </Badge>
+                          )}
                         </div>
+
+                        {/* Property Information - Highlighted */}
+                        {lead.Listing && (
+                          <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                            <div className="flex items-center gap-2">
+                              <FileText className="h-4 w-4 text-blue-600" />
+                              <div>
+                                <div className="text-xs text-blue-600 font-medium">PROPERTY ENQUIRY</div>
+                                <a 
+                                  href={`/listing/${lead.Listing.slug}`} 
+                                  className="font-semibold text-blue-700 hover:underline"
+                                  onClick={(e) => e.stopPropagation()}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  {lead.Listing.title}
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                         
                         <div className="space-y-1 text-sm">
                           <p>
@@ -444,18 +474,6 @@ export function LeadsClient({ initialLeads, agents, metrics }: LeadsClientProps)
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 {lead.phone}
-                              </a>
-                            </p>
-                          )}
-                          {lead.Listing && (
-                            <p>
-                              <strong>Property:</strong>{' '}
-                              <a 
-                                href={`/listing/${lead.Listing.slug}`} 
-                                className="text-blue-600 hover:underline"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                {lead.Listing.title}
                               </a>
                             </p>
                           )}
