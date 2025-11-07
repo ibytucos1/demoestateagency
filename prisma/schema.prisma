@@ -75,15 +75,16 @@ model Tenant {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  tenantId  String
-  email     String
-  name      String?
-  role      String   // 'owner' | 'agent' | 'admin'
-  authId    String   @unique // Clerk Auth user ID
-  Tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(cuid())
+  tenantId      String
+  email         String
+  name          String?
+  role          String   // 'owner' | 'agent' | 'admin'
+  authId        String   @unique // Clerk Auth user ID
+  Tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  AssignedLeads Lead[]   @relation("AssignedLeads")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@unique([tenantId, email])
   @@index([tenantId])
@@ -128,20 +129,27 @@ model Listing {
 }
 
 model Lead {
-  id        String    @id @default(cuid())
-  tenantId  String
-  listingId String?
-  name      String
-  email     String
-  phone     String?
-  message   String    @db.Text
-  source    String    // 'form' | 'phone' | 'portal' | 'valuation' | 'contact'
-  createdAt DateTime  @default(now())
-  Listing   Listing?  @relation(fields: [listingId], references: [id], onDelete: SetNull)
-  Tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id          String    @id @default(cuid())
+  tenantId    String
+  listingId   String?
+  assignedTo  String?   // User ID of assigned agent
+  name        String
+  email       String
+  phone       String?
+  message     String    @db.Text
+  source      String    // 'form' | 'phone' | 'portal' | 'valuation' | 'contact'
+  status      String    @default("new") // 'new' | 'contacted' | 'qualified' | 'converted' | 'archived'
+  notes       String?   @db.Text
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  Listing     Listing?  @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  Tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  AssignedUser User?    @relation("AssignedLeads", fields: [assignedTo], references: [id], onDelete: SetNull)
 
   @@index([tenantId, createdAt])
+  @@index([tenantId, status])
   @@index([listingId])
+  @@index([assignedTo])
 }
 
 model WhatsAppClick {

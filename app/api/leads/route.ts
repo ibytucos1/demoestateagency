@@ -64,6 +64,7 @@ export async function POST(req: NextRequest) {
         phone: phone || null,
         message,
         source: body.source || 'form',
+        status: 'new',
       },
     })
 
