@@ -2,6 +2,7 @@ import { getTenant, getTenantId } from '@/lib/tenant'
 import { searchService } from '@/lib/search'
 import { ListingCard } from '@/components/listing-card'
 import { FilterBar } from '@/components/filter-bar'
+import { PropertyMap } from '@/components/property-map'
 import { normalizeCityName } from '@/lib/utils'
 import { env } from '@/lib/env'
 import { db } from '@/lib/db'
@@ -429,6 +430,25 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
             {/* Right Column - Sidebar */}
             <div className="lg:col-span-1 space-y-6">
+              {/* Map - Desktop Only */}
+              {displayListings.length > 0 && (
+                <div className="hidden lg:block sticky top-24">
+                  <PropertyMap 
+                    listings={displayListings.map((l: any) => ({
+                      id: l.id,
+                      title: l.title,
+                      lat: l.lat,
+                      lng: l.lng,
+                      price: l.price,
+                      currency: l.currency,
+                      type: l.type,
+                      slug: l.slug,
+                    }))}
+                    apiKey={env.NEXT_PUBLIC_MAPS_BROWSER_KEY}
+                  />
+                </div>
+              )}
+
               {/* Search Summary */}
               {displayListings.length > 0 && (
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
