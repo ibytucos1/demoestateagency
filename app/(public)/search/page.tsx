@@ -360,7 +360,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   return (
     <div>
       {/* Filter Bar - Right under nav bar */}
-      <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800">
+      <div className="bg-white border-b border-gray-200">
         <div className="container mx-auto px-4 py-4">
           <FilterBar />
         </div>
@@ -394,6 +394,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                         key={listing.id}
                         listing={listing}
                         whatsappNumber={listingTenant?.whatsappNumber || whatsappNumber}
+                        contactPhone={listingTenant?.contactPhone || null}
+                        contactEmail={listingTenant?.contactEmail || null}
                         tenantName={listingTenant?.slug || null}
                       />
                     )
@@ -448,45 +450,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   />
                 </div>
               )}
-
-              {/* Search Summary */}
-              {displayListings.length > 0 && (
-                <div className="bg-white rounded-lg border border-gray-200 p-6">
-                  <h2 className="text-xl font-bold mb-4">Search Results</h2>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Total Found</span>
-                      <span className="font-semibold text-gray-900">{displayListings.length}</span>
-                    </div>
-                    {displayListings.some((l: any) => l.lat && l.lng) && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">With Coordinates</span>
-                        <span className="font-semibold text-green-600">
-                          {displayListings.filter((l: any) => l.lat && l.lng).length}
-                        </span>
-                      </div>
-                    )}
-                    {displayListings.some((l: any) => !l.lat || !l.lng) && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Missing Coordinates</span>
-                        <span className="font-semibold text-amber-600">
-                          {displayListings.filter((l: any) => !l.lat || !l.lng).length}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              <div className="bg-white rounded-lg border border-gray-200 p-6 sticky top-24">
-                <h2 className="text-xl font-bold mb-4">Need Help?</h2>
-                <p className="text-sm text-gray-600 mb-4">
-                  Our team is here to help you find your perfect property.
-                    </p>
-                <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md text-sm font-medium transition-colors">
-                  Contact Us
-                </button>
-              </div>
             </div>
           </div>
         </main>

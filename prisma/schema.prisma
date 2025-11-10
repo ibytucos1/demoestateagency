@@ -60,6 +60,8 @@ model Tenant {
   name      String
   theme     Json     // { primaryColor, logo, etc }
   whatsappNumber String?
+  contactPhone String?
+  contactEmail String?
   createdAt DateTime @default(now())
   Users     User[]
   Listings  Listing[]
@@ -102,6 +104,7 @@ model Listing {
   currency     String   @default("USD")
   bedrooms     Int?
   bathrooms    Int?
+  squareFeet   Int?
   propertyType String?  // 'house' | 'apartment' | 'condo' | 'villa' | etc
   addressLine1 String
   city         String

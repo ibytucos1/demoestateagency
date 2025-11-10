@@ -1,11 +1,12 @@
 'use client'
 
+import React, { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { MapPin, Bed, Bath, Heart, Eye } from 'lucide-react'
-import { useState } from 'react'
+import { MapPin, Bed, Bath, Heart, Eye, ChevronLeft, ChevronRight, Maximize2, MessageCircle, Phone, Mail } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getPublicUrlSync } from '@/lib/storage-utils'
+import { getWhatsAppTrackingUrl } from '@/lib/whatsapp-utils'
 
 interface ListingCardProps {
   listing: {
@@ -26,17 +27,22 @@ interface ListingCardProps {
     media: any
     lat?: number | null
     lng?: number | null
+    squareFeet?: number | null
     createdAt?: Date
   }
   whatsappNumber?: string | null
+  contactPhone?: string | null
+  contactEmail?: string | null
   tenantName?: string | null
 }
 
-export function ListingCard({ listing, whatsappNumber, tenantName }: ListingCardProps) {
+export function ListingCard({ listing, whatsappNumber, contactPhone, contactEmail, tenantName }: ListingCardProps) {
   const [isFavorite, setIsFavorite] = useState(false)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  
   const media = listing.media as any[]
-  const firstImage = media?.[0]
   const imageCount = media?.length || 0
+  const currentImage = media?.[currentImageIndex]
   
   // Get image URL - use url if available, otherwise construct from key
   const getImageUrl = (image: any) => {
@@ -45,7 +51,21 @@ export function ListingCard({ listing, whatsappNumber, tenantName }: ListingCard
     return null
   }
   
-  const imageUrl = firstImage ? getImageUrl(firstImage) : null
+  const imageUrl = currentImage ? getImageUrl(currentImage) : null
+  
+  // Navigate to next image
+  const handleNextImage = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setCurrentImageIndex((prev: number) => (prev + 1) % imageCount)
+  }
+  
+  // Navigate to previous image
+  const handlePrevImage = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setCurrentImageIndex((prev: number) => (prev - 1 + imageCount) % imageCount)
+  }
   
   const formatPrice = () => {
     const formatted = listing.price.toLocaleString()
@@ -76,15 +96,15 @@ export function ListingCard({ listing, whatsappNumber, tenantName }: ListingCard
 
   return (
     <Link href={`/listing/${listing.slug}`}>
-      <div className="group bg-white rounded-xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 border border-gray-200 hover:border-primary/50 mb-6">
+      <div className="group bg-white rounded-xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 border border-gray-200 hover:border-primary/50 mb-4 sm:mb-6">
         <div className="flex flex-col sm:flex-row h-full">
           {/* Image Section - Left */}
-          <div className="relative w-full sm:w-1/2 h-48 sm:h-auto flex-shrink-0 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+          <div className="relative w-full sm:w-1/2 h-56 sm:h-auto flex-shrink-0 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden group/image">
             {imageUrl ? (
               <>
                 <Image
                   src={imageUrl}
-                  alt={firstImage.alt || listing.title}
+                  alt={currentImage.alt || listing.title}
                   fill
                   className="object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                 />
@@ -92,11 +112,55 @@ export function ListingCard({ listing, whatsappNumber, tenantName }: ListingCard
                 {/* Gradient overlay for better text readability */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
                 
+                {/* Image Navigation Arrows - Only show if multiple images */}
+                {imageCount > 1 && (
+                  <>
+                    {/* Previous Button */}
+                    <button
+                      onClick={handlePrevImage}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all duration-200 opacity-0 group-hover/image:opacity-100 hover:scale-110 z-20"
+                      aria-label="Previous image"
+                    >
+                      <ChevronLeft className="h-5 w-5 text-gray-800" />
+                    </button>
+                    
+                    {/* Next Button */}
+                    <button
+                      onClick={handleNextImage}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all duration-200 opacity-0 group-hover/image:opacity-100 hover:scale-110 z-20"
+                      aria-label="Next image"
+                    >
+                      <ChevronRight className="h-5 w-5 text-gray-800" />
+                    </button>
+                    
+                    {/* Image Indicators (Dots) */}
+                    <div className="absolute bottom-16 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                      {media.map((_, index) => (
+                        <button
+                          key={index}
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            setCurrentImageIndex(index)
+                          }}
+                          className={cn(
+                            'h-1.5 rounded-full transition-all duration-300',
+                            index === currentImageIndex
+                              ? 'w-6 bg-white'
+                              : 'w-1.5 bg-white/50 hover:bg-white/75'
+                          )}
+                          aria-label={`Go to image ${index + 1}`}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+                
                 {/* Image Counter Overlay - Top Left */}
                 {imageCount > 1 && (
                   <div className="absolute top-4 left-4 bg-black/75 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 shadow-lg">
                     <Eye className="h-4 w-4" />
-                    <span>{imageCount} photos</span>
+                    <span>{currentImageIndex + 1} / {imageCount}</span>
                   </div>
                 )}
                 
@@ -141,22 +205,17 @@ export function ListingCard({ listing, whatsappNumber, tenantName }: ListingCard
           </div>
 
           {/* Details Section - Right */}
-          <div className="flex-1 p-6 flex flex-col min-w-0">
+          <div className="flex-1 p-4 sm:p-6 flex flex-col min-w-0">
             {/* Top Section */}
             <div className="flex-1">
               {/* Price & Property Type */}
-              <div className="flex items-start justify-between gap-3 mb-3">
-                <div className="text-3xl font-bold text-gray-900 tracking-tight">
+              <div className="flex items-start justify-between gap-2 mb-2 sm:mb-3">
+                <div className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
                   {formatPrice()}
                 </div>
                 <div className="flex items-center gap-2 flex-wrap justify-end">
-                  {tenantName && (
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200 uppercase tracking-wide">
-                      {tenantName.toUpperCase()}
-                    </span>
-                  )}
                   {listing.propertyType && (
-                    <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100 capitalize whitespace-nowrap">
+                    <span className="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100 capitalize whitespace-nowrap">
                       {listing.propertyType}
                     </span>
                   )}
@@ -164,75 +223,84 @@ export function ListingCard({ listing, whatsappNumber, tenantName }: ListingCard
               </div>
 
               {/* Title */}
-              <h3 className="text-base font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-primary transition-colors duration-300 leading-snug">
+              <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-1.5 sm:mb-2 line-clamp-2 group-hover:text-primary transition-colors duration-300 leading-snug">
                 {listing.title}
               </h3>
 
               {/* Description */}
               {listing.description && (
-                <p className="text-sm text-gray-600 mb-3 line-clamp-2 leading-relaxed">
+                <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3 line-clamp-1 sm:line-clamp-2 leading-relaxed">
                   {listing.description}
                 </p>
               )}
 
-              {/* Location */}
-              <div className="flex items-start gap-2 text-gray-600 mb-5">
-                <MapPin className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                <span className="text-sm font-medium line-clamp-2">
-                  {listing.addressLine1}, {listing.city}
-                </span>
-              </div>
-
-              {/* Features - Bedrooms & Bathrooms */}
-              <div className="flex items-center gap-6">
+              {/* Features - Bedrooms, Bathrooms & Square Feet */}
+              <div className="flex items-center gap-3 sm:gap-4 text-gray-700 mb-3 sm:mb-5">
                 {listing.bedrooms !== undefined && listing.bedrooms !== null && (
-                  <div className="flex items-center gap-2">
-                    <div className="p-2 rounded-lg bg-blue-50 border border-blue-100">
-                      <Bed className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-lg font-bold text-gray-900">{listing.bedrooms}</span>
-                      <span className="text-xs text-gray-500">Beds</span>
-                    </div>
+                  <div className="flex items-center gap-1.5">
+                    <Bed className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm font-medium">{listing.bedrooms} bd</span>
                   </div>
                 )}
                 {listing.bathrooms !== undefined && listing.bathrooms !== null && (
-                  <div className="flex items-center gap-2">
-                    <div className="p-2 rounded-lg bg-blue-50 border border-blue-100">
-                      <Bath className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-lg font-bold text-gray-900">{listing.bathrooms}</span>
-                      <span className="text-xs text-gray-500">Baths</span>
-                    </div>
+                  <div className="flex items-center gap-1.5">
+                    <Bath className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm font-medium">{listing.bathrooms} bt</span>
+                  </div>
+                )}
+                {listing.squareFeet !== undefined && listing.squareFeet !== null && (
+                  <div className="flex items-center gap-1.5">
+                    <Maximize2 className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm font-medium">{listing.squareFeet.toLocaleString()} sq ft</span>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Bottom Section - Action Button */}
-            <div className="mt-6 pt-5 border-t-2 border-gray-100">
-              <div className="flex items-center justify-between group/button cursor-pointer">
-                <span className="text-sm font-bold text-primary group-hover/button:text-blue-700 transition-colors">
-                  View full details
-                </span>
-                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white group-hover/button:bg-blue-700 transition-all duration-300 group-hover/button:scale-110 shadow-md group-hover/button:shadow-lg">
-                  <svg
-                    className="w-5 h-5 group-hover/button:translate-x-0.5 transition-transform"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2.5}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
+            {/* Bottom Section - Contact Buttons */}
+            {(whatsappNumber || contactPhone || contactEmail) && (
+              <div className="mt-3 sm:mt-6 pt-3 sm:pt-5 border-t-2 border-gray-100">
+                <div className="grid grid-cols-3 gap-2">
+                  {/* WhatsApp Button */}
+                  {whatsappNumber && (
+                    <a
+                      href={getWhatsAppTrackingUrl(whatsappNumber, `Hi, I'm interested in ${listing.title}`, listing.id)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex flex-col items-center justify-center gap-1.5 py-3 px-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all duration-200 shadow-md hover:shadow-lg hover:scale-[1.02]"
+                    >
+                      <MessageCircle className="h-5 w-5" />
+                      <span className="text-xs font-semibold">WhatsApp</span>
+                    </a>
+                  )}
+                  
+                  {/* Email Button */}
+                  {contactEmail && (
+                    <a
+                      href={`mailto:${contactEmail}?subject=Inquiry about ${listing.title}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex flex-col items-center justify-center gap-1.5 py-3 px-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-all duration-200 shadow-md hover:shadow-lg hover:scale-[1.02]"
+                    >
+                      <Mail className="h-5 w-5" />
+                      <span className="text-xs font-semibold">Email</span>
+                    </a>
+                  )}
+                  
+                  {/* Call Button */}
+                  {contactPhone && (
+                    <a
+                      href={`tel:${contactPhone}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex flex-col items-center justify-center gap-1.5 py-3 px-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-all duration-200 shadow-md hover:shadow-lg hover:scale-[1.02]"
+                    >
+                      <Phone className="h-5 w-5" />
+                      <span className="text-xs font-semibold">Call</span>
+                    </a>
+                  )}
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
