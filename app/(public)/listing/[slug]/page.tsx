@@ -9,6 +9,7 @@ import { env } from '@/lib/env'
 import { getWhatsAppTrackingUrl } from '@/lib/whatsapp-utils'
 import { getPublicUrlSync } from '@/lib/storage-utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { LeadForm } from '@/components/lead-form'
 import { PropertyGallery } from '@/components/property-gallery'
 import { StickyCTABar } from '@/components/sticky-cta-bar'
@@ -25,6 +26,9 @@ import {
   Bed,
   Bath,
   Home as HomeIcon,
+  Share2,
+  Heart,
+  Calendar,
   Check,
   Zap,
   Info,
@@ -179,26 +183,53 @@ export default async function ListingDetailPage({
     ? 'Added yesterday' 
     : `Added ${daysSinceAdded} days ago`
 
+  // JSON-LD for SEO
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'RealEstateListing',
+    name: listing.title,
+    description: listing.description,
+    url: `${appUrl}/listing/${listing.slug}`,
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: listing.addressLine1,
+      addressLocality: listing.city,
+      postalCode: listing.postcode || '',
+    },
+    geo: listing.lat && listing.lng ? {
+      '@type': 'GeoCoordinates',
+      latitude: listing.lat,
+      longitude: listing.lng,
+    } : undefined,
+    numberOfRooms: listing.bedrooms || undefined,
+    numberOfBathroomsTotal: listing.bathrooms || undefined,
+    price: listing.price,
+    priceCurrency: listing.currency,
+  }
+
   return (
     <>
-      {/* Breadcrumbs - Sleeker design */}
-      <div className="bg-white border-b">
-        <div className="container mx-auto px-4 py-4">
-          <Link 
-            href="/search" 
-            className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-primary transition-colors group"
-          >
-            <svg className="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Back to search results
-          </Link>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      
+      {/* Breadcrumbs */}
+      <div className="bg-gray-50 border-b border-gray-200">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Link href="/search" className="hover:text-primary transition-colors">
+                Back to search results
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Image Gallery - Full Width, Modern Layout */}
-      <div className="bg-gray-50">
-        <div className="container mx-auto px-4 py-4 lg:py-6">
+      {/* Image Hero Section - Center of Attention */}
+      <div className="bg-white">
+        <div className="container mx-auto px-4 py-6">
           <PropertyGallery 
             images={media} 
             propertyTitle={listing.title}
@@ -208,147 +239,144 @@ export default async function ListingDetailPage({
         </div>
       </div>
 
-      {/* Property Header - Clean, Premium Design */}
-      <div className="bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+      {/* Property Details Below Images */}
+      <div className="bg-white border-t border-gray-200">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
             <div className="flex-1 min-w-0">
-              {/* Badges */}
-              <div className="flex items-center gap-2 mb-4 flex-wrap">
-                <span className={`px-4 py-1.5 rounded-full text-xs font-bold text-white ${getTypeColor()}`}>
-                  {getTypeLabel()}
-                </span>
+              <div className="flex items-center gap-3 mb-3 flex-wrap">
                 {listing.propertyType && (
-                  <span className="px-4 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 capitalize">
+                  <span className="px-3 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700 capitalize">
                     {listing.propertyType}
                   </span>
                 )}
-                <span className="px-4 py-1.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5" />
+                <span className="px-3 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700 flex items-center gap-1.5">
+                  <Clock className="h-3 w-3" />
                   {timeIndicator}
                 </span>
               </div>
-
-              {/* Title */}
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 leading-tight">
+              <h1 className="text-lg sm:text-xl font-bold text-gray-900 mb-3">
                 {listing.title}
               </h1>
-
-              {/* Address */}
-              <div className="flex items-start gap-2 text-gray-600 mb-6">
-                <MapPin className="h-5 w-5 text-primary flex-shrink-0 mt-1" />
-                <span className="text-lg">
+              <div className="flex items-start gap-2 text-gray-600 mb-4">
+                <MapPin className="h-5 w-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                <span className="text-base sm:text-lg">
                   {listing.addressLine1}, {listing.city}
-                  {listing.postcode && ` ${listing.postcode}`}
+                  {listing.postcode && `, ${listing.postcode}`}
                 </span>
               </div>
-
-              {/* Quick Stats */}
-              <div className="flex items-center gap-6 mb-6 flex-wrap">
-                {listing.bedrooms !== undefined && listing.bedrooms !== null && (
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <Bed className="h-5 w-5 text-primary" />
-                    <span className="font-semibold">{listing.bedrooms}</span>
-                    <span className="text-sm text-gray-600">Bedrooms</span>
-                  </div>
-                )}
-                {listing.bathrooms !== undefined && listing.bathrooms !== null && (
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <Bath className="h-5 w-5 text-primary" />
-                    <span className="font-semibold">{listing.bathrooms}</span>
-                    <span className="text-sm text-gray-600">Bathrooms</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Price - Prominent Display */}
-            <div className="lg:text-right">
-              <div className="inline-block lg:block">
-                <div className="text-sm text-gray-600 mb-1">Price</div>
-                <div className="text-4xl lg:text-5xl font-bold text-primary mb-2">
-                  {formatPrice()}
-                </div>
+              <div className="text-3xl sm:text-4xl font-bold text-gray-900">
+                {formatPrice()}
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="bg-gray-50 py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-6">
+      <div className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-6">
 
-              {/* Description - Premium Card */}
-              <Card className="shadow-md border-0 overflow-hidden">
-                <div className="bg-gradient-to-r from-primary/5 to-primary/10 px-6 py-4 border-b border-gray-100">
-                  <CardTitle className="text-xl font-bold text-gray-900">Property Description</CardTitle>
-                </div>
-                <CardContent className="p-6">
-                  <p className="whitespace-pre-wrap text-gray-700 leading-relaxed text-base">
-                    {listing.description}
-                  </p>
-                </CardContent>
-              </Card>
-
-              {/* Features - Modern Grid */}
-              {features.length > 0 && (
-                <Card className="shadow-md border-0 overflow-hidden">
-                  <div className="bg-gradient-to-r from-primary/5 to-primary/10 px-6 py-4 border-b border-gray-100">
-                    <CardTitle className="text-xl font-bold text-gray-900">Key Features</CardTitle>
+            {/* Key Features Summary */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-6 bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200">
+              {listing.bedrooms !== undefined && listing.bedrooms !== null && (
+                <div className="flex flex-col items-center text-center p-4 bg-white rounded-lg shadow-sm">
+                  <div className="p-3 rounded-full bg-primary/10 mb-3">
+                    <Bed className="h-6 w-6 text-primary" />
                   </div>
-                  <CardContent className="p-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {features.map((feature, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-center gap-3 p-4 bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-100 hover:border-primary/30 hover:shadow-sm transition-all"
-                        >
-                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-sm">
-                            <Check className="h-4 w-4 text-white" />
-                          </div>
-                          <span className="text-sm font-medium text-gray-800 capitalize">
-                            {feature.replace(/-/g, ' ')}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+                  <div className="text-2xl font-bold text-gray-900">{listing.bedrooms}</div>
+                  <div className="text-sm text-gray-600">Bedrooms</div>
+                </div>
+              )}
+              {listing.bathrooms !== undefined && listing.bathrooms !== null && (
+                <div className="flex flex-col items-center text-center p-4 bg-white rounded-lg shadow-sm">
+                  <div className="p-3 rounded-full bg-primary/10 mb-3">
+                    <Bath className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">{listing.bathrooms}</div>
+                  <div className="text-sm text-gray-600">Bathrooms</div>
+                </div>
+              )}
+              {listing.propertyType && (
+                <div className="flex flex-col items-center text-center p-4 bg-white rounded-lg shadow-sm col-span-2 sm:col-span-1">
+                  <div className="p-3 rounded-full bg-primary/10 mb-3">
+                    <HomeIcon className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900 capitalize">{listing.propertyType}</div>
+                  <div className="text-sm text-gray-600">Property Type</div>
+                </div>
               )}
             </div>
 
-            <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
-            {/* Agent Card - Premium Design */}
-            <Card className="shadow-xl border-0 overflow-hidden bg-gradient-to-br from-white to-gray-50">
-              <div className="bg-gradient-to-r from-primary to-primary/90 px-6 py-5">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 ring-2 ring-white/30">
-                    <Building className="h-7 w-7 text-white" />
+            {/* Description */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Property Description</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="whitespace-pre-wrap text-gray-700 leading-relaxed">{listing.description}</p>
+              </CardContent>
+            </Card>
+
+            {/* Features */}
+            {features.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Key Features</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {features.map((feature, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                      >
+                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Check className="h-4 w-4 text-primary" />
+                        </div>
+                        <span className="text-sm text-gray-700 capitalize">
+                          {feature.replace(/-/g, ' ')}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
+            {/* Agent Card */}
+            <Card className="shadow-lg border-primary/20">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4 mb-6">
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Building className="h-8 w-8 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg text-white">{listing.Tenant.name}</h3>
-                    <p className="text-sm text-white/90">Estate Agent</p>
+                    <h3 className="font-semibold text-lg text-gray-900">{listing.Tenant.name}</h3>
+                    <p className="text-sm text-gray-600">Estate Agent</p>
                   </div>
                 </div>
-              </div>
 
-              <CardContent className="p-6">
                 <AgentCTAButtons
                   whatsappLink={whatsappLink}
                   phoneNumber={contactPhone || whatsappNumber}
                 />
+
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <p className="text-sm text-gray-600 text-center">or</p>
+                  <p className="text-sm text-gray-600 text-center mt-2">Get in touch for more information</p>
+                </div>
               </CardContent>
             </Card>
 
-            {/* Contact Form - Modern Design */}
-            <Card className="shadow-xl border-0 overflow-hidden">
-              <div className="bg-gradient-to-r from-primary/5 to-primary/10 px-6 py-5 border-b border-gray-100">
-                <CardTitle className="text-xl font-bold text-gray-900">Request Information</CardTitle>
-                <p className="text-sm text-gray-600 mt-1">Fill out the form and we'll get back to you shortly</p>
-              </div>
-              <CardContent className="p-6">
+            {/* Lead Form */}
+            <Card className="shadow-lg">
+              <CardHeader>
+                <CardTitle>Enquire About This Property</CardTitle>
+              </CardHeader>
+              <CardContent>
                 <LeadForm 
                   tenantId={listing.tenantId}
                   listingId={listing.id}
@@ -360,126 +388,106 @@ export default async function ListingDetailPage({
         </div>
       </div>
 
-      {/* Additional Information */}
-      <div className="bg-white py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
-              {/* Collapsible Sections - Modern Design */}
-              <Card className="shadow-md border-0 overflow-hidden">
-                <div className="bg-gradient-to-r from-primary/5 to-primary/10 px-6 py-4 border-b border-gray-100">
-                  <CardTitle className="text-xl font-bold text-gray-900">Additional Information</CardTitle>
-                </div>
-                <CardContent className="p-6">
-                  <Accordion type="single" collapsible className="w-full">
-                    <AccordionItem value="location" className="border-b border-gray-100">
-                      <AccordionTrigger className="text-base font-semibold hover:no-underline py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                            <MapPinned className="h-5 w-5 text-primary" />
-                          </div>
-                          <span>Location & Area</span>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="pt-2 pb-4">
-                        <div className="text-sm text-gray-700 space-y-3 pl-13">
-                          <div className="bg-gray-50 p-4 rounded-lg">
-                            <p className="font-semibold text-gray-900 mb-1">Address</p>
-                            <p>{listing.addressLine1}, {listing.city}{listing.postcode && `, ${listing.postcode}`}</p>
-                          </div>
-                          <p className="leading-relaxed">This property is located in a desirable area with excellent transport links and local amenities.</p>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-
-                    <AccordionItem value="details" className="border-b border-gray-100">
-                      <AccordionTrigger className="text-base font-semibold hover:no-underline py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                            <Info className="h-5 w-5 text-primary" />
-                          </div>
-                          <span>Property Details</span>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="pt-2 pb-4">
-                        <div className="grid grid-cols-2 gap-4 text-sm pl-13">
-                          <div className="bg-gray-50 p-4 rounded-lg">
-                            <span className="text-gray-600 text-xs uppercase tracking-wide">Property Type</span>
-                            <p className="font-semibold text-gray-900 capitalize mt-1">{listing.propertyType || 'N/A'}</p>
-                          </div>
-                          <div className="bg-gray-50 p-4 rounded-lg">
-                            <span className="text-gray-600 text-xs uppercase tracking-wide">Listing Type</span>
-                            <p className="font-semibold text-gray-900 capitalize mt-1">{listing.type}</p>
-                          </div>
-                          <div className="bg-gray-50 p-4 rounded-lg">
-                            <span className="text-gray-600 text-xs uppercase tracking-wide">Bedrooms</span>
-                            <p className="font-semibold text-gray-900 mt-1">{listing.bedrooms || 'N/A'}</p>
-                          </div>
-                          <div className="bg-gray-50 p-4 rounded-lg">
-                            <span className="text-gray-600 text-xs uppercase tracking-wide">Bathrooms</span>
-                            <p className="font-semibold text-gray-900 mt-1">{listing.bathrooms || 'N/A'}</p>
-                          </div>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-
-                    <AccordionItem value="epc" className="border-none">
-                      <AccordionTrigger className="text-base font-semibold hover:no-underline py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                            <Zap className="h-5 w-5 text-primary" />
-                          </div>
-                          <span>Energy Performance</span>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="pt-2 pb-4">
-                        <div className="text-sm text-gray-700 space-y-2 pl-13">
-                          <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg">
-                            <p className="font-medium text-amber-900">Energy Performance Certificate (EPC) information will be available soon.</p>
-                            <p className="mt-2 text-xs text-amber-700">
-                              An EPC gives you an idea of running costs and environmental impact of the property.
-                            </p>
-                          </div>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Full-Width Map Section - Modern Design */}
+      {/* Full-Width Map Section - NO PARENT CONTAINERS */}
       {listing.lat && listing.lng && (
-        <div className="bg-gray-50 py-12">
-          <div className="container mx-auto px-4">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Location</h2>
-              <p className="text-gray-600">Explore the property location and surrounding area</p>
-            </div>
-            <div className="h-[400px] lg:h-[500px] w-full rounded-2xl overflow-hidden shadow-xl border border-gray-200">
-              <PropertyMap 
-                listings={[{
-                  id: listing.id,
-                  title: listing.title,
-                  price: listing.price,
-                  currency: listing.currency,
-                  type: listing.type,
-                  lat: listing.lat,
-                  lng: listing.lng,
-                  slug: listing.slug,
-                  bedrooms: listing.bedrooms,
-                  bathrooms: listing.bathrooms,
-                  propertyType: listing.propertyType,
-                }]} 
-                apiKey={env.NEXT_PUBLIC_MAPS_BROWSER_KEY}
-              />
-            </div>
+        <div className="w-full mb-12 mt-8">
+          <div className="h-[400px] lg:h-[500px] w-full">
+            <PropertyMap 
+              listings={[{
+                id: listing.id,
+                title: listing.title,
+                price: listing.price,
+                currency: listing.currency,
+                type: listing.type,
+                lat: listing.lat,
+                lng: listing.lng,
+                slug: listing.slug,
+                bedrooms: listing.bedrooms,
+                bathrooms: listing.bathrooms,
+                propertyType: listing.propertyType,
+              }]} 
+              apiKey={env.NEXT_PUBLIC_MAPS_BROWSER_KEY}
+            />
           </div>
         </div>
       )}
+
+      <div className="container mx-auto px-4 pb-8 pt-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-6">
+            {/* Collapsible Sections */}
+            <Card>
+              <CardContent className="pt-6">
+                <Accordion type="single" collapsible className="w-full">
+                  <AccordionItem value="location">
+                    <AccordionTrigger className="text-lg font-semibold">
+                      <div className="flex items-center gap-2">
+                        <MapPinned className="h-5 w-5 text-primary" />
+                        Location & Area
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="text-sm text-gray-600">
+                        <p className="mb-2">
+                          <strong>Address:</strong> {listing.addressLine1}, {listing.city}
+                          {listing.postcode && `, ${listing.postcode}`}
+                        </p>
+                        <p>This property is located in a desirable area with excellent transport links and local amenities.</p>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="details">
+                    <AccordionTrigger className="text-lg font-semibold">
+                      <div className="flex items-center gap-2">
+                        <Info className="h-5 w-5 text-primary" />
+                        Property Details
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-gray-600">Property Type</span>
+                          <p className="font-semibold capitalize">{listing.propertyType || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Listing Type</span>
+                          <p className="font-semibold capitalize">{listing.type}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Bedrooms</span>
+                          <p className="font-semibold">{listing.bedrooms || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Bathrooms</span>
+                          <p className="font-semibold">{listing.bathrooms || 'N/A'}</p>
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="epc">
+                    <AccordionTrigger className="text-lg font-semibold">
+                      <div className="flex items-center gap-2">
+                        <Zap className="h-5 w-5 text-primary" />
+                        Energy Performance
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="text-sm text-gray-600">
+                        <p>Energy Performance Certificate (EPC) information will be available soon.</p>
+                        <p className="mt-2 text-xs text-gray-500">
+                          An EPC gives you an idea of running costs and environmental impact of the property.
+                        </p>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
 
       {/* Sticky Mobile CTA Bar */}
       <StickyCTABar 
