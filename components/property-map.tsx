@@ -13,6 +13,9 @@ interface PropertyMapProps {
     currency: string
     type: string
     slug: string
+    bedrooms?: number | null
+    bathrooms?: number | null
+    propertyType?: string | null
   }>
   apiKey: string
 }

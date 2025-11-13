@@ -357,27 +357,30 @@ export default async function ListingDetailPage({
                     </AccordionTrigger>
                     <AccordionContent>
                       <div className="space-y-4">
-                        {/* Google Map */}
+                        {/* Google Map - Full Width */}
                         {listing.lat && listing.lng && (
-                          <div className="h-[400px] rounded-lg overflow-hidden border border-gray-200">
-                            <PropertyMap 
-                              listings={[{
-                                id: listing.id,
-                                title: listing.title,
-                                price: listing.price,
-                                type: listing.type,
-                                lat: listing.lat,
-                                lng: listing.lng,
-                                slug: listing.slug,
-                                bedrooms: listing.bedrooms,
-                                bathrooms: listing.bathrooms,
-                                propertyType: listing.propertyType,
-                              }]} 
-                              apiKey={env.NEXT_PUBLIC_MAPS_BROWSER_KEY}
-                            />
+                          <div className="-mx-4 sm:-mx-6 lg:-mx-8">
+                            <div className="h-[450px] w-full">
+                              <PropertyMap 
+                                listings={[{
+                                  id: listing.id,
+                                  title: listing.title,
+                                  price: listing.price,
+                                  currency: listing.currency,
+                                  type: listing.type,
+                                  lat: listing.lat,
+                                  lng: listing.lng,
+                                  slug: listing.slug,
+                                  bedrooms: listing.bedrooms,
+                                  bathrooms: listing.bathrooms,
+                                  propertyType: listing.propertyType,
+                                }]} 
+                                apiKey={env.NEXT_PUBLIC_MAPS_BROWSER_KEY}
+                              />
+                            </div>
                           </div>
                         )}
-                        <div className="text-sm text-gray-600">
+                        <div className="text-sm text-gray-600 pt-2">
                           <p className="mb-2">
                             <strong>Address:</strong> {listing.addressLine1}, {listing.city}
                             {listing.postcode && `, ${listing.postcode}`}
