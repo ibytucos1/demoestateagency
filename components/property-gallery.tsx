@@ -58,12 +58,61 @@ export function PropertyGallery({ images, propertyTitle, typeLabel, typeColor }:
 
   return (
     <>
-      {/* Gallery Grid - Rightmove Style */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 lg:gap-3 lg:h-[600px]">
+      {/* Mobile: Horizontal Scrollable Carousel */}
+      <div className="lg:hidden">
+        <div className="relative">
+          <div className="flex gap-2 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 px-4">
+            {images.map((img, idx) => (
+              <div 
+                key={`mobile-img-${idx}`}
+                className="relative flex-shrink-0 w-[85vw] aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl overflow-hidden snap-center"
+                onClick={() => openLightbox(idx)}
+              >
+                <Image
+                  src={getImageUrl(img) || ''}
+                  alt={img.alt || propertyTitle}
+                  fill
+                  className="object-cover"
+                  priority={idx === 0}
+                  sizes="85vw"
+                />
+                {/* Image Counter Badge - First image only */}
+                {idx === 0 && images.length > 1 && (
+                  <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm text-gray-900 px-3 py-1.5 rounded-lg text-sm font-semibold shadow-lg">
+                    {images.length} Photos
+                  </div>
+                )}
+                {/* Type Badge - First image only */}
+                {idx === 0 && typeLabel && typeColor && (
+                  <div className="absolute top-4 right-4">
+                    <span className={`px-3 py-1.5 rounded-lg text-xs font-bold text-white shadow-lg ${typeColor}`}>
+                      {typeLabel}
+                    </span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          {/* Dot indicators */}
+          {images.length > 1 && (
+            <div className="flex justify-center gap-1.5 mt-3">
+              {images.map((_, idx) => (
+                <div 
+                  key={`dot-${idx}`}
+                  className="w-1.5 h-1.5 rounded-full bg-gray-300"
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Desktop: Gallery Grid - Rightmove Style */}
+      <div className="hidden lg:grid lg:grid-cols-12 gap-3 lg:h-[600px]">
         {/* Main Large Image - Left Side */}
         <div className="lg:col-span-7">
           <div 
-            className="relative aspect-[4/3] lg:aspect-auto lg:h-full bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl overflow-hidden group cursor-pointer"
+            className="relative h-full bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl overflow-hidden group cursor-pointer"
             onClick={() => openLightbox(0)}
           >
             <Image
@@ -72,7 +121,7 @@ export function PropertyGallery({ images, propertyTitle, typeLabel, typeColor }:
               fill
               className="object-cover transition-transform duration-300 group-hover:scale-105"
               priority
-              sizes="(max-width: 1024px) 100vw, 58vw"
+              sizes="58vw"
             />
             {/* Overlay */}
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
@@ -96,12 +145,12 @@ export function PropertyGallery({ images, propertyTitle, typeLabel, typeColor }:
         </div>
 
         {/* Two Smaller Images - Right Side (Stacked vertically) */}
-        <div className="lg:col-span-5 flex flex-col gap-2 lg:gap-3 lg:h-full">
+        <div className="lg:col-span-5 flex flex-col gap-3 h-full">
           {images.length > 1 ? (
             <>
               {/* First smaller image - Takes half the height */}
               <div 
-                className="relative aspect-[4/3] lg:aspect-auto lg:flex-1 lg:min-h-0 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg overflow-hidden group cursor-pointer"
+                className="relative flex-1 min-h-0 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg overflow-hidden group cursor-pointer"
                 onClick={() => openLightbox(1)}
               >
                 <Image
@@ -109,7 +158,7 @@ export function PropertyGallery({ images, propertyTitle, typeLabel, typeColor }:
                   alt={images[1].alt || propertyTitle}
                   fill
                   className="object-cover transition-transform duration-300 group-hover:scale-105"
-                  sizes="(max-width: 1024px) 100vw, 38vw"
+                  sizes="38vw"
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
               </div>
@@ -117,7 +166,7 @@ export function PropertyGallery({ images, propertyTitle, typeLabel, typeColor }:
               {/* Second smaller image - Takes half the height */}
               {images.length > 2 ? (
                 <div 
-                  className="relative aspect-[4/3] lg:aspect-auto lg:flex-1 lg:min-h-0 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg overflow-hidden group cursor-pointer"
+                  className="relative flex-1 min-h-0 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg overflow-hidden group cursor-pointer"
                   onClick={() => openLightbox(2)}
                 >
                   <Image
@@ -125,7 +174,7 @@ export function PropertyGallery({ images, propertyTitle, typeLabel, typeColor }:
                     alt={images[2].alt || propertyTitle}
                     fill
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    sizes="(max-width: 1024px) 100vw, 38vw"
+                    sizes="38vw"
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
                   
@@ -137,7 +186,7 @@ export function PropertyGallery({ images, propertyTitle, typeLabel, typeColor }:
                   )}
                 </div>
               ) : (
-                <div className="relative aspect-[4/3] lg:aspect-auto lg:flex-1 lg:min-h-0 bg-gray-100 rounded-lg flex items-center justify-center">
+                <div className="relative flex-1 min-h-0 bg-gray-100 rounded-lg flex items-center justify-center">
                   <span className="text-gray-400 text-sm">No additional images</span>
                 </div>
               )}
@@ -145,10 +194,10 @@ export function PropertyGallery({ images, propertyTitle, typeLabel, typeColor }:
           ) : (
             <>
               {/* Placeholders when only 1 image */}
-              <div className="relative aspect-[4/3] lg:aspect-auto lg:flex-1 lg:min-h-0 bg-gray-100 rounded-lg flex items-center justify-center">
+              <div className="relative flex-1 min-h-0 bg-gray-100 rounded-lg flex items-center justify-center">
                 <span className="text-gray-400 text-sm">No additional images</span>
               </div>
-              <div className="relative aspect-[4/3] lg:aspect-auto lg:flex-1 lg:min-h-0 bg-gray-100 rounded-lg flex items-center justify-center">
+              <div className="relative flex-1 min-h-0 bg-gray-100 rounded-lg flex items-center justify-center">
                 <span className="text-gray-400 text-sm">No additional images</span>
               </div>
             </>
