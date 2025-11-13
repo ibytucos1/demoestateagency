@@ -36,7 +36,8 @@ export function FilterBar() {
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [lat, setLat] = useState<string>(searchParams.get('lat') || '')
   const [lng, setLng] = useState<string>(searchParams.get('lng') || '')
-  const debounceTimerRef = useRef<NodeJS.Timeout>()
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isFirstRenderRef = useRef(true)
 
   const applyFilters = () => {
     const params = new URLSearchParams()
@@ -62,8 +63,8 @@ export function FilterBar() {
   // Auto-apply filters with debounce (except for initial load)
   useEffect(() => {
     // Skip on initial mount
-    if (debounceTimerRef.current === undefined) {
-      debounceTimerRef.current = null as any
+    if (isFirstRenderRef.current) {
+      isFirstRenderRef.current = false
       return
     }
 
@@ -95,7 +96,7 @@ export function FilterBar() {
       if (keywords) params.set('keywords', keywords)
       
       startTransition(() => {
-      router.push(`/search?${params.toString()}`)
+        router.push(`/search?${params.toString()}`)
       })
     }, 500)
 

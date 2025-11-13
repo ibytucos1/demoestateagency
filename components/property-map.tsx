@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 
 interface PropertyMapProps {
@@ -29,7 +29,10 @@ export function PropertyMap({ listings, apiKey }: PropertyMapProps) {
   const infoWindowRef = useRef<google.maps.InfoWindow | null>(null)
 
   // Filter listings with valid coordinates
-  const validListings = listings.filter((l) => l.lat && l.lng)
+  const validListings = useMemo(
+    () => listings.filter((listing) => typeof listing.lat === 'number' && typeof listing.lng === 'number'),
+    [listings],
+  )
 
   useEffect(() => {
     if (!mapRef.current || validListings.length === 0) {
@@ -102,9 +105,7 @@ export function PropertyMap({ listings, apiKey }: PropertyMapProps) {
         // Calculate center and bounds
         const bounds = new google.maps.LatLngBounds()
         validListings.forEach((listing) => {
-          if (listing.lat && listing.lng) {
-            bounds.extend(new google.maps.LatLng(listing.lat, listing.lng))
-          }
+          bounds.extend(new google.maps.LatLng(Number(listing.lat), Number(listing.lng)))
         })
 
         // Create map
@@ -129,7 +130,7 @@ export function PropertyMap({ listings, apiKey }: PropertyMapProps) {
 
         // Add markers using AdvancedMarkerElement
         validListings.forEach((listing) => {
-          if (!listing.lat || !listing.lng) return
+          if (typeof listing.lat !== 'number' || typeof listing.lng !== 'number') return
 
           // Create marker content (pin)
           const pinElement = new google.maps.marker.PinElement({
@@ -198,7 +199,7 @@ export function PropertyMap({ listings, apiKey }: PropertyMapProps) {
         infoWindowRef.current.close()
       }
     }
-  }, [validListings.length, apiKey])
+  }, [validListings, apiKey])
 
   if (validListings.length === 0) {
     return (
