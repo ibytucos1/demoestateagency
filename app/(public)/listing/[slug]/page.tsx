@@ -265,7 +265,7 @@ export default async function ListingDetailPage({
                   {listing.postcode && `, ${listing.postcode}`}
                 </span>
               </div>
-              <div className="text-3xl sm:text-4xl font-bold text-primary">
+              <div className="text-3xl sm:text-4xl font-bold text-gray-900">
                 {formatPrice()}
               </div>
             </div>
