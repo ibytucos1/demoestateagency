@@ -373,7 +373,7 @@ export default async function ListingDetailPage({
                                 bathrooms: listing.bathrooms,
                                 propertyType: listing.propertyType,
                               }]} 
-                              apiKey={env.GOOGLE_PLACES_API_KEY}
+                              apiKey={env.NEXT_PUBLIC_MAPS_BROWSER_KEY}
                             />
                           </div>
                         )}
