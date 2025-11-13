@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -11,6 +10,7 @@ import { Turnstile } from '@marsidev/react-turnstile'
 interface LeadFormProps {
   listingId: string
   listingTitle: string
+  tenantId?: string
 }
 
 export function LeadForm({ listingId, listingTitle }: LeadFormProps) {
@@ -61,62 +61,101 @@ export function LeadForm({ listingId, listingTitle }: LeadFormProps) {
 
   if (success) {
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <p className="text-center text-green-600">
-            Thank you! We'll get back to you soon.
-          </p>
-        </CardContent>
-      </Card>
+      <div className="text-center py-8">
+        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h3 className="text-xl font-bold text-gray-900 mb-2">Thank You!</h3>
+        <p className="text-gray-600">
+          We've received your enquiry and will get back to you shortly.
+        </p>
+      </div>
     )
   }
 
   return (
-    <Card id="enquiry-form">
-      <CardHeader>
-        <CardTitle>Enquire About This Property</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="name">Name *</Label>
-            <Input id="name" name="name" required />
-          </div>
-          <div>
-            <Label htmlFor="email">Email *</Label>
-            <Input id="email" type="email" name="email" required />
-          </div>
-          <div>
-            <Label htmlFor="phone">Phone</Label>
-            <Input id="phone" type="tel" name="phone" />
-          </div>
-          <div>
-            <Label htmlFor="message">Message *</Label>
-            <Textarea id="message" name="message" required rows={4} />
-          </div>
-          {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
-            <div>
-              <Turnstile
-                ref={turnstileRef}
-                siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-                onSuccess={(token) => setTurnstileToken(token)}
-                onError={() => setTurnstileToken(null)}
-                onExpire={() => setTurnstileToken(null)}
-              />
-            </div>
-          )}
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          <Button 
-            type="submit" 
-            className="w-full" 
-            loading={loading}
-            disabled={!!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !turnstileToken}
-          >
-            {loading ? 'Sending...' : 'Send Enquiry'}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+    <form id="enquiry-form" onSubmit={handleSubmit} className="space-y-5">
+      <div>
+        <Label htmlFor="name" className="text-sm font-semibold text-gray-700 mb-2">Name *</Label>
+        <Input 
+          id="name" 
+          name="name" 
+          required 
+          className="h-11 border-gray-300 focus:border-primary focus:ring-primary"
+          placeholder="John Smith"
+        />
+      </div>
+      <div>
+        <Label htmlFor="email" className="text-sm font-semibold text-gray-700 mb-2">Email *</Label>
+        <Input 
+          id="email" 
+          type="email" 
+          name="email" 
+          required 
+          className="h-11 border-gray-300 focus:border-primary focus:ring-primary"
+          placeholder="john@example.com"
+        />
+      </div>
+      <div>
+        <Label htmlFor="phone" className="text-sm font-semibold text-gray-700 mb-2">Phone</Label>
+        <Input 
+          id="phone" 
+          type="tel" 
+          name="phone" 
+          className="h-11 border-gray-300 focus:border-primary focus:ring-primary"
+          placeholder="+44 20 1234 5678"
+        />
+      </div>
+      <div>
+        <Label htmlFor="message" className="text-sm font-semibold text-gray-700 mb-2">Message *</Label>
+        <Textarea 
+          id="message" 
+          name="message" 
+          required 
+          rows={4} 
+          className="border-gray-300 focus:border-primary focus:ring-primary resize-none"
+          placeholder="I'm interested in this property..."
+        />
+      </div>
+      {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+        <div>
+          <Turnstile
+            ref={turnstileRef}
+            siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+            onSuccess={(token) => setTurnstileToken(token)}
+            onError={() => setTurnstileToken(null)}
+            onExpire={() => setTurnstileToken(null)}
+          />
+        </div>
+      )}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+          <p className="text-sm text-red-700">{error}</p>
+        </div>
+      )}
+      <Button 
+        type="submit" 
+        className="w-full h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-shadow" 
+        disabled={loading || (!!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !turnstileToken)}
+      >
+        {loading ? (
+          <span className="flex items-center gap-2">
+            <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Sending...
+          </span>
+        ) : (
+          'Send Enquiry'
+        )}
+      </Button>
+      <p className="text-xs text-center text-gray-500 mt-3">
+        By submitting this form, you agree to be contacted about this property
+      </p>
+    </form>
   )
 }
 
