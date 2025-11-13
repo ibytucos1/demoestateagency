@@ -179,37 +179,8 @@ export default async function ListingDetailPage({
     ? 'Added yesterday' 
     : `Added ${daysSinceAdded} days ago`
 
-  // JSON-LD for SEO
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'RealEstateListing',
-    name: listing.title,
-    description: listing.description,
-    url: `${appUrl}/listing/${listing.slug}`,
-    address: {
-      '@type': 'PostalAddress',
-      streetAddress: listing.addressLine1,
-      addressLocality: listing.city,
-      postalCode: listing.postcode || '',
-    },
-    geo: listing.lat && listing.lng ? {
-      '@type': 'GeoCoordinates',
-      latitude: listing.lat,
-      longitude: listing.lng,
-    } : undefined,
-    numberOfRooms: listing.bedrooms || undefined,
-    numberOfBathroomsTotal: listing.bathrooms || undefined,
-    price: listing.price,
-    priceCurrency: listing.currency,
-  }
-
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      
       {/* Breadcrumbs - Sleeker design */}
       <div className="bg-white border-b">
         <div className="container mx-auto px-4 py-4">
@@ -346,9 +317,9 @@ export default async function ListingDetailPage({
                   </CardContent>
                 </Card>
               )}
-          </div>
+            </div>
 
-          <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
+            <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
             {/* Agent Card - Premium Design */}
             <Card className="shadow-xl border-0 overflow-hidden bg-gradient-to-br from-white to-gray-50">
               <div className="bg-gradient-to-r from-primary to-primary/90 px-6 py-5">
