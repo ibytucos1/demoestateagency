@@ -359,11 +359,8 @@ export default async function ListingDetailPage({
                 </div>
 
                 <AgentCTAButtons
-                  whatsappNumber={whatsappNumber}
-                  contactPhone={contactPhone}
-                  listingId={listing.id}
-                  listingTitle={listing.title}
-                  listingSlug={listing.slug}
+                  whatsappLink={whatsappLink}
+                  phoneNumber={contactPhone || whatsappNumber}
                 />
 
                 <div className="mt-6 pt-6 border-t border-gray-200">
