@@ -16,6 +16,7 @@ export function HeroSearch() {
   const [selectedTab, setSelectedTab] = useState<'buy' | 'rent' | 'sell'>('buy')
   const [selectedLocation, setSelectedLocation] = useState<LocationSelection | undefined>(undefined)
   const [sellPostcode, setSellPostcode] = useState('')
+  const [isSearching, setIsSearching] = useState(false)
 
   // Initialize tab and city from URL params
   useEffect(() => {
@@ -85,76 +86,82 @@ export function HeroSearch() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsSearching(true)
     
-    // If "Sell My Home" tab is selected, redirect to valuation page
-    if (selectedTab === 'sell') {
-      const trimmedPostcode = sellPostcode.trim()
-      if (trimmedPostcode) {
-        router.push(`/valuation?postcode=${encodeURIComponent(trimmedPostcode)}`)
-      } else {
-        router.push('/valuation')
-      }
-      return
-    }
-    
-    // Otherwise, handle regular property search
-    const params = new URLSearchParams()
-    const trimmedCity = city.trim()
-    
-    // Add location if provided
-    if (trimmedCity) {
-      params.set('city', trimmedCity)
-    }
-    
-    let lat = selectedLocation?.lat
-    let lng = selectedLocation?.lng
-    let radiusKm = selectedLocation?.radiusKm
-
-    if (trimmedCity && (lat === undefined || lng === undefined)) {
-      try {
-        const geocodeResponse = await fetch(
-          `/api/places?action=geocode&address=${encodeURIComponent(
-            trimmedCity
-          )}`
-        )
-
-        if (geocodeResponse.ok) {
-          const geocodeData = await geocodeResponse.json()
-          const result = geocodeData?.result
-          if (result?.lat && result?.lng) {
-            lat = result.lat
-            lng = result.lng
-            radiusKm = radiusKm ?? DEFAULT_RADIUS_KM
-          }
+    try {
+      // If "Sell My Home" tab is selected, redirect to valuation page
+      if (selectedTab === 'sell') {
+        const trimmedPostcode = sellPostcode.trim()
+        if (trimmedPostcode) {
+          router.push(`/valuation?postcode=${encodeURIComponent(trimmedPostcode)}`)
+        } else {
+          router.push('/valuation')
         }
-      } catch (error) {
-        console.error('Geocode error:', error)
+        return
       }
-    }
+      
+      // Otherwise, handle regular property search
+      const params = new URLSearchParams()
+      const trimmedCity = city.trim()
+      
+      // Add location if provided
+      if (trimmedCity) {
+        params.set('city', trimmedCity)
+      }
+      
+      let lat = selectedLocation?.lat
+      let lng = selectedLocation?.lng
+      let radiusKm = selectedLocation?.radiusKm
 
-    if (
-      lat !== undefined &&
-      !Number.isNaN(lat) &&
-      lng !== undefined &&
-      !Number.isNaN(lng)
-    ) {
-      params.set('lat', String(lat))
-      params.set('lng', String(lng))
-      params.set(
-        'radius',
-        String(radiusKm && radiusKm > 0 ? radiusKm : DEFAULT_RADIUS_KM)
-      )
-    }
+      if (trimmedCity && (lat === undefined || lng === undefined)) {
+        try {
+          const geocodeResponse = await fetch(
+            `/api/places?action=geocode&address=${encodeURIComponent(
+              trimmedCity
+            )}`
+          )
 
-    // Add type based on selected tab
-    if (selectedTab === 'buy') {
-      params.set('type', 'sale')
-    } else if (selectedTab === 'rent') {
-      params.set('type', 'rent')
+          if (geocodeResponse.ok) {
+            const geocodeData = await geocodeResponse.json()
+            const result = geocodeData?.result
+            if (result?.lat && result?.lng) {
+              lat = result.lat
+              lng = result.lng
+              radiusKm = radiusKm ?? DEFAULT_RADIUS_KM
+            }
+          }
+        } catch (error) {
+          console.error('Geocode error:', error)
+        }
+      }
+
+      if (
+        lat !== undefined &&
+        !Number.isNaN(lat) &&
+        lng !== undefined &&
+        !Number.isNaN(lng)
+      ) {
+        params.set('lat', String(lat))
+        params.set('lng', String(lng))
+        params.set(
+          'radius',
+          String(radiusKm && radiusKm > 0 ? radiusKm : DEFAULT_RADIUS_KM)
+        )
+      }
+
+      // Add type based on selected tab
+      if (selectedTab === 'buy') {
+        params.set('type', 'sale')
+      } else if (selectedTab === 'rent') {
+        params.set('type', 'rent')
+      }
+      
+      // Navigate to search page with both location and type
+      router.push(`/search?${params.toString()}`)
+    } finally {
+      // Reset searching state after a delay to allow navigation to complete
+      setTimeout(() => setIsSearching(false), 1000)
     }
-    
-    // Navigate to search page with both location and type
-    router.push(`/search?${params.toString()}`)
   }
 
   return (
@@ -228,6 +235,7 @@ export function HeroSearch() {
               <Button 
                 type="submit" 
                 className="h-12 px-6 sm:px-4 rounded-md sm:rounded-l-none sm:rounded-r-md flex-shrink-0 w-full sm:w-auto"
+                loading={isSearching}
               >
                 <span>Get Free Valuation</span>
               </Button>
@@ -248,9 +256,10 @@ export function HeroSearch() {
               <Button 
                 type="submit" 
                 className="h-12 px-6 sm:px-4 rounded-md sm:rounded-l-none sm:rounded-r-md flex-shrink-0 w-full sm:w-auto"
+                loading={isSearching}
               >
-                <Search className="h-5 w-5 mr-2 sm:mr-0" />
-                <span className="sm:hidden">Search</span>
+                {!isSearching && <Search className="h-5 w-5 mr-2 sm:mr-0" />}
+                <span className="sm:hidden">{isSearching ? 'Searching...' : 'Search'}</span>
               </Button>
             </>
           )}

@@ -162,9 +162,10 @@ export function ContactForm() {
         type="submit" 
         className="w-full h-12 text-lg" 
         size="lg"
-        disabled={loading || (!!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !turnstileToken)}
+        loading={loading}
+        disabled={!!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !turnstileToken}
       >
-        <Send className="mr-2 h-5 w-5" />
+        {!loading && <Send className="mr-2 h-5 w-5" />}
         {loading ? 'Sending...' : 'Send Message'}
       </Button>
     </form>

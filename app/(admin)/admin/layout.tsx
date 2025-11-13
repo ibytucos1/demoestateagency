@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { UserMenu } from '@/components/user-menu'
+import { NavigationProgress } from '@/components/navigation-progress'
 import {
   Home,
   LayoutDashboard,
@@ -50,6 +51,7 @@ export default async function AdminLayout({
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
+      <NavigationProgress />
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-gray-200 fixed inset-y-0 left-0 z-50 flex flex-col">
         {/* Logo */}

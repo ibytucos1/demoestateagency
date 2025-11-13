@@ -106,7 +106,12 @@ export function LeadForm({ listingId, listingTitle }: LeadFormProps) {
             </div>
           )}
           {error && <p className="text-sm text-destructive">{error}</p>}
-          <Button type="submit" className="w-full" disabled={loading || (!!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !turnstileToken)}>
+          <Button 
+            type="submit" 
+            className="w-full" 
+            loading={loading}
+            disabled={!!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !turnstileToken}
+          >
             {loading ? 'Sending...' : 'Send Enquiry'}
           </Button>
         </form>

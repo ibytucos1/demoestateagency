@@ -239,7 +239,8 @@ export function ValuationForm({ initialPostcode = '' }: ValuationFormProps) {
         <Button
           type="submit"
           className="w-full"
-          disabled={loading || (!!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !turnstileToken)}
+          loading={loading}
+          disabled={!!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !turnstileToken}
         >
           {loading ? 'Submitting...' : 'Get My Free Valuation'}
         </Button>
