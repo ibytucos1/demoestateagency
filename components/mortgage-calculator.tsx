@@ -62,8 +62,8 @@ export function MortgageCalculator({ propertyPrice }: MortgageCalculatorProps) {
     }, 600)
   }
 
-  const depositPercentage = price && deposit ? ((parseFloat(deposit) / parseFloat(price)) * 100).toFixed(0) : 0
-  const loanToValue = price && deposit ? (100 - parseFloat(depositPercentage.toString())).toFixed(0) : 0
+  const depositPercentage = price && deposit ? Math.round((parseFloat(deposit) / parseFloat(price)) * 100) : 0
+  const loanToValue = price && deposit ? Math.round(100 - depositPercentage) : 0
 
   return (
     <div className="relative overflow-hidden rounded-3xl border-2 border-gray-200 bg-white shadow-sm">
