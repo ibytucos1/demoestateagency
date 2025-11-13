@@ -227,12 +227,12 @@ export default async function ListingDetailPage({
                   {timeIndicator}
                 </span>
               </div>
-              <h1 className="text-lg sm:text-xl font-bold text-gray-900 mb-3">
+              <h1 className="text-base sm:text-lg font-bold text-gray-900 mb-3">
                 {listing.title}
               </h1>
               <div className="flex items-start gap-2 text-gray-600 mb-4">
-                <MapPin className="h-5 w-5 text-gray-400 flex-shrink-0 mt-0.5" />
-                <span className="text-base sm:text-lg">
+                <MapPin className="h-4 w-4 text-gray-400 flex-shrink-0 mt-0.5" />
+                <span className="text-sm sm:text-base">
                   {listing.addressLine1}, {listing.city}
                   {listing.postcode && `, ${listing.postcode}`}
                 </span>
