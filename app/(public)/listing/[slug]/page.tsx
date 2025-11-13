@@ -390,7 +390,7 @@ export default async function ListingDetailPage({
 
       {/* Full-Width Map Section - NO PARENT CONTAINERS */}
       {listing.lat && listing.lng && (
-        <div className="w-full my-12">
+        <div className="w-full mb-12 mt-8">
           <div className="h-[400px] lg:h-[500px] w-full">
             <PropertyMap 
               listings={[{
@@ -412,7 +412,7 @@ export default async function ListingDetailPage({
         </div>
       )}
 
-      <div className="container mx-auto px-4 pb-8">
+      <div className="container mx-auto px-4 pb-8 pt-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
             {/* Collapsible Sections */}
