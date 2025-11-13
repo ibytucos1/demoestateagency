@@ -470,7 +470,11 @@ export default async function ListingDetailPage({
       </div>
 
       {/* Sticky Mobile CTA Bar */}
-      <StickyCTABar price={formatPrice()} whatsappLink={whatsappLink} />
+      <StickyCTABar 
+        price={formatPrice()} 
+        whatsappLink={whatsappLink} 
+        phoneNumber={whatsappNumber}
+      />
     </>
   )
 }
