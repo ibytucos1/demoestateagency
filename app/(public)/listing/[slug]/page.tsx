@@ -141,9 +141,10 @@ export default async function ListingDetailPage({
   const features = Array.isArray(listing.features) ? (listing.features as string[]) : []
   const appUrl = env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
   const whatsappNumber = tenant.whatsappNumber || null
+  const contactPhone = tenant.contactPhone || null
   const whatsappMessage = `Hi, I'm interested in ${listing.title}`
   const whatsappLink = whatsappNumber
-    ? getWhatsAppTrackingUrl(whatsappNumber, whatsappMessage, listing.id)
+    ? getWhatsAppTrackingUrl(whatsappNumber, whatsappMessage, listing.id, listing.slug)
     : null
   
   const formatPrice = () => {
