@@ -15,6 +15,7 @@ import { PropertyGallery } from '@/components/property-gallery'
 import { StickyCTABar } from '@/components/sticky-cta-bar'
 import { AgentCTAButtons } from '@/components/agent-cta-buttons'
 import { PropertyMap } from '@/components/property-map'
+import { MortgageCalculator } from '@/components/mortgage-calculator'
 import {
   Accordion,
   AccordionContent,
@@ -183,37 +184,8 @@ export default async function ListingDetailPage({
     ? 'Added yesterday' 
     : `Added ${daysSinceAdded} days ago`
 
-  // JSON-LD for SEO
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'RealEstateListing',
-    name: listing.title,
-    description: listing.description,
-    url: `${appUrl}/listing/${listing.slug}`,
-    address: {
-      '@type': 'PostalAddress',
-      streetAddress: listing.addressLine1,
-      addressLocality: listing.city,
-      postalCode: listing.postcode || '',
-    },
-    geo: listing.lat && listing.lng ? {
-      '@type': 'GeoCoordinates',
-      latitude: listing.lat,
-      longitude: listing.lng,
-    } : undefined,
-    numberOfRooms: listing.bedrooms || undefined,
-    numberOfBathroomsTotal: listing.bathrooms || undefined,
-    price: listing.price,
-    priceCurrency: listing.currency,
-  }
-
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      
       {/* Breadcrumbs */}
       <div className="bg-gray-50 border-b border-gray-200">
         <div className="container mx-auto px-4 py-3">
@@ -343,79 +315,8 @@ export default async function ListingDetailPage({
                 </CardContent>
               </Card>
             )}
-          </div>
 
-          <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
-            {/* Agent Card */}
-            <Card className="shadow-lg border-primary/20">
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4 mb-6">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Building className="h-8 w-8 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg text-gray-900">{listing.Tenant.name}</h3>
-                    <p className="text-sm text-gray-600">Estate Agent</p>
-                  </div>
-                </div>
-
-                <AgentCTAButtons
-                  whatsappLink={whatsappLink}
-                  phoneNumber={contactPhone || whatsappNumber}
-                />
-
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <p className="text-sm text-gray-600 text-center">or</p>
-                  <p className="text-sm text-gray-600 text-center mt-2">Get in touch for more information</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Lead Form */}
-            <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle>Enquire About This Property</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <LeadForm 
-                  tenantId={listing.tenantId}
-                  listingId={listing.id}
-                  listingTitle={listing.title}
-                />
-              </CardContent>
-            </Card>
-          </aside>
-        </div>
-      </div>
-
-      {/* Full-Width Map Section - NO PARENT CONTAINERS */}
-      {listing.lat && listing.lng && (
-        <div className="w-full mb-12 mt-8">
-          <div className="h-[400px] lg:h-[500px] w-full">
-            <PropertyMap 
-              listings={[{
-                id: listing.id,
-                title: listing.title,
-                price: listing.price,
-                currency: listing.currency,
-                type: listing.type,
-                lat: listing.lat,
-                lng: listing.lng,
-                slug: listing.slug,
-                bedrooms: listing.bedrooms,
-                bathrooms: listing.bathrooms,
-                propertyType: listing.propertyType,
-              }]} 
-              apiKey={env.NEXT_PUBLIC_MAPS_BROWSER_KEY}
-            />
-          </div>
-        </div>
-      )}
-
-      <div className="container mx-auto px-4 pb-8 pt-4">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
-            {/* Collapsible Sections */}
+            {/* Accordion Sections */}
             <Card>
               <CardContent className="pt-6">
                 <Accordion type="single" collapsible className="w-full">
@@ -485,7 +386,73 @@ export default async function ListingDetailPage({
                 </Accordion>
               </CardContent>
             </Card>
+
+            {/* Map Section - Same Width as Content Above */}
+            {listing.lat && listing.lng && (
+              <div className="h-[400px] w-full rounded-lg overflow-hidden">
+                <PropertyMap 
+                  listings={[{
+                    id: listing.id,
+                    title: listing.title,
+                    price: listing.price,
+                    currency: listing.currency,
+                    type: listing.type,
+                    lat: listing.lat,
+                    lng: listing.lng,
+                    slug: listing.slug,
+                    bedrooms: listing.bedrooms,
+                    bathrooms: listing.bathrooms,
+                    propertyType: listing.propertyType,
+                  }]} 
+                  apiKey={env.NEXT_PUBLIC_MAPS_BROWSER_KEY}
+                />
+              </div>
+            )}
+
+            {/* Mortgage Calculator */}
+            <MortgageCalculator propertyPrice={listing.price} />
           </div>
+
+          <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
+            {/* Agent Card */}
+            <Card className="shadow-lg border-primary/20">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4 mb-6">
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Building className="h-8 w-8 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg text-gray-900">{listing.Tenant.name}</h3>
+                    <p className="text-sm text-gray-600">Estate Agent</p>
+                  </div>
+                </div>
+
+                <AgentCTAButtons
+                  whatsappLink={whatsappLink}
+                  phoneNumber={contactPhone || whatsappNumber}
+                />
+
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <p className="text-sm text-gray-600 text-center">or</p>
+                  <p className="text-sm text-gray-600 text-center mt-2">Get in touch for more information</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Lead Form */}
+            <Card className="shadow-lg">
+              <CardHeader>
+                <CardTitle>Enquire About This Property</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <LeadForm 
+                  tenantId={listing.tenantId}
+                  listingId={listing.id}
+                  listingTitle={listing.title}
+                />
+              </CardContent>
+            </Card>
+          </aside>
         </div>
       </div>
 
