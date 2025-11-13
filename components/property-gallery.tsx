@@ -21,6 +21,7 @@ interface PropertyGalleryProps {
 export function PropertyGallery({ images, propertyTitle, typeLabel, typeColor }: PropertyGalleryProps) {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [mobileCurrentIndex, setMobileCurrentIndex] = useState(0)
 
   // Get image URL helper
   const getImageUrl = (image: any) => {
@@ -61,7 +62,15 @@ export function PropertyGallery({ images, propertyTitle, typeLabel, typeColor }:
       {/* Mobile: Full-Width Horizontal Scrollable Carousel - Rightmove Style */}
       <div className="lg:hidden -mx-4">
         <div className="relative">
-          <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide">
+          <div 
+            className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide"
+            onScroll={(e) => {
+              const scrollLeft = e.currentTarget.scrollLeft
+              const width = e.currentTarget.offsetWidth
+              const index = Math.round(scrollLeft / width)
+              setMobileCurrentIndex(index)
+            }}
+          >
             {images.map((img, idx) => (
               <div 
                 key={`mobile-img-${idx}`}
@@ -93,7 +102,7 @@ export function PropertyGallery({ images, propertyTitle, typeLabel, typeColor }:
             <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm text-gray-900 px-3 py-1.5 rounded-lg text-sm font-semibold shadow-lg">
               <span className="flex items-center gap-1">
                 <Maximize2 className="h-3.5 w-3.5" />
-                1/{images.length}
+                {mobileCurrentIndex + 1}/{images.length}
               </span>
             </div>
           )}
@@ -104,7 +113,10 @@ export function PropertyGallery({ images, propertyTitle, typeLabel, typeColor }:
               {images.map((_, idx) => (
                 <div 
                   key={`dot-${idx}`}
-                  className="w-1.5 h-1.5 rounded-full bg-white/70"
+                  className={cn(
+                    "w-1.5 h-1.5 rounded-full transition-colors",
+                    idx === mobileCurrentIndex ? "bg-white" : "bg-white/50"
+                  )}
                 />
               ))}
             </div>
