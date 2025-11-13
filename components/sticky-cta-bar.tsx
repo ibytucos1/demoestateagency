@@ -33,47 +33,45 @@ export function StickyCTABar({ price, whatsappLink, phoneNumber, onContactClick 
       )}
     >
       <div className="px-4 py-3">
-        {/* Price */}
-        <div className="mb-3">
-          <div className="text-xs text-gray-600 mb-1">Price</div>
-          <div className="text-2xl font-bold text-gray-900">{price}</div>
-        </div>
-        
-        {/* CTA Buttons */}
-        <div className="flex gap-2">
-          {/* Call Button - Red */}
-          <Button
-            size="lg"
-            className="flex-1 bg-red-500 hover:bg-red-600 text-white h-12"
-            asChild={!!phoneNumber}
-            onClick={phoneNumber ? undefined : onContactClick}
-          >
-            {phoneNumber ? (
-              <a href={`tel:${phoneNumber}`}>
-                <Phone className="h-5 w-5 mr-2" />
-                Call
-              </a>
-            ) : (
-              <>
-                <Phone className="h-5 w-5 mr-2" />
-                Call
-              </>
-            )}
-          </Button>
+        {/* Price and CTA Buttons in One Row */}
+        <div className="flex items-center justify-between gap-3">
+          {/* Price */}
+          <div className="flex-1 min-w-0">
+            <div className="text-xs text-gray-600">Price</div>
+            <div className="text-xl font-bold text-gray-900 truncate">{price}</div>
+          </div>
           
-          {/* WhatsApp Button - Green */}
-          {whatsappLink && (
+          {/* CTA Buttons - Icon Only */}
+          <div className="flex gap-2">
+            {/* Call Button - Red, Icon Only */}
             <Button
-              size="lg"
-              className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white h-12"
-              asChild
+              size="icon"
+              className="bg-red-500 hover:bg-red-600 text-white h-12 w-12 flex-shrink-0"
+              asChild={!!phoneNumber}
+              onClick={phoneNumber ? undefined : onContactClick}
             >
-              <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
-                <MessageCircle className="h-5 w-5 mr-2" />
-                WhatsApp
-              </a>
+              {phoneNumber ? (
+                <a href={`tel:${phoneNumber}`}>
+                  <Phone className="h-5 w-5" />
+                </a>
+              ) : (
+                <Phone className="h-5 w-5" />
+              )}
             </Button>
-          )}
+            
+            {/* WhatsApp Button - Green, Icon Only */}
+            {whatsappLink && (
+              <Button
+                size="icon"
+                className="bg-emerald-500 hover:bg-emerald-600 text-white h-12 w-12 flex-shrink-0"
+                asChild
+              >
+                <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
+                  <MessageCircle className="h-5 w-5" />
+                </a>
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </div>
