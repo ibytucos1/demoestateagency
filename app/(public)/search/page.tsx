@@ -21,7 +21,13 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   
   // Get all tenants for showing all listings
   const allTenants = await db.tenant.findMany({
-    select: { id: true, slug: true, whatsappNumber: true },
+    select: { 
+      id: true, 
+      slug: true, 
+      whatsappNumber: true,
+      contactPhone: true,
+      contactEmail: true,
+    },
   })
   const tenantIds = allTenants.map((t: { id: string }) => t.id)
 

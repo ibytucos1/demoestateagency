@@ -67,6 +67,8 @@ async function main() {
         },
       },
       whatsappNumber: '+447700900123',
+      contactPhone: '+442071234567',
+      contactEmail: 'info@acmerealestate.com',
     },
   })
 
@@ -85,6 +87,8 @@ async function main() {
         },
       },
       whatsappNumber: '+447700900456',
+      contactPhone: '+442079876543',
+      contactEmail: 'contact@bluebirdproperties.co.uk',
     },
   })
 

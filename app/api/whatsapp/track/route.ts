@@ -11,9 +11,6 @@ export const runtime = 'nodejs'
  */
 export async function GET(req: NextRequest) {
   try {
-    const tenant = await getTenant()
-    const tenantId = tenant.id
-
     const searchParams = req.nextUrl.searchParams
     const listingId = searchParams.get('listingId')
     const whatsappNumber = searchParams.get('number')
@@ -24,16 +21,23 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'WhatsApp number required' }, { status: 400 })
     }
 
-    // Verify listing belongs to tenant if listingId provided
+    // Get tenant ID from the listing itself (for multi-tenant support)
+    let tenantId: string
     if (listingId) {
       const listing = await db.listing.findUnique({
         where: { id: listingId },
         select: { tenantId: true },
       })
 
-      if (!listing || listing.tenantId !== tenantId) {
+      if (!listing) {
         return NextResponse.json({ error: 'Listing not found' }, { status: 404 })
       }
+      
+      tenantId = listing.tenantId
+    } else {
+      // If no listing ID, use current tenant context
+      const tenant = await getTenant()
+      tenantId = tenant.id
     }
 
     // Get IP address and user agent for tracking
@@ -50,9 +54,9 @@ export async function GET(req: NextRequest) {
       },
     })
 
-    // Build WhatsApp URL
+    // Build WhatsApp URL using official API format
     const cleanNumber = whatsappNumber.replace(/[^\d]/g, '')
-    const whatsappUrl = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`
+    const whatsappUrl = `https://api.whatsapp.com/send/?phone=${cleanNumber}&text=${encodeURIComponent(message)}&type=phone_number&app_absent=0`
 
     // Redirect to WhatsApp
     return NextResponse.redirect(whatsappUrl)
@@ -63,7 +67,7 @@ export async function GET(req: NextRequest) {
     const message = req.nextUrl.searchParams.get('message') || 'Hi, I\'m interested in this property'
     if (whatsappNumber) {
       const cleanNumber = whatsappNumber.replace(/[^\d]/g, '')
-      const whatsappUrl = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`
+      const whatsappUrl = `https://api.whatsapp.com/send/?phone=${cleanNumber}&text=${encodeURIComponent(message)}&type=phone_number&app_absent=0`
       return NextResponse.redirect(whatsappUrl)
     }
     return NextResponse.json({ error: 'Failed to track WhatsApp click' }, { status: 500 })

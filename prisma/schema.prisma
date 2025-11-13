@@ -83,6 +83,8 @@ model User {
   name          String?
   role          String   // 'owner' | 'agent' | 'admin'
   authId        String   @unique // Clerk Auth user ID
+  contactPhone  String?  // Agent's phone number for property cards
+  contactEmail  String?  // Agent's email for property cards
   Tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   AssignedLeads Lead[]   @relation("AssignedLeads")
   createdAt     DateTime @default(now())

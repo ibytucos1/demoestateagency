@@ -7,7 +7,7 @@ async function getFallbackTenant() {
   try {
     // Try to get first tenant from DB
     const firstTenant = await db.tenant.findFirst({
-      select: { id: true, slug: true, name: true, theme: true, whatsappNumber: true },
+      select: { id: true, slug: true, name: true, theme: true, whatsappNumber: true, contactPhone: true, contactEmail: true },
     })
     if (firstTenant) {
       return firstTenant
@@ -30,6 +30,8 @@ async function getFallbackTenant() {
       },
     },
     whatsappNumber: null as string | null,
+    contactPhone: null as string | null,
+    contactEmail: null as string | null,
   }
 }
 
@@ -87,14 +89,14 @@ export async function getTenantId(): Promise<string> {
  * Accepts either tenant ID or slug
  * For public pages, if no tenant specified, returns first tenant (for theme/branding)
  */
-export async function getTenant(tenantId?: string): Promise<{ id: string; slug: string; name: string; theme: any; whatsappNumber: string | null }> {
+export async function getTenant(tenantId?: string): Promise<{ id: string; slug: string; name: string; theme: any; whatsappNumber: string | null; contactPhone: string | null; contactEmail: string | null }> {
   const identifier = tenantId || (await getTenantId())
   
   // If no identifier and this is a public page, get first tenant for branding
   if (!identifier || identifier === '') {
     try {
       const firstTenant = await db.tenant.findFirst({
-        select: { id: true, slug: true, name: true, theme: true, whatsappNumber: true },
+        select: { id: true, slug: true, name: true, theme: true, whatsappNumber: true, contactPhone: true, contactEmail: true },
       })
       if (firstTenant) {
         return firstTenant
@@ -112,14 +114,14 @@ export async function getTenant(tenantId?: string): Promise<{ id: string; slug: 
     // Try slug first (slugs can be any string)
     tenant = await db.tenant.findUnique({
       where: { slug: identifier },
-      select: { id: true, slug: true, name: true, theme: true, whatsappNumber: true },
+      select: { id: true, slug: true, name: true, theme: true, whatsappNumber: true, contactPhone: true, contactEmail: true },
     })
 
     // If not found by slug, try by ID
     if (!tenant) {
       tenant = await db.tenant.findUnique({
         where: { id: identifier },
-        select: { id: true, slug: true, name: true, theme: true, whatsappNumber: true },
+        select: { id: true, slug: true, name: true, theme: true, whatsappNumber: true, contactPhone: true, contactEmail: true },
       })
     }
 
@@ -127,7 +129,7 @@ export async function getTenant(tenantId?: string): Promise<{ id: string; slug: 
     if (!tenant) {
       console.warn(`[getTenant] Tenant "${identifier}" not found, falling back to first available tenant`)
       const firstTenant = await db.tenant.findFirst({
-        select: { id: true, slug: true, name: true, theme: true, whatsappNumber: true },
+        select: { id: true, slug: true, name: true, theme: true, whatsappNumber: true, contactPhone: true, contactEmail: true },
         orderBy: { createdAt: 'asc' },
       })
       

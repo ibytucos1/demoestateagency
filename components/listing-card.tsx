@@ -259,44 +259,51 @@ export function ListingCard({ listing, whatsappNumber, contactPhone, contactEmai
 
             {/* Bottom Section - Contact Buttons */}
             {(whatsappNumber || contactPhone || contactEmail) && (
-              <div className="mt-3 sm:mt-6 pt-3 sm:pt-5 border-t-2 border-gray-100">
-                <div className="grid grid-cols-3 gap-2">
-                  {/* WhatsApp Button */}
-                  {whatsappNumber && (
-                    <a
-                      href={getWhatsAppTrackingUrl(whatsappNumber, `Hi, I'm interested in ${listing.title}`, listing.id)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="flex flex-col items-center justify-center gap-1.5 py-3 px-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all duration-200 shadow-md hover:shadow-lg hover:scale-[1.02]"
-                    >
-                      <MessageCircle className="h-5 w-5" />
-                      <span className="text-xs font-semibold">WhatsApp</span>
-                    </a>
-                  )}
-                  
-                  {/* Email Button */}
-                  {contactEmail && (
-                    <a
-                      href={`mailto:${contactEmail}?subject=Inquiry about ${listing.title}`}
-                      onClick={(e) => e.stopPropagation()}
-                      className="flex flex-col items-center justify-center gap-1.5 py-3 px-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-all duration-200 shadow-md hover:shadow-lg hover:scale-[1.02]"
-                    >
-                      <Mail className="h-5 w-5" />
-                      <span className="text-xs font-semibold">Email</span>
-                    </a>
-                  )}
-                  
+              <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                   {/* Call Button */}
                   {contactPhone && (
-                    <a
-                      href={`tel:${contactPhone}`}
-                      onClick={(e) => e.stopPropagation()}
-                      className="flex flex-col items-center justify-center gap-1.5 py-3 px-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-all duration-200 shadow-md hover:shadow-lg hover:scale-[1.02]"
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        window.location.href = `tel:${contactPhone}`
+                      }}
+                      className="flex items-center justify-center gap-2 py-3 px-3 bg-white hover:bg-indigo-50 text-indigo-600 border-2 border-indigo-600 rounded-lg transition-all duration-200 text-sm font-semibold"
                     >
                       <Phone className="h-5 w-5" />
-                      <span className="text-xs font-semibold">Call</span>
-                    </a>
+                      <span>Call</span>
+                    </button>
+                  )}
+                  
+                  {/* Email Button - Desktop Only */}
+                  {contactEmail && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        window.location.href = `mailto:${contactEmail}?subject=Inquiry about ${listing.title}`
+                      }}
+                      className="hidden md:flex items-center justify-center gap-2 py-3 px-3 bg-white hover:bg-indigo-50 text-indigo-600 border-2 border-indigo-600 rounded-lg transition-all duration-200 text-sm font-semibold"
+                    >
+                      <Mail className="h-5 w-5" />
+                      <span>Email</span>
+                    </button>
+                  )}
+                  
+                  {/* WhatsApp Button */}
+                  {whatsappNumber && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        window.open(getWhatsAppTrackingUrl(whatsappNumber, `Hi, I'm interested in ${listing.title}`, listing.id, listing.slug), '_blank')
+                      }}
+                      className="flex items-center justify-center gap-2 py-3 px-3 bg-white hover:bg-indigo-50 text-indigo-600 border-2 border-indigo-600 rounded-lg transition-all duration-200 text-sm font-semibold"
+                    >
+                      <MessageCircle className="h-5 w-5" />
+                      <span>WhatsApp</span>
+                    </button>
                   )}
                 </div>
               </div>

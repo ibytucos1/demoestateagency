@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
+import { Metadata } from 'next'
 import { getTenant, getTenantId } from '@/lib/tenant'
 import { BRAND_NAME } from '@/lib/constants'
 import { db } from '@/lib/db'
@@ -41,6 +42,70 @@ type ListingMedia = {
   width?: number
   height?: number
   alt?: string
+}
+
+// Generate metadata for Open Graph / WhatsApp rich previews
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string }
+}): Promise<Metadata> {
+  const listing = await db.listing.findFirst({
+    where: {
+      slug: params.slug,
+      status: 'active',
+    },
+    include: {
+      Tenant: true,
+    },
+  })
+
+  if (!listing) {
+    return {
+      title: 'Listing Not Found',
+    }
+  }
+
+  const media = Array.isArray(listing.media) ? (listing.media as ListingMedia[]) : []
+  const firstImage = media[0]
+  const imageUrl = firstImage ? getPublicUrlSync(firstImage.key) : null
+  const appUrl = env.NEXT_PUBLIC_APP_URL || 'http://localhost:3005'
+  
+  const formatPrice = () => {
+    const formatted = listing.price.toLocaleString()
+    if (listing.type === 'rent') {
+      return `£${formatted}/month`
+    }
+    return `£${formatted}`
+  }
+
+  const description = `${formatPrice()} - ${listing.bedrooms || 0} bed, ${listing.bathrooms || 0} bath ${listing.propertyType || 'property'} in ${listing.city}. ${listing.description.substring(0, 150)}...`
+
+  return {
+    title: `${listing.title} | ${listing.Tenant.name}`,
+    description,
+    openGraph: {
+      title: listing.title,
+      description,
+      url: `${appUrl}/listing/${listing.slug}`,
+      siteName: listing.Tenant.name,
+      images: imageUrl ? [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: listing.title,
+        },
+      ] : [],
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: listing.title,
+      description,
+      images: imageUrl ? [imageUrl] : [],
+    },
+  }
 }
 
 export default async function ListingDetailPage({
