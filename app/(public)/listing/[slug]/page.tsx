@@ -350,7 +350,7 @@ export default async function ListingDetailPage({
               <CardContent className="p-6">
                 <div className="flex items-start gap-4 mb-6">
                   <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Building2 className="h-8 w-8 text-primary" />
+                    <Building className="h-8 w-8 text-primary" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg text-gray-900">{listing.Tenant.name}</h3>
