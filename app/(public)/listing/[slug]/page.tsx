@@ -259,7 +259,7 @@ export default async function ListingDetailPage({
                   {timeIndicator}
                 </span>
               </div>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+              <h1 className="text-lg sm:text-xl font-bold text-gray-900 mb-3">
                 {listing.title}
               </h1>
               <div className="flex items-start gap-2 text-gray-600 mb-4">
