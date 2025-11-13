@@ -222,14 +222,6 @@ export default async function ListingDetailPage({
                 Back to search results
               </Link>
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <Share2 className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <Heart className="h-4 w-4" />
-              </Button>
-            </div>
           </div>
         </div>
       </div>
@@ -275,29 +267,6 @@ export default async function ListingDetailPage({
               <div className="text-3xl sm:text-4xl font-bold text-primary">
                 {formatPrice()}
               </div>
-            </div>
-            <div className="flex flex-wrap gap-2 md:flex-col md:items-stretch">
-              <Button variant="outline" size="lg" className="flex-1 md:flex-none">
-                <Share2 className="h-4 w-4 mr-2" />
-                Share
-              </Button>
-              <Button variant="outline" size="lg" className="flex-1 md:flex-none">
-                <Heart className="h-4 w-4 mr-2" />
-                Save
-              </Button>
-              {whatsappLink && (
-                <Button size="lg" variant="outline" className="flex-1 md:flex-none border-emerald-500 text-emerald-600 hover:bg-emerald-50" asChild>
-                  <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    WhatsApp
-                  </a>
-                </Button>
-              )}
-              <Button size="lg" className="w-full md:w-auto">
-                <Calendar className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">Arrange Viewing</span>
-                <span className="sm:hidden">Book Viewing</span>
-              </Button>
             </div>
           </div>
         </div>
@@ -460,7 +429,7 @@ export default async function ListingDetailPage({
             </Card>
           </div>
 
-          <aside className="space-y-6 sticky top-6 self-start">
+          <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
             {/* Agent Card */}
             <Card className="shadow-lg border-primary/20">
               <CardHeader className="bg-gradient-to-br from-primary/5 to-primary/10 border-b">
