@@ -58,14 +58,14 @@ export function PropertyGallery({ images, propertyTitle, typeLabel, typeColor }:
 
   return (
     <>
-      {/* Mobile: Horizontal Scrollable Carousel */}
-      <div className="lg:hidden">
+      {/* Mobile: Full-Width Horizontal Scrollable Carousel - Rightmove Style */}
+      <div className="lg:hidden -mx-4">
         <div className="relative">
-          <div className="flex gap-2 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 px-4">
+          <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide">
             {images.map((img, idx) => (
               <div 
                 key={`mobile-img-${idx}`}
-                className="relative flex-shrink-0 w-[85vw] aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl overflow-hidden snap-center"
+                className="relative flex-shrink-0 w-screen aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 snap-start"
                 onClick={() => openLightbox(idx)}
               >
                 <Image
@@ -74,14 +74,8 @@ export function PropertyGallery({ images, propertyTitle, typeLabel, typeColor }:
                   fill
                   className="object-cover"
                   priority={idx === 0}
-                  sizes="85vw"
+                  sizes="100vw"
                 />
-                {/* Image Counter Badge - First image only */}
-                {idx === 0 && images.length > 1 && (
-                  <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm text-gray-900 px-3 py-1.5 rounded-lg text-sm font-semibold shadow-lg">
-                    {images.length} Photos
-                  </div>
-                )}
                 {/* Type Badge - First image only */}
                 {idx === 0 && typeLabel && typeColor && (
                   <div className="absolute top-4 right-4">
@@ -93,13 +87,24 @@ export function PropertyGallery({ images, propertyTitle, typeLabel, typeColor }:
               </div>
             ))}
           </div>
-          {/* Dot indicators */}
+          
+          {/* Image Counter Badge - Bottom Right (Rightmove Style) */}
           {images.length > 1 && (
-            <div className="flex justify-center gap-1.5 mt-3">
+            <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm text-gray-900 px-3 py-1.5 rounded-lg text-sm font-semibold shadow-lg">
+              <span className="flex items-center gap-1">
+                <Maximize2 className="h-3.5 w-3.5" />
+                1/{images.length}
+              </span>
+            </div>
+          )}
+          
+          {/* Dot indicators - Bottom Center */}
+          {images.length > 1 && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
               {images.map((_, idx) => (
                 <div 
                   key={`dot-${idx}`}
-                  className="w-1.5 h-1.5 rounded-full bg-gray-300"
+                  className="w-1.5 h-1.5 rounded-full bg-white/70"
                 />
               ))}
             </div>
