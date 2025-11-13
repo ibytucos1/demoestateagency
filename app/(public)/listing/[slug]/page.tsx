@@ -84,17 +84,20 @@ export async function generateMetadata({
   return {
     title: `${listing.title} | ${listing.Tenant.name}`,
     description,
+    metadataBase: new URL(appUrl),
     openGraph: {
       title: listing.title,
       description,
       url: `${appUrl}/listing/${listing.slug}`,
       siteName: listing.Tenant.name,
+      locale: 'en_GB',
       images: imageUrl ? [
         {
           url: imageUrl,
           width: 1200,
           height: 630,
           alt: listing.title,
+          type: 'image/webp',
         },
       ] : [],
       type: 'website',
