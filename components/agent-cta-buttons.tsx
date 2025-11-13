@@ -1,7 +1,8 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import { Calendar, MessageCircle, Phone } from 'lucide-react'
+import { Calendar, Phone } from 'lucide-react'
+import { WhatsAppIcon } from '@/components/icons/whatsapp-icon'
 
 interface AgentCTAButtonsProps {
   whatsappLink: string | null
@@ -32,7 +33,7 @@ export function AgentCTAButtons({ whatsappLink, phoneNumber }: AgentCTAButtonsPr
           asChild
         >
           <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
-            <MessageCircle className="h-5 w-5 mr-2" />
+            <WhatsAppIcon className="h-5 w-5 mr-2" />
             Chat on WhatsApp
           </a>
         </Button>

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Phone, MessageCircle, Calendar } from 'lucide-react'
+import { Phone } from 'lucide-react'
+import { WhatsAppIcon } from '@/components/icons/whatsapp-icon'
 import { cn } from '@/lib/utils'
 
 interface StickyCTABarProps {
@@ -67,7 +68,7 @@ export function StickyCTABar({ price, whatsappLink, phoneNumber, onContactClick 
                 asChild
               >
                 <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
-                  <MessageCircle className="h-5 w-5" />
+                  <WhatsAppIcon className="h-5 w-5" />
                 </a>
               </Button>
             )}
