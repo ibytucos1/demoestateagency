@@ -14,6 +14,7 @@ import { LeadForm } from '@/components/lead-form'
 import { PropertyGallery } from '@/components/property-gallery'
 import { StickyCTABar } from '@/components/sticky-cta-bar'
 import { AgentCTAButtons } from '@/components/agent-cta-buttons'
+import { PropertyMap } from '@/components/property-map'
 import {
   Accordion,
   AccordionContent,
@@ -356,16 +357,24 @@ export default async function ListingDetailPage({
                     </AccordionTrigger>
                     <AccordionContent>
                       <div className="space-y-4">
-                        {/* Map Placeholder */}
+                        {/* Google Map */}
                         {listing.lat && listing.lng && (
-                          <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center text-gray-500">
-                            <div className="text-center">
-                              <MapPinned className="h-12 w-12 mx-auto mb-2 text-gray-400" />
-                              <p className="text-sm">Map showing property location</p>
-                              <p className="text-xs text-gray-400 mt-1">
-                                {listing.lat.toFixed(4)}, {listing.lng.toFixed(4)}
-                              </p>
-                            </div>
+                          <div className="h-[400px] rounded-lg overflow-hidden border border-gray-200">
+                            <PropertyMap 
+                              listings={[{
+                                id: listing.id,
+                                title: listing.title,
+                                price: listing.price,
+                                type: listing.type,
+                                lat: listing.lat,
+                                lng: listing.lng,
+                                slug: listing.slug,
+                                bedrooms: listing.bedrooms,
+                                bathrooms: listing.bathrooms,
+                                propertyType: listing.propertyType,
+                              }]} 
+                              apiKey={env.GOOGLE_PLACES_API_KEY}
+                            />
                           </div>
                         )}
                         <div className="text-sm text-gray-600">
