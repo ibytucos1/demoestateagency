@@ -357,10 +357,10 @@ export default async function ListingDetailPage({
                     </AccordionTrigger>
                     <AccordionContent>
                       <div className="space-y-4">
-                        {/* Google Map - Full Width */}
+                        {/* Google Map - Full Width (breaks out of all containers on mobile) */}
                         {listing.lat && listing.lng && (
-                          <div className="-mx-4 sm:-mx-6 lg:-mx-8">
-                            <div className="h-[450px] w-full">
+                          <div className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen lg:left-0 lg:right-0 lg:ml-0 lg:mr-0 lg:w-full">
+                            <div className="h-[400px] lg:h-[450px] w-full">
                               <PropertyMap 
                                 listings={[{
                                   id: listing.id,
@@ -380,7 +380,7 @@ export default async function ListingDetailPage({
                             </div>
                           </div>
                         )}
-                        <div className="text-sm text-gray-600 pt-2">
+                        <div className="text-sm text-gray-600 pt-4">
                           <p className="mb-2">
                             <strong>Address:</strong> {listing.addressLine1}, {listing.city}
                             {listing.postcode && `, ${listing.postcode}`}
