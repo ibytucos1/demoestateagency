@@ -34,8 +34,7 @@ import {
   Info,
   Building,
   MapPinned,
-  Clock,
-  MessageCircle
+  Clock
 } from 'lucide-react'
 
 type ListingMedia = {
