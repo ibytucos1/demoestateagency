@@ -8,8 +8,26 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Upload, X, Image as ImageIcon } from 'lucide-react'
+import { 
+  Upload, 
+  X, 
+  Image as ImageIcon, 
+  FileText, 
+  MapPin, 
+  Home, 
+  DollarSign,
+  Bed,
+  Bath,
+  Maximize2,
+  Tag,
+  Save,
+  ArrowLeft,
+  Info,
+  CheckCircle2,
+  AlertCircle
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface MediaItem {
@@ -141,275 +159,477 @@ export function ListingEditor({ listing }: ListingEditorProps) {
   }
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold mb-8">
-        {listing ? 'Edit Listing' : 'Create Listing'}
-      </h1>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+            <Home className="h-8 w-8 text-primary" />
+            {listing ? 'Edit Property' : 'Create New Property'}
+          </h1>
+          <p className="text-sm text-gray-600 mt-2">
+            {listing ? 'Update property details and information' : 'Fill in the details below to list a new property'}
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => router.back()}
+          className="gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </Button>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
+        {/* Basic Information */}
+        <Card className="border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader className="bg-gradient-to-br from-gray-50 to-gray-100 border-b border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary rounded-lg">
+                <FileText className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Basic Information</CardTitle>
+                <p className="text-sm text-gray-600 mt-0.5">Property title, status, and pricing</p>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="title">Title *</Label>
+          <CardContent className="pt-6 space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="title" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                <Tag className="h-4 w-4 text-primary" />
+                Property Title <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="title"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                placeholder="e.g., Luxury 3 Bedroom Apartment in Central London"
+                className="h-11 border-2 focus:border-primary"
                 required
               />
+              <p className="text-xs text-gray-500 flex items-start gap-1.5">
+                <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                <span>This will be the main heading for your property listing</span>
+              </p>
             </div>
-            <div>
-              <Label htmlFor="slug">Slug *</Label>
+
+            <div className="space-y-2">
+              <Label htmlFor="slug" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                URL Slug <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="slug"
                 value={formData.slug}
                 onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                placeholder="luxury-3-bed-apartment-london"
+                className="h-11 border-2 focus:border-primary font-mono text-sm"
                 required
               />
+              <p className="text-xs text-gray-500 flex items-start gap-1.5">
+                <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                <span>URL-friendly version (lowercase, hyphens, no spaces)</span>
+              </p>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Status</Label>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold text-gray-700">Status</Label>
                 <Select
                   value={formData.status}
                   onValueChange={(v) => setFormData({ ...formData, status: v })}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-11 border-2">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="sold">Sold</SelectItem>
-                    <SelectItem value="let">Let</SelectItem>
+                    <SelectItem value="draft">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-gray-400" />
+                        Draft
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="active">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                        Active
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="sold">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-blue-500" />
+                        Sold
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="let">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-purple-500" />
+                        Let
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label>Type</Label>
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold text-gray-700">Listing Type</Label>
                 <Select
                   value={formData.type}
                   onValueChange={(v) => setFormData({ ...formData, type: v })}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-11 border-2">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="sale">Sale</SelectItem>
-                    <SelectItem value="rent">Rent</SelectItem>
+                    <SelectItem value="sale">For Sale</SelectItem>
+                    <SelectItem value="rent">For Rent</SelectItem>
                     <SelectItem value="commercial">Commercial</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="price">Price *</Label>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="price" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-emerald-600" />
+                  Price <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   id="price"
                   type="number"
                   value={formData.price}
                   onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  placeholder="350000"
+                  className="h-11 border-2 focus:border-primary"
                   required
                 />
               </div>
-              <div>
-                <Label htmlFor="currency">Currency</Label>
-                <Input
-                  id="currency"
+              <div className="space-y-2">
+                <Label htmlFor="currency" className="text-sm font-semibold text-gray-700">Currency</Label>
+                <Select
                   value={formData.currency}
-                  onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                />
+                  onValueChange={(v) => setFormData({ ...formData, currency: v })}
+                >
+                  <SelectTrigger className="h-11 border-2">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="GBP">£ GBP</SelectItem>
+                    <SelectItem value="USD">$ USD</SelectItem>
+                    <SelectItem value="EUR">€ EUR</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Property Details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        {/* Property Details */}
+        <Card className="border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader className="bg-gradient-to-br from-gray-50 to-gray-100 border-b border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-emerald-600 rounded-lg">
+                <Home className="h-5 w-5 text-white" />
+              </div>
               <div>
-                <Label htmlFor="bedrooms">Bedrooms</Label>
+                <CardTitle className="text-lg">Property Details</CardTitle>
+                <p className="text-sm text-gray-600 mt-0.5">Specifications and features</p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="bedrooms" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <Bed className="h-4 w-4 text-emerald-600" />
+                  Bedrooms
+                </Label>
                 <Input
                   id="bedrooms"
                   type="number"
                   min="0"
                   value={formData.bedrooms}
                   onChange={(e) => setFormData({ ...formData, bedrooms: e.target.value })}
+                  placeholder="3"
+                  className="h-11 border-2 focus:border-emerald-500"
                 />
               </div>
-              <div>
-                <Label htmlFor="bathrooms">Bathrooms</Label>
+              <div className="space-y-2">
+                <Label htmlFor="bathrooms" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <Bath className="h-4 w-4 text-emerald-600" />
+                  Bathrooms
+                </Label>
                 <Input
                   id="bathrooms"
                   type="number"
                   min="0"
+                  step="0.5"
                   value={formData.bathrooms}
                   onChange={(e) => setFormData({ ...formData, bathrooms: e.target.value })}
+                  placeholder="2"
+                  className="h-11 border-2 focus:border-emerald-500"
                 />
               </div>
-              <div>
-                <Label htmlFor="squareFeet">Square Feet</Label>
+              <div className="space-y-2">
+                <Label htmlFor="squareFeet" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <Maximize2 className="h-4 w-4 text-emerald-600" />
+                  Square Feet
+                </Label>
                 <Input
                   id="squareFeet"
                   type="number"
                   min="0"
                   value={formData.squareFeet}
                   onChange={(e) => setFormData({ ...formData, squareFeet: e.target.value })}
-                  placeholder="e.g., 1500"
+                  placeholder="1200"
+                  className="h-11 border-2 focus:border-emerald-500"
                 />
               </div>
             </div>
-            <div>
-              <Label htmlFor="propertyType">Property Type</Label>
-              <Input
-                id="propertyType"
+
+            <div className="space-y-2">
+              <Label htmlFor="propertyType" className="text-sm font-semibold text-gray-700">Property Type</Label>
+              <Select
                 value={formData.propertyType}
-                onChange={(e) => setFormData({ ...formData, propertyType: e.target.value })}
-                placeholder="e.g., house, apartment, condo"
-              />
+                onValueChange={(v) => setFormData({ ...formData, propertyType: v })}
+              >
+                <SelectTrigger className="h-11 border-2">
+                  <SelectValue placeholder="Select property type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="house">House</SelectItem>
+                  <SelectItem value="apartment">Apartment</SelectItem>
+                  <SelectItem value="condo">Condo</SelectItem>
+                  <SelectItem value="villa">Villa</SelectItem>
+                  <SelectItem value="townhouse">Townhouse</SelectItem>
+                  <SelectItem value="studio">Studio</SelectItem>
+                  <SelectItem value="penthouse">Penthouse</SelectItem>
+                  <SelectItem value="bungalow">Bungalow</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <div>
-              <Label htmlFor="features">Features (comma-separated)</Label>
+
+            <div className="space-y-2">
+              <Label htmlFor="features" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                <Tag className="h-4 w-4 text-emerald-600" />
+                Features
+              </Label>
               <Input
                 id="features"
                 value={formData.features}
                 onChange={(e) => setFormData({ ...formData, features: e.target.value })}
-                placeholder="e.g., parking, garden, balcony"
+                placeholder="parking, garden, balcony, pool, gym"
+                className="h-11 border-2 focus:border-emerald-500"
               />
+              <p className="text-xs text-gray-500 flex items-start gap-1.5">
+                <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                <span>Separate multiple features with commas</span>
+              </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Address</CardTitle>
+        {/* Address */}
+        <Card className="border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader className="bg-gradient-to-br from-gray-50 to-gray-100 border-b border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-purple-600 rounded-lg">
+                <MapPin className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Address & Location</CardTitle>
+                <p className="text-sm text-gray-600 mt-0.5">Property location details</p>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="addressLine1">Address Line 1 *</Label>
+          <CardContent className="pt-6 space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="addressLine1" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-purple-600" />
+                Street Address <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="addressLine1"
                 value={formData.addressLine1}
                 onChange={(e) => setFormData({ ...formData, addressLine1: e.target.value })}
-                placeholder="Street address, P.O. box"
+                placeholder="123 Main Street"
+                className="h-11 border-2 focus:border-purple-500"
                 required
               />
             </div>
-            <div>
-              <Label htmlFor="addressLine2">Address Line 2</Label>
+
+            <div className="space-y-2">
+              <Label htmlFor="addressLine2" className="text-sm font-semibold text-gray-700">
+                Address Line 2
+              </Label>
               <Input
                 id="addressLine2"
                 value={formData.addressLine2}
                 onChange={(e) => setFormData({ ...formData, addressLine2: e.target.value })}
-                placeholder="Apartment, suite, unit, building, floor, etc."
+                placeholder="Apartment, suite, unit, building, floor (optional)"
+                className="h-11 border-2 focus:border-purple-500"
               />
             </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="city">City *</Label>
+              <div className="space-y-2">
+                <Label htmlFor="city" className="text-sm font-semibold text-gray-700">
+                  City <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   id="city"
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  placeholder="London"
+                  className="h-11 border-2 focus:border-purple-500"
                   required
                 />
               </div>
-              <div>
-                <Label htmlFor="state">State / County / Region</Label>
+              <div className="space-y-2">
+                <Label htmlFor="state" className="text-sm font-semibold text-gray-700">
+                  State / County / Region
+                </Label>
                 <Input
                   id="state"
                   value={formData.state}
                   onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                  placeholder="e.g., Greater London, Essex"
+                  placeholder="Greater London, Essex"
+                  className="h-11 border-2 focus:border-purple-500"
                 />
               </div>
             </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="postcode">Postcode / ZIP</Label>
+              <div className="space-y-2">
+                <Label htmlFor="postcode" className="text-sm font-semibold text-gray-700">
+                  Postcode / ZIP
+                </Label>
                 <Input
                   id="postcode"
                   value={formData.postcode}
                   onChange={(e) => setFormData({ ...formData, postcode: e.target.value })}
+                  placeholder="SW1A 1AA"
+                  className="h-11 border-2 focus:border-purple-500"
                 />
               </div>
-              <div>
-                <Label htmlFor="country">Country</Label>
-                <Input
-                  id="country"
+              <div className="space-y-2">
+                <Label htmlFor="country" className="text-sm font-semibold text-gray-700">Country</Label>
+                <Select
                   value={formData.country}
-                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                />
+                  onValueChange={(v) => setFormData({ ...formData, country: v })}
+                >
+                  <SelectTrigger className="h-11 border-2">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="United Kingdom">United Kingdom</SelectItem>
+                    <SelectItem value="United States">United States</SelectItem>
+                    <SelectItem value="Canada">Canada</SelectItem>
+                    <SelectItem value="Australia">Australia</SelectItem>
+                    <SelectItem value="Ireland">Ireland</SelectItem>
+                    <SelectItem value="New Zealand">New Zealand</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Description</CardTitle>
+        {/* Description */}
+        <Card className="border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader className="bg-gradient-to-br from-gray-50 to-gray-100 border-b border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-amber-600 rounded-lg">
+                <FileText className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Description</CardTitle>
+                <p className="text-sm text-gray-600 mt-0.5">Detailed property information</p>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent>
-            <Label htmlFor="description">Description *</Label>
+          <CardContent className="pt-6 space-y-2">
+            <Label htmlFor="description" className="text-sm font-semibold text-gray-700">
+              Property Description <span className="text-red-500">*</span>
+            </Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={10}
+              placeholder="Describe the property in detail: key features, amenities, nearby locations, and what makes it special..."
+              className="border-2 focus:border-amber-500 resize-none"
               required
             />
+            <p className="text-xs text-gray-500 flex items-start gap-1.5 pt-1">
+              <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+              <span>Write a compelling description highlighting the property's best features</span>
+            </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Photos</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="photo-upload">Upload Photos</Label>
-              <div className="mt-2">
-                <Input
-                  ref={fileInputRef}
-                  id="photo-upload"
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleFileUpload}
-                  disabled={uploading || loading}
-                  className="sr-only"
-                />
-                <label
-                  htmlFor="photo-upload"
-                  className={cn(
-                    "flex items-center justify-center gap-2 h-10 px-4 py-2 border border-dashed rounded-md transition-colors cursor-pointer",
-                    uploading || loading
-                      ? "opacity-50 cursor-not-allowed pointer-events-none"
-                      : "hover:bg-accent hover:border-primary"
-                  )}
-                >
-                  <Upload className="h-4 w-4" />
-                  <span className="text-sm font-medium">
-                    {uploading ? 'Uploading...' : 'Click to select images'}
-                  </span>
-                </label>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Upload one or more images. Maximum 10MB per file.
-                </p>
+        {/* Photos */}
+        <Card className="border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader className="bg-gradient-to-br from-gray-50 to-gray-100 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-cyan-600 rounded-lg">
+                  <ImageIcon className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Property Photos</CardTitle>
+                  <p className="text-sm text-gray-600 mt-0.5">Upload high-quality images</p>
+                </div>
               </div>
+              {media.length > 0 && (
+                <Badge variant="secondary" className="bg-cyan-100 text-cyan-900">
+                  {media.length} {media.length === 1 ? 'photo' : 'photos'}
+                </Badge>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="pt-6 space-y-6">
+            <div className="space-y-2">
+              <Input
+                ref={fileInputRef}
+                id="photo-upload"
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleFileUpload}
+                disabled={uploading || loading}
+                className="sr-only"
+              />
+              <label
+                htmlFor="photo-upload"
+                className={cn(
+                  "flex flex-col items-center justify-center gap-3 min-h-[160px] px-4 py-8 border-2 border-dashed rounded-xl transition-all cursor-pointer",
+                  uploading || loading
+                    ? "opacity-50 cursor-not-allowed pointer-events-none bg-gray-50 border-gray-300"
+                    : "hover:bg-cyan-50 hover:border-cyan-500 border-gray-300"
+                )}
+              >
+                <div className="p-3 bg-cyan-100 rounded-full">
+                  <Upload className="h-6 w-6 text-cyan-600" />
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-semibold text-gray-900">
+                    {uploading ? 'Uploading images...' : 'Click to upload photos'}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    PNG, JPG, WEBP up to 10MB each
+                  </p>
+                </div>
+              </label>
             </div>
 
             {media.length > 0 && (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {media.map((item, index) => (
                   <div key={item.key || index} className="relative group">
-                    <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
+                    <div className="relative aspect-square rounded-lg overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 border-2 border-gray-200 group-hover:border-cyan-500 transition-colors">
                       {item.url ? (
                         <Image
                           src={item.url}
@@ -423,12 +643,17 @@ export function ListingEditor({ listing }: ListingEditorProps) {
                           <ImageIcon className="h-8 w-8 text-gray-400" />
                         </div>
                       )}
+                      {index === 0 && (
+                        <div className="absolute top-2 left-2 bg-primary text-white text-xs font-bold px-2 py-1 rounded">
+                          Primary
+                        </div>
+                      )}
                     </div>
                     <Button
                       type="button"
                       variant="destructive"
                       size="sm"
-                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute -top-2 -right-2 h-7 w-7 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
                       onClick={() => handleRemoveMedia(index)}
                     >
                       <X className="h-4 w-4" />
@@ -439,28 +664,54 @@ export function ListingEditor({ listing }: ListingEditorProps) {
             )}
 
             {media.length === 0 && (
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                <ImageIcon className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-600">No photos uploaded yet</p>
+              <div className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center bg-gray-50">
+                <div className="p-4 bg-gray-100 rounded-full w-fit mx-auto mb-3">
+                  <ImageIcon className="h-8 w-8 text-gray-400" />
+                </div>
+                <p className="text-sm font-medium text-gray-700 mb-1">No photos uploaded</p>
+                <p className="text-xs text-gray-500">Click the upload button above to add photos</p>
               </div>
             )}
           </CardContent>
         </Card>
 
+        {/* Error Message */}
         {error && (
-          <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-md">
+          <div className="flex items-center gap-3 p-4 bg-red-50 border-l-4 border-red-500 text-red-900 rounded-lg">
+            <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
             <p className="font-medium">{error}</p>
           </div>
         )}
-        <div className="flex gap-4">
-          <Button type="submit" disabled={loading}>
-            {loading ? 'Saving...' : 'Save Listing'}
+
+        {/* Form Actions */}
+        <div className="flex items-center gap-4 pt-4 border-t border-gray-200">
+          <Button 
+            type="submit" 
+            disabled={loading || uploading}
+            size="lg"
+            className="gap-2 min-w-[140px]"
+          >
+            {loading ? (
+              <>
+                <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4" />
+                Save Property
+              </>
+            )}
           </Button>
           <Button
             type="button"
             variant="outline"
+            size="lg"
             onClick={() => router.back()}
+            disabled={loading || uploading}
+            className="gap-2"
           >
+            <ArrowLeft className="h-4 w-4" />
             Cancel
           </Button>
         </div>
