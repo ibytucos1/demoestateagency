@@ -1,305 +1,108 @@
-import { redirect } from 'next/navigation'
-import Link from 'next/link'
-import { Building2, Users2, Wrench, AlertTriangle } from 'lucide-react'
-import { db } from '@/lib/db'
 import { getTenant } from '@/lib/tenant'
 import { requireAuth } from '@/lib/rbac'
-import { StatsGrid, type StatItem } from '@/components/property-management/stats-grid'
-import { PropertyTable } from '@/components/property-management/property-table'
-import { MaintenanceBoard } from '@/components/property-management/maintenance-board'
-import { CreateLeaseWizard } from '@/components/property-management/create-lease-wizard'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { isPropertyManagementEnabled } from '@/lib/property-management'
-
-function isConnectionIssue(error: unknown) {
-  if (!(error instanceof Error)) return false
-  const code = (error as any)?.code
-  if (error.name === 'PrismaClientInitializationError') return true
-  if (code === 'P1001') return true
-  const message = typeof error.message === 'string' ? error.message : ''
-  return message.includes("Can't reach database server")
-}
+import { Badge } from '@/components/ui/badge'
+import Link from 'next/link'
+import {
+  Building2,
+  Construction,
+  Clock,
+  ArrowLeft,
+  Sparkles,
+  CheckCircle2,
+} from 'lucide-react'
 
 export default async function PropertyManagementPage() {
   const tenant = await getTenant()
   const tenantId = tenant.id
 
-  await requireAuth(tenantId, ['admin', 'agent'])
-
-  if (!isPropertyManagementEnabled(tenant.theme)) {
-    redirect('/admin')
-  }
-
-  const now = new Date()
-
-  let properties: Awaited<ReturnType<typeof db.property.findMany>> = []
-  let unitBreakdown: Array<{ status: string; _count: { _all: number } }> = []
-  let maintenanceItems: Awaited<ReturnType<typeof db.maintenanceRequest.findMany>> = []
-  let maintenanceOpenByProperty: Array<{ propertyId: string; _count: { _all: number } }> = []
-  let activeLeaseCount = 0
-  let overduePayments = 0
-  let overduePaymentsByProperty: any[] = []
-
-  try {
-    ;[
-      properties,
-      unitBreakdown,
-      maintenanceItems,
-      maintenanceOpenByProperty,
-      activeLeaseCount,
-      overduePayments,
-      overduePaymentsByProperty,
-    ] = await Promise.all([
-      db.property.findMany({
-        where: { tenantId },
-        include: {
-          Units: {
-            select: {
-              id: true,
-              status: true,
-            },
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-        take: 25,
-      }),
-      db.unit.groupBy({
-        by: ['status'],
-        where: { tenantId },
-        _count: { _all: true },
-      }),
-      db.maintenanceRequest.findMany({
-        where: { tenantId },
-        include: {
-          Property: { select: { name: true } },
-          Unit: { select: { label: true } },
-        },
-        orderBy: { requestedAt: 'desc' },
-        take: 10,
-      }),
-      db.maintenanceRequest.groupBy({
-        by: ['propertyId'],
-        where: {
-          tenantId,
-          status: { in: ['OPEN', 'IN_PROGRESS', 'ON_HOLD'] },
-        },
-        _count: { _all: true },
-      }),
-      db.lease.count({
-        where: {
-          tenantId,
-          status: { in: ['ACTIVE', 'DRAFT'] },
-        },
-      }),
-      db.payment.count({
-        where: {
-          tenantId,
-          status: { in: ['PENDING', 'PARTIAL'] },
-          dueDate: { lt: now },
-        },
-      }),
-      db.payment.findMany({
-        where: {
-          tenantId,
-          status: { in: ['PENDING', 'PARTIAL'] },
-          dueDate: { lt: now },
-        },
-        include: {
-          Lease: {
-            select: {
-              Unit: {
-                select: {
-                  propertyId: true,
-                },
-              },
-            },
-          },
-        },
-      }),
-    ])
-  } catch (error) {
-    if (!isConnectionIssue(error)) {
-      throw error
-    }
-
-    console.warn('[PropertyManagementPage] Falling back to demo data due to database connectivity issue')
-
-    properties = [
-      {
-        id: 'demo-property-1',
-        tenantId,
-        name: 'Demo Residences',
-        code: 'DR-01',
-        description: 'Placeholder property used when the database is unavailable.',
-        addressLine1: '1 Demo Street',
-        addressLine2: null,
-        city: 'London',
-        postcode: 'EC1A 1AA',
-        country: 'UK',
-        lat: null,
-        lng: null,
-        ownerName: 'Demo Owner',
-        ownerEmail: 'owner@example.com',
-        metadata: null,
-        externalId: null,
-        createdAt: new Date('2024-01-01T00:00:00Z'),
-        updatedAt: new Date('2024-01-01T00:00:00Z'),
-        Units: [
-          { id: 'demo-unit-1', status: 'OCCUPIED' as const },
-          { id: 'demo-unit-2', status: 'VACANT' as const },
-        ],
-        Listings: [],
-        Maintenance: [],
-      },
-    ] as any
-
-    unitBreakdown = [
-      { status: 'OCCUPIED', _count: { _all: 1 } },
-      { status: 'VACANT', _count: { _all: 1 } },
-    ]
-
-    maintenanceItems = [
-      {
-        id: 'demo-maintenance-1',
-        tenantId,
-        propertyId: 'demo-property-1',
-        unitId: null,
-        tenantProfileId: null,
-        summary: 'Demo maintenance task',
-        description: 'Example maintenance request shown when offline.',
-        priority: 'MEDIUM',
-        status: 'OPEN',
-        requestedAt: new Date('2024-01-05T09:00:00Z'),
-        scheduledAt: null,
-        resolvedAt: null,
-        assignedAgentId: null,
-        source: 'manual',
-        attachments: null,
-        metadata: null,
-        Property: { name: 'Demo Residences' },
-        Unit: null,
-      },
-    ] as any
-
-    maintenanceOpenByProperty = [{ propertyId: 'demo-property-1', _count: { _all: 1 } }]
-    activeLeaseCount = 1
-    overduePayments = 0
-    overduePaymentsByProperty = []
-  }
-
-  const totalProperties = properties.length
-  const totalUnits = unitBreakdown.reduce((acc, current) => acc + current._count._all, 0)
-  const occupiedUnits = unitBreakdown.find((row) => row.status === 'OCCUPIED')?._count._all ?? 0
-  const vacancyUnits = totalUnits - occupiedUnits
-  const vacancyRate = totalUnits > 0 ? Math.round((vacancyUnits / totalUnits) * 100) : 0
-
-  const openMaintenanceTotal = maintenanceItems.filter((item) => ['OPEN', 'IN_PROGRESS', 'ON_HOLD'].includes(item.status)).length
-
-  const maintenanceCountMap = new Map(maintenanceOpenByProperty.map((row) => [row.propertyId, row._count._all]))
-
-  // Group overdue payments by property
-  const overduePaymentsMap = new Map<string, number>()
-  overduePaymentsByProperty.forEach((payment) => {
-    const propertyId = payment.Lease?.Unit?.propertyId
-    if (propertyId) {
-      overduePaymentsMap.set(propertyId, (overduePaymentsMap.get(propertyId) || 0) + 1)
-    }
-  })
-
-  const propertyRows = properties.map((property) => {
-    const propertyWithUnits = property as any
-    const totalUnitsForProperty = propertyWithUnits.Units.length
-    const occupiedUnitsForProperty = propertyWithUnits.Units.filter((unit: any) => unit.status === 'OCCUPIED').length
-    const hasOverduePayments = overduePaymentsMap.get(property.id) ?? 0
-
-    return {
-      id: property.id,
-      name: property.name,
-      city: property.city,
-      code: property.code,
-      ownerName: property.ownerName,
-      totalUnits: totalUnitsForProperty,
-      occupiedUnits: occupiedUnitsForProperty,
-      maintenanceOpen: maintenanceCountMap.get(property.id) ?? 0,
-      overduePayments: hasOverduePayments,
-      createdAt: property.createdAt.toISOString(),
-    }
-  })
-
-  const maintenanceRows = maintenanceItems.map((item) => {
-    const itemWithRelations = item as any
-    return {
-    id: item.id,
-    summary: item.summary,
-    status: item.status,
-    priority: item.priority,
-      propertyName: itemWithRelations.Property.name,
-      unitLabel: itemWithRelations.Unit?.label ?? null,
-    requestedAt: item.requestedAt.toISOString(),
-    assignedAgentId: item.assignedAgentId ?? null,
-    }
-  })
-
-  const stats: StatItem[] = [
-    {
-      label: 'Managed properties',
-      value: totalProperties.toString(),
-      helper: `${totalUnits} total units`,
-      icon: <Building2 className="h-5 w-5" />,
-    },
-    {
-      label: 'Occupied units',
-      value: `${occupiedUnits}/${totalUnits}`,
-      helper: `Vacancy ${vacancyRate}%`,
-      accent: vacancyRate > 15 ? 'warning' : 'success',
-      icon: <Users2 className="h-5 w-5" />,
-    },
-    {
-      label: 'Active leases',
-      value: activeLeaseCount.toString(),
-      helper: overduePayments > 0 ? `${overduePayments} overdue payments` : 'All payments current',
-      accent: overduePayments > 0 ? 'warning' : 'success',
-      icon: <Wrench className="h-5 w-5" />,
-    },
-    {
-      label: 'Open maintenance',
-      value: openMaintenanceTotal.toString(),
-      helper: openMaintenanceTotal > 0 ? 'Review queue' : 'All clear',
-      accent: openMaintenanceTotal > 0 ? 'warning' : 'success',
-      icon: <AlertTriangle className="h-5 w-5" />,
-    },
-  ]
+  await requireAuth(tenantId, ['owner', 'admin', 'agent'])
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-semibold text-gray-900">Property Management</h1>
-        <p className="text-sm text-gray-600">Portfolio control, maintenance triage, and rent collection in one place.</p>
+    <div className="min-h-[calc(100vh-12rem)] flex items-center justify-center p-6">
+      <div className="max-w-2xl w-full">
+        <Card className="border-2 shadow-xl">
+          <CardContent className="pt-12 pb-12 px-8">
+            {/* Icon */}
+            <div className="flex justify-center mb-6">
+              <div className="relative">
+                <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse" />
+                <div className="relative p-6 bg-gradient-to-br from-primary to-primary/80 rounded-full">
+                  <Construction className="h-12 w-12 text-white" />
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/admin/property-management/tenants">View Tenants</Link>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/admin/property-management/payments">View Payments</Link>
-          </Button>
-          <CreateLeaseWizard />
         </div>
       </div>
 
-      <StatsGrid stats={stats} />
+            {/* Badge */}
+            <div className="flex justify-center mb-4">
+              <Badge className="bg-amber-100 text-amber-900 border border-amber-300 px-3 py-1.5 text-xs font-semibold">
+                <Clock className="h-3.5 w-3.5 mr-1.5" />
+                Currently in Development
+              </Badge>
+            </div>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-5">
-        <div className="xl:col-span-3">
-          <PropertyTable properties={propertyRows} />
+            {/* Heading */}
+            <h1 className="text-4xl font-bold text-center text-gray-900 mb-3">
+              Property Management
+            </h1>
+            <p className="text-lg text-center text-gray-600 mb-8">
+              Coming Soon
+            </p>
+
+            {/* Description */}
+            <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6 mb-8 border border-blue-200">
+              <p className="text-center text-gray-700 leading-relaxed mb-4">
+                We're building something amazing! The Property Management module will provide comprehensive tools for managing your portfolio.
+              </p>
+              
+              {/* Feature List */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-6">
+                <div className="flex items-start gap-2 text-sm text-gray-700">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                  <span>Property & Unit Management</span>
+                </div>
+                <div className="flex items-start gap-2 text-sm text-gray-700">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                  <span>Tenant Profiles & Leases</span>
+                </div>
+                <div className="flex items-start gap-2 text-sm text-gray-700">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                  <span>Maintenance Tracking</span>
+                </div>
+                <div className="flex items-start gap-2 text-sm text-gray-700">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                  <span>Rent Collection & Payments</span>
+                </div>
+              </div>
+            </div>
+
+            {/* CTA */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Button asChild size="lg" className="gap-2 min-w-[160px]">
+                <Link href="/admin/listings">
+                  <Building2 className="h-4 w-4" />
+                  View Listings
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="gap-2 min-w-[160px]">
+                <Link href="/admin">
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to Dashboard
+                </Link>
+              </Button>
         </div>
-        <div className="xl:col-span-2">
-          <MaintenanceBoard maintenance={maintenanceRows} />
+
+            {/* Footer Note */}
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <p className="text-center text-xs text-gray-500 flex items-center justify-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-primary" />
+                <span>Stay tuned for updates!</span>
+              </p>
         </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
 }
-
-
