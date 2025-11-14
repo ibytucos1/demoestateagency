@@ -214,8 +214,8 @@ export default async function ListingDetailPage({
       {/* Property Details Below Images */}
       <div className="bg-white border-t border-gray-200">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-            <div className="flex-1 min-w-0">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2">
               <div className="flex items-center gap-3 mb-3 flex-wrap">
                 {listing.propertyType && (
                   <span className="px-3 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700 capitalize">
@@ -250,32 +250,43 @@ export default async function ListingDetailPage({
           <div className="lg:col-span-2 space-y-6">
 
             {/* Key Features Summary */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-6 bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200">
-              {listing.bedrooms !== undefined && listing.bedrooms !== null && (
-                <div className="flex flex-col items-center text-center p-4 bg-white rounded-lg shadow-sm">
-                  <div className="p-3 rounded-full bg-primary/10 mb-3">
-                    <Bed className="h-6 w-6 text-primary" />
-                  </div>
-                  <div className="text-2xl font-bold text-gray-900">{listing.bedrooms}</div>
-                  <div className="text-sm text-gray-600">Bedrooms</div>
-                </div>
-              )}
-              {listing.bathrooms !== undefined && listing.bathrooms !== null && (
-                <div className="flex flex-col items-center text-center p-4 bg-white rounded-lg shadow-sm">
-                  <div className="p-3 rounded-full bg-primary/10 mb-3">
-                    <Bath className="h-6 w-6 text-primary" />
-                  </div>
-                  <div className="text-2xl font-bold text-gray-900">{listing.bathrooms}</div>
-                  <div className="text-sm text-gray-600">Bathrooms</div>
-                </div>
-              )}
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-6 sm:gap-8 p-6 bg-white rounded-2xl border border-gray-200 shadow-sm">
               {listing.propertyType && (
-                <div className="flex flex-col items-center text-center p-4 bg-white rounded-lg shadow-sm col-span-2 sm:col-span-1">
-                  <div className="p-3 rounded-full bg-primary/10 mb-3">
-                    <HomeIcon className="h-6 w-6 text-primary" />
+                <>
+                  <div className="flex flex-col items-center gap-2">
+                    <HomeIcon className="h-8 w-8 text-gray-700" strokeWidth={1.5} />
+                    <span className="text-base font-medium text-gray-900 capitalize">{listing.propertyType}</span>
                   </div>
-                  <div className="text-2xl font-bold text-gray-900 capitalize">{listing.propertyType}</div>
-                  <div className="text-sm text-gray-600">Property Type</div>
+                  <div className="h-12 w-px bg-gray-200 hidden sm:block" />
+                </>
+              )}
+              
+              {listing.bedrooms !== undefined && listing.bedrooms !== null && (
+                <>
+                  <div className="flex flex-col items-center gap-2">
+                    <Bed className="h-8 w-8 text-gray-700" strokeWidth={1.5} />
+                    <span className="text-base font-medium text-gray-900">{listing.bedrooms} bed{listing.bedrooms !== 1 ? 's' : ''}</span>
+                  </div>
+                  <div className="h-12 w-px bg-gray-200 hidden sm:block" />
+                </>
+              )}
+              
+              {listing.bathrooms !== undefined && listing.bathrooms !== null && (
+                <>
+                  <div className="flex flex-col items-center gap-2">
+                    <Bath className="h-8 w-8 text-gray-700" strokeWidth={1.5} />
+                    <span className="text-base font-medium text-gray-900">{listing.bathrooms} bath{listing.bathrooms !== 1 ? 's' : ''}</span>
+                  </div>
+                  {listing.squareFeet && <div className="h-12 w-px bg-gray-200 hidden sm:block" />}
+                </>
+              )}
+              
+              {listing.squareFeet && (
+                <div className="flex flex-col items-center gap-2">
+                  <svg className="h-8 w-8 text-gray-700" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h7v7H3V3zm11 0h7v7h-7V3zM3 14h7v7H3v-7zm11 0h7v7h-7v-7z" />
+                  </svg>
+                  <span className="text-base font-medium text-gray-900">{listing.squareFeet.toLocaleString()} sq ft</span>
                 </div>
               )}
             </div>
