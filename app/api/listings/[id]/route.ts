@@ -58,8 +58,11 @@ export async function PATCH(
       try {
         const addressParts = [
           updateData.addressLine1 || listing.addressLine1,
+          updateData.addressLine2 || listing.addressLine2,
           updateData.city || listing.city,
-          updateData.postcode || listing.postcode
+          updateData.state || listing.state,
+          updateData.postcode || listing.postcode,
+          updateData.country || listing.country
         ].filter(Boolean)
         const addressString = addressParts.join(', ')
         

@@ -109,8 +109,11 @@ model Listing {
   squareFeet   Int?
   propertyType String?  // 'house' | 'apartment' | 'condo' | 'villa' | etc
   addressLine1 String
+  addressLine2 String?
   city         String
+  state        String?  // State, county, or region
   postcode     String?
+  country      String?  @default("United Kingdom")
   lat          Float?
   lng          Float?
   description  String   @db.Text

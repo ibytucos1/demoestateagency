@@ -40,10 +40,14 @@ export function ListingEditor({ listing }: ListingEditorProps) {
     currency: listing?.currency || 'USD',
     bedrooms: listing?.bedrooms || '',
     bathrooms: listing?.bathrooms || '',
+    squareFeet: listing?.squareFeet || '',
     propertyType: listing?.propertyType || '',
     addressLine1: listing?.addressLine1 || '',
+    addressLine2: listing?.addressLine2 || '',
     city: listing?.city || '',
+    state: listing?.state || '',
     postcode: listing?.postcode || '',
+    country: listing?.country || 'United Kingdom',
     description: listing?.description || '',
     features: (listing?.features || []).join(', '),
   })
@@ -100,6 +104,10 @@ export function ListingEditor({ listing }: ListingEditorProps) {
         price: Number(formData.price),
         bedrooms: formData.bedrooms ? Number(formData.bedrooms) : null,
         bathrooms: formData.bathrooms ? Number(formData.bathrooms) : null,
+        squareFeet: formData.squareFeet ? Number(formData.squareFeet) : null,
+        addressLine2: formData.addressLine2 || null,
+        state: formData.state || null,
+        country: formData.country || null,
         features: formData.features
           .split(',')
           .map((feature: string) => feature.trim())
@@ -224,12 +232,13 @@ export function ListingEditor({ listing }: ListingEditorProps) {
             <CardTitle>Property Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="bedrooms">Bedrooms</Label>
                 <Input
                   id="bedrooms"
                   type="number"
+                  min="0"
                   value={formData.bedrooms}
                   onChange={(e) => setFormData({ ...formData, bedrooms: e.target.value })}
                 />
@@ -239,8 +248,20 @@ export function ListingEditor({ listing }: ListingEditorProps) {
                 <Input
                   id="bathrooms"
                   type="number"
+                  min="0"
                   value={formData.bathrooms}
                   onChange={(e) => setFormData({ ...formData, bathrooms: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="squareFeet">Square Feet</Label>
+                <Input
+                  id="squareFeet"
+                  type="number"
+                  min="0"
+                  value={formData.squareFeet}
+                  onChange={(e) => setFormData({ ...formData, squareFeet: e.target.value })}
+                  placeholder="e.g., 1500"
                 />
               </div>
             </div>
@@ -276,10 +297,20 @@ export function ListingEditor({ listing }: ListingEditorProps) {
                 id="addressLine1"
                 value={formData.addressLine1}
                 onChange={(e) => setFormData({ ...formData, addressLine1: e.target.value })}
+                placeholder="Street address, P.O. box"
                 required
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="addressLine2">Address Line 2</Label>
+              <Input
+                id="addressLine2"
+                value={formData.addressLine2}
+                onChange={(e) => setFormData({ ...formData, addressLine2: e.target.value })}
+                placeholder="Apartment, suite, unit, building, floor, etc."
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="city">City *</Label>
                 <Input
@@ -290,11 +321,30 @@ export function ListingEditor({ listing }: ListingEditorProps) {
                 />
               </div>
               <div>
-                <Label htmlFor="postcode">Postcode</Label>
+                <Label htmlFor="state">State / County / Region</Label>
+                <Input
+                  id="state"
+                  value={formData.state}
+                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                  placeholder="e.g., Greater London, Essex"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="postcode">Postcode / ZIP</Label>
                 <Input
                   id="postcode"
                   value={formData.postcode}
                   onChange={(e) => setFormData({ ...formData, postcode: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="country">Country</Label>
+                <Input
+                  id="country"
+                  value={formData.country}
+                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                 />
               </div>
             </div>

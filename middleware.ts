@@ -76,13 +76,6 @@ export async function middleware(request: NextRequest) {
   // For public routes, no default tenant needed (shows all listings)
   let tenant = request.cookies.get('x-tenant')?.value || request.nextUrl.searchParams.get('tenant')
   
-  // If admin route and no tenant set, we'll detect it from user's account after auth
-  // For now, leave tenant empty for public pages
-  if (!tenant && request.nextUrl.pathname.startsWith('/admin')) {
-    // Will be set after checking user's tenant
-    tenant = null
-  }
-  
   // Protect admin routes and detect tenant from user's account
   if (request.nextUrl.pathname.startsWith('/admin')) {
     const {
@@ -95,7 +88,16 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(signInUrl)
     }
     
-    // If no tenant set, get from user's account
+    // Check cached tenant for this user (avoids DB query on every request)
+    const cachedTenantCookie = request.cookies.get(`x-tenant-cache-${session.user.id}`)
+    const cachedTenant = cachedTenantCookie?.value
+    
+    // If we have a cached tenant for this user, use it
+    if (cachedTenant && !tenant) {
+      tenant = cachedTenant
+    }
+    
+    // If no tenant cached, fetch from DB and cache it
     if (!tenant && session.user?.id) {
       try {
         const { db } = await import('@/lib/db')
@@ -105,6 +107,15 @@ export async function middleware(request: NextRequest) {
         })
         if (user?.Tenant?.slug) {
           tenant = user.Tenant.slug
+          
+          // Cache the tenant slug for this user (1 hour TTL)
+          response.cookies.set(`x-tenant-cache-${session.user.id}`, tenant, {
+            httpOnly: true,
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 60 * 60, // 1 hour
+            secure: process.env.NODE_ENV === 'production',
+          })
         }
       } catch (error) {
         console.warn('[middleware] Could not fetch user tenant:', error)

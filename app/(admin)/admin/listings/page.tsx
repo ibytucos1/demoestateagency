@@ -129,22 +129,14 @@ export default async function ListingsPage() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="flex gap-8">
-          <button className="border-b-2 border-primary pb-4 px-1 text-sm font-medium text-primary">
-            Properties
-            <span className="ml-2 bg-primary/10 text-primary px-2 py-0.5 rounded-full text-xs">
-              {totalListings}
-            </span>
-          </button>
-          <button className="border-b-2 border-transparent pb-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-900 hover:border-gray-300">
-            Units
-          </button>
-          <button className="border-b-2 border-transparent pb-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-900 hover:border-gray-300">
-            Equipment
-          </button>
-        </nav>
+      {/* Page Title Section */}
+      <div className="border-b border-gray-200 pb-4">
+        <div className="flex items-center gap-3">
+          <h2 className="text-lg font-semibold text-gray-900">Properties</h2>
+          <span className="bg-primary/10 text-primary px-2.5 py-1 rounded-full text-xs font-medium">
+            {totalListings}
+          </span>
+        </div>
       </div>
 
       {/* Search and Filters */}

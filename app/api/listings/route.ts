@@ -59,10 +59,14 @@ export async function POST(req: NextRequest) {
       currency = 'USD',
       bedrooms,
       bathrooms,
+      squareFeet,
       propertyType,
       addressLine1,
+      addressLine2,
       city,
+      state,
       postcode,
+      country,
       lat,
       lng,
       description,
@@ -101,7 +105,7 @@ export async function POST(req: NextRequest) {
     if (!finalLat || !finalLng) {
       try {
         // Build address string for geocoding
-        const addressParts = [addressLine1, city, postcode].filter(Boolean)
+        const addressParts = [addressLine1, addressLine2, city, state, postcode, country].filter(Boolean)
         const addressString = addressParts.join(', ')
         
         const geocodeResult = await placesService.geocode(addressString)
@@ -128,10 +132,14 @@ export async function POST(req: NextRequest) {
         currency,
         bedrooms: bedrooms ? Number(bedrooms) : null,
         bathrooms: bathrooms ? Number(bathrooms) : null,
+        squareFeet: squareFeet ? Number(squareFeet) : null,
         propertyType: propertyType || null,
         addressLine1,
+        addressLine2: addressLine2 || null,
         city,
+        state: state || null,
         postcode: postcode || null,
+        country: country || null,
         lat: finalLat,
         lng: finalLng,
         description,
