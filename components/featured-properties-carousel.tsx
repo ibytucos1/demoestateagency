@@ -121,16 +121,12 @@ export function FeaturedPropertiesCarousel({ listings, whatsappNumber, contactPh
 
               {/* Content */}
               <div className="p-5">
-                <h3 className="font-semibold text-lg mb-2 line-clamp-1 group-hover:text-primary transition-colors">
+                <h3 className="font-semibold text-lg mb-3 line-clamp-1 group-hover:text-primary transition-colors">
                   {listing.title}
                 </h3>
-                <p className="text-sm text-muted-foreground mb-4 flex items-center gap-1">
-                  <MapPin className="h-4 w-4" />
-                  {listing.addressLine1}, {listing.city}
-                </p>
 
                 {/* Features */}
-                <div className="flex items-center gap-4 text-sm text-gray-600">
+                <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
                   {listing.bedrooms && (
                     <div className="flex items-center gap-1">
                       <Bed className="h-4 w-4" />
@@ -149,6 +145,14 @@ export function FeaturedPropertiesCarousel({ listings, whatsappNumber, contactPh
                       <span className="font-medium capitalize">{listing.propertyType}</span>
                     </div>
                   )}
+                </div>
+
+                {/* Location */}
+                <div className="flex items-center gap-1.5 text-gray-600">
+                  <MapPin className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                  <span className="text-sm line-clamp-1">
+                    {listing.addressLine1}, {listing.city}
+                  </span>
                 </div>
               </div>
             </Link>

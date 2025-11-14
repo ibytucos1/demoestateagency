@@ -28,6 +28,7 @@ export function PropertyMap({ listings, apiKey }: PropertyMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const [map, setMap] = useState<google.maps.Map | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([])
   const infoWindowRef = useRef<google.maps.InfoWindow | null>(null)
 
@@ -37,11 +38,43 @@ export function PropertyMap({ listings, apiKey }: PropertyMapProps) {
     [listings],
   )
 
+  // Check for API key
   useEffect(() => {
-    if (!mapRef.current || validListings.length === 0) {
+    if (!apiKey || apiKey.trim() === '') {
+      console.error('❌ Google Maps API key is missing!')
+      setError('Maps configuration error: API key not found')
+      setIsLoading(false)
+    }
+    
+    // Listen for Google Maps API errors
+    const handleGoogleMapsError = (event: ErrorEvent) => {
+      const message = event.message?.toLowerCase() || ''
+      if (message.includes('referernotallowedmaperror')) {
+        console.error('❌ Google Maps RefererNotAllowedMapError detected')
+        setError('API key not authorized for this domain')
+        setIsLoading(false)
+      } else if (message.includes('invalidkeymaperror')) {
+        console.error('❌ Google Maps InvalidKeyMapError detected')
+        setError('Invalid Google Maps API key')
+        setIsLoading(false)
+      } else if (message.includes('apinotactivatedmaperror')) {
+        console.error('❌ Google Maps ApiNotActivatedMapError detected')
+        setError('Google Maps API not activated')
+        setIsLoading(false)
+      }
+    }
+    
+    window.addEventListener('error', handleGoogleMapsError)
+    return () => window.removeEventListener('error', handleGoogleMapsError)
+  }, [apiKey])
+
+  useEffect(() => {
+    if (!mapRef.current || validListings.length === 0 || !apiKey) {
       setIsLoading(false)
       return
     }
+
+    console.log('🗺️ Initializing map with', validListings.length, 'properties')
 
     // Load Google Maps script only once
     const loadGoogleMaps = async (): Promise<void> => {
@@ -87,9 +120,10 @@ export function PropertyMap({ listings, apiKey }: PropertyMapProps) {
           isGoogleMapsLoading = false
           resolve()
         }
-        script.onerror = () => {
+        script.onerror = (e) => {
           isGoogleMapsLoading = false
           googleMapsLoadPromise = null
+          console.error('❌ Failed to load Google Maps script:', e)
           reject(new Error('Failed to load Google Maps'))
         }
         document.head.appendChild(script)
@@ -184,8 +218,23 @@ export function PropertyMap({ listings, apiKey }: PropertyMapProps) {
         })
 
         setIsLoading(false)
+        console.log('✅ Map initialized successfully')
       } catch (error) {
-        console.error('Error initializing map:', error)
+        console.error('❌ Error initializing map:', error)
+        
+        // Detect specific error types
+        if (error instanceof Error) {
+          if (error.message.includes('RefererNotAllowedMapError')) {
+            setError('API key not authorized for this domain')
+          } else if (error.message.includes('ApiNotActivatedMapError')) {
+            setError('Google Maps API not activated')
+          } else if (error.message.includes('InvalidKeyMapError')) {
+            setError('Invalid Google Maps API key')
+          } else {
+            setError('Failed to load map')
+          }
+        }
+        
         setIsLoading(false)
       }
     }
@@ -204,9 +253,38 @@ export function PropertyMap({ listings, apiKey }: PropertyMapProps) {
     }
   }, [validListings, apiKey])
 
+  // Show error state
+  if (error) {
+    return (
+      <div className="w-full h-[400px] rounded-xl border-2 border-red-200 bg-gradient-to-br from-red-50 to-orange-50 p-8 flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <p className="text-sm font-semibold text-red-700 mb-2">
+            {error}
+          </p>
+          <p className="text-xs text-red-600 mb-4">
+            Please check the Google Maps API key configuration in Google Cloud Console
+          </p>
+          <a 
+            href="https://console.cloud.google.com/apis/credentials" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="inline-block text-xs text-blue-600 hover:text-blue-800 underline"
+          >
+            Configure API Key →
+          </a>
+        </div>
+      </div>
+    )
+  }
+
   if (validListings.length === 0) {
     return (
-      <div className="w-full h-full rounded-xl border-2 border-dashed border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100 p-12 flex items-center justify-center">
+      <div className="w-full h-[400px] rounded-xl border-2 border-dashed border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100 p-12 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -217,7 +295,7 @@ export function PropertyMap({ listings, apiKey }: PropertyMapProps) {
             No location data available
           </p>
           <p className="text-xs text-gray-500 mt-1">
-            Map will be displayed once coordinates are added
+            Properties need latitude and longitude coordinates
           </p>
         </div>
       </div>
@@ -225,7 +303,7 @@ export function PropertyMap({ listings, apiKey }: PropertyMapProps) {
   }
 
   return (
-    <div className="relative w-full h-full bg-gray-100">
+    <div className="relative w-full h-[400px] bg-gray-100 rounded-xl overflow-hidden">
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-white/95 backdrop-blur-sm z-10">
           <div className="flex flex-col items-center gap-3">
@@ -236,7 +314,7 @@ export function PropertyMap({ listings, apiKey }: PropertyMapProps) {
               </div>
             </div>
             <p className="text-base font-medium text-gray-700">Loading map...</p>
-            <p className="text-xs text-gray-500">Preparing property location</p>
+            <p className="text-xs text-gray-500">Preparing {validListings.length} location{validListings.length !== 1 ? 's' : ''}</p>
           </div>
         </div>
       )}

@@ -235,17 +235,17 @@ export function ListingCard({ listing, whatsappNumber, contactPhone, contactEmai
               )}
 
               {/* Features - Bedrooms, Bathrooms & Square Feet */}
-              <div className="flex items-center gap-3 sm:gap-4 text-gray-700 mb-3 sm:mb-5">
+              <div className="flex items-center gap-3 sm:gap-4 text-gray-700 mb-3">
                 {listing.bedrooms !== undefined && listing.bedrooms !== null && (
                   <div className="flex items-center gap-1.5">
                     <Bed className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm font-medium">{listing.bedrooms} bd</span>
+                    <span className="text-sm font-medium">{listing.bedrooms}</span>
                   </div>
                 )}
                 {listing.bathrooms !== undefined && listing.bathrooms !== null && (
                   <div className="flex items-center gap-1.5">
                     <Bath className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm font-medium">{listing.bathrooms} bt</span>
+                    <span className="text-sm font-medium">{listing.bathrooms}</span>
                   </div>
                 )}
                 {listing.squareFeet !== undefined && listing.squareFeet !== null && (
@@ -254,6 +254,15 @@ export function ListingCard({ listing, whatsappNumber, contactPhone, contactEmai
                     <span className="text-sm font-medium">{listing.squareFeet.toLocaleString()} sq ft</span>
                   </div>
                 )}
+              </div>
+
+              {/* Location */}
+              <div className="flex items-center gap-1.5 text-gray-600 mb-3 sm:mb-5">
+                <MapPin className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                <span className="text-sm line-clamp-1">
+                  {listing.addressLine1}, {listing.city}
+                  {listing.postcode && `, ${listing.postcode}`}
+                </span>
               </div>
             </div>
 

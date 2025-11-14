@@ -6,6 +6,7 @@ import { PropertyMap } from '@/components/property-map'
 import { normalizeCityName } from '@/lib/utils'
 import { env } from '@/lib/env'
 import { db } from '@/lib/db'
+import Link from 'next/link'
 import type { Prisma } from '@prisma/client'
 
 export const dynamic = 'force-dynamic'
@@ -354,7 +355,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   if (hasGeoFilter && filters.radius) {
     searchSummary.push(`within ${filters.radius}km`)
   }
-  if (filters.type) searchSummary.push(`for ${filters.type[0]}`)
+  // Removed: if (filters.type) searchSummary.push(`for ${filters.type[0]}`)
   if (filters.bedrooms) searchSummary.push(`with ${filters.bedrooms}+ bedrooms`)
   if (filters.minPrice || filters.maxPrice) {
     const priceRange = []
@@ -374,9 +375,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">
+          <h1 className="text-2xl font-bold mb-2">
             {displayListings.length > 0 
-              ? `${displayListings.length} Property${displayListings.length !== 1 ? 'ies' : ''} Found`
+              ? `We found ${displayListings.length} ${displayListings.length !== 1 ? 'properties' : 'property'}${filters.type && filters.type[0] ? ` for ${filters.type[0]}` : ''}`
               : 'Search Properties'}
           </h1>
           {searchSummary.length > 0 && (
@@ -440,7 +441,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             <div className="lg:col-span-1 space-y-6">
               {/* Map - Desktop Only */}
               {displayListings.length > 0 && (
-                <div className="hidden lg:block sticky top-24">
+                <div className="hidden lg:block sticky top-24 space-y-6">
                   <PropertyMap 
                     listings={displayListings.map((l: any) => ({
                       id: l.id,
@@ -454,6 +455,29 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                     }))}
                     apiKey={env.NEXT_PUBLIC_MAPS_BROWSER_KEY}
                   />
+                  
+                  {/* CTA Card - Desktop Only */}
+                  <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-bold text-gray-900">
+                        Need Help Finding a Property?
+                      </h3>
+                    </div>
+                    <p className="text-gray-600 mb-5 text-sm leading-relaxed">
+                      Our expert team is here to help you find your perfect home with personalized recommendations.
+                    </p>
+                    <Link 
+                      href="/contact" 
+                      className="inline-flex items-center justify-center w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-md hover:shadow-lg"
+                    >
+                      Contact an Agent
+                    </Link>
+                  </div>
                 </div>
               )}
             </div>
