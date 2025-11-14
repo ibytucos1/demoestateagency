@@ -1,6 +1,7 @@
 import { getTenant, getTenantId } from '@/lib/tenant'
 import { BRAND_TAGLINE } from '@/lib/constants'
 import { db } from '@/lib/db'
+import { redis } from '@/lib/redis'
 import { Button } from '@/components/ui/button'
 import { HeroSearch } from '@/components/hero-search'
 import { FeaturedPropertiesCarousel } from '@/components/featured-properties-carousel'
@@ -14,20 +15,35 @@ export default async function HomePage() {
   const tenant = await getTenant(tenantIdentifier)
 
   // Get all tenant IDs for showing featured listings from all branches
-  const allTenants = await db.tenant.findMany({
-    select: { id: true, slug: true, whatsappNumber: true, contactPhone: true },
-  })
+  // Cache for 5 minutes to reduce DB load
+  const cacheKey = 'homepage:allTenants'
+  let allTenants = await redis.get<Array<{ id: string; slug: string; whatsappNumber: string | null; contactPhone: string | null }>>(cacheKey)
+  
+  if (!allTenants) {
+    allTenants = await db.tenant.findMany({
+      select: { id: true, slug: true, whatsappNumber: true, contactPhone: true },
+    })
+    await redis.setex(cacheKey, 300, allTenants) // 5 minutes TTL
+  }
+  
   const tenantIds = allTenants.map((t: { id: string }) => t.id)
 
   // Get featured listings from all tenants
-  let featured = await db.listing.findMany({
-    where: {
-      tenantId: { in: tenantIds },
-      status: 'active',
-    },
-    orderBy: { createdAt: 'desc' },
-    take: 6,
-  })
+  // Cache for 5 minutes with tenant IDs in key
+  const featuredCacheKey = `homepage:featured:${tenantIds.sort().join(',')}`
+  let featured = await redis.get<Awaited<ReturnType<typeof db.listing.findMany>>>(featuredCacheKey)
+  
+  if (!featured) {
+    featured = await db.listing.findMany({
+      where: {
+        tenantId: { in: tenantIds },
+        status: 'active',
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 6,
+    })
+    await redis.setex(featuredCacheKey, 300, featured) // 5 minutes TTL
+  }
 
   // If no listings, use mock data
   if (featured.length === 0) {
@@ -216,16 +232,23 @@ export default async function HomePage() {
   }
 
   // Get stats from all tenants
-  const stats = await db.listing.groupBy({
-    by: ['type'],
-    where: {
-      tenantId: { in: tenantIds },
-      status: 'active',
-    },
-    _count: {
-      id: true,
-    },
-  })
+  // Cache for 5 minutes with tenant IDs in key
+  const statsCacheKey = `homepage:stats:${tenantIds.sort().join(',')}`
+  let stats = await redis.get<Array<{ type: string; _count: { id: number } }>>(statsCacheKey)
+  
+  if (!stats) {
+    stats = await db.listing.groupBy({
+      by: ['type'],
+      where: {
+        tenantId: { in: tenantIds },
+        status: 'active',
+      },
+      _count: {
+        id: true,
+      },
+    })
+    await redis.setex(statsCacheKey, 300, stats) // 5 minutes TTL
+  }
 
   type ListingStat = {
     type: string
