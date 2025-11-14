@@ -17,7 +17,7 @@ export default async function HomePage() {
   // Get all tenant IDs for showing featured listings from all branches
   // Cache for 5 minutes to reduce DB load
   const cacheKey = 'homepage:allTenants'
-  let allTenants = await redis.get<Array<{ id: string; slug: string; whatsappNumber: string | null; contactPhone: string | null }>>(cacheKey)
+  let allTenants = (await redis.get(cacheKey)) as Array<{ id: string; slug: string; whatsappNumber: string | null; contactPhone: string | null }> | null
   
   if (!allTenants) {
     allTenants = await db.tenant.findMany({
@@ -31,7 +31,7 @@ export default async function HomePage() {
   // Get featured listings from all tenants
   // Cache for 5 minutes with tenant IDs in key
   const featuredCacheKey = `homepage:featured:${tenantIds.sort().join(',')}`
-  let featured = await redis.get<Awaited<ReturnType<typeof db.listing.findMany>>>(featuredCacheKey)
+  let featured = (await redis.get(featuredCacheKey)) as Awaited<ReturnType<typeof db.listing.findMany>> | null
   
   if (!featured) {
     featured = await db.listing.findMany({
@@ -234,7 +234,7 @@ export default async function HomePage() {
   // Get stats from all tenants
   // Cache for 5 minutes with tenant IDs in key
   const statsCacheKey = `homepage:stats:${tenantIds.sort().join(',')}`
-  let stats = await redis.get<Array<{ type: string; _count: { id: number } }>>(statsCacheKey)
+  let stats = (await redis.get(statsCacheKey)) as Array<{ type: string; _count: { id: number } }> | null
   
   if (!stats) {
     stats = await db.listing.groupBy({
