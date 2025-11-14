@@ -250,12 +250,12 @@ export default async function ListingDetailPage({
           <div className="lg:col-span-2 space-y-6">
 
             {/* Key Features Summary */}
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-6 sm:gap-8 p-6 bg-white rounded-2xl border border-gray-200 shadow-sm">
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:items-center sm:justify-start gap-4 sm:gap-6 md:gap-8 p-4 sm:p-6 bg-white rounded-2xl border border-gray-200 shadow-sm">
               {listing.propertyType && (
                 <>
                   <div className="flex flex-col items-center gap-2">
-                    <HomeIcon className="h-8 w-8 text-gray-700" strokeWidth={1.5} />
-                    <span className="text-base font-medium text-gray-900 capitalize">{listing.propertyType}</span>
+                    <HomeIcon className="h-7 w-7 sm:h-8 sm:w-8 text-gray-700" strokeWidth={1.5} />
+                    <span className="text-sm sm:text-base font-medium text-gray-900 capitalize text-center">{listing.propertyType}</span>
                   </div>
                   <div className="h-12 w-px bg-gray-200 hidden sm:block" />
                 </>
@@ -264,8 +264,8 @@ export default async function ListingDetailPage({
               {listing.bedrooms !== undefined && listing.bedrooms !== null && (
                 <>
                   <div className="flex flex-col items-center gap-2">
-                    <Bed className="h-8 w-8 text-gray-700" strokeWidth={1.5} />
-                    <span className="text-base font-medium text-gray-900">{listing.bedrooms} bed{listing.bedrooms !== 1 ? 's' : ''}</span>
+                    <Bed className="h-7 w-7 sm:h-8 sm:w-8 text-gray-700" strokeWidth={1.5} />
+                    <span className="text-sm sm:text-base font-medium text-gray-900 text-center">{listing.bedrooms} bed{listing.bedrooms !== 1 ? 's' : ''}</span>
                   </div>
                   <div className="h-12 w-px bg-gray-200 hidden sm:block" />
                 </>
@@ -274,19 +274,19 @@ export default async function ListingDetailPage({
               {listing.bathrooms !== undefined && listing.bathrooms !== null && (
                 <>
                   <div className="flex flex-col items-center gap-2">
-                    <Bath className="h-8 w-8 text-gray-700" strokeWidth={1.5} />
-                    <span className="text-base font-medium text-gray-900">{listing.bathrooms} bath{listing.bathrooms !== 1 ? 's' : ''}</span>
+                    <Bath className="h-7 w-7 sm:h-8 sm:w-8 text-gray-700" strokeWidth={1.5} />
+                    <span className="text-sm sm:text-base font-medium text-gray-900 text-center">{listing.bathrooms} bath{listing.bathrooms !== 1 ? 's' : ''}</span>
                   </div>
                   {listing.squareFeet && <div className="h-12 w-px bg-gray-200 hidden sm:block" />}
                 </>
               )}
               
               {listing.squareFeet && (
-                <div className="flex flex-col items-center gap-2">
-                  <svg className="h-8 w-8 text-gray-700" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                <div className="flex flex-col items-center gap-2 col-span-2 sm:col-span-1">
+                  <svg className="h-7 w-7 sm:h-8 sm:w-8 text-gray-700" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h7v7H3V3zm11 0h7v7h-7V3zM3 14h7v7H3v-7zm11 0h7v7h-7v-7z" />
                   </svg>
-                  <span className="text-base font-medium text-gray-900">{listing.squareFeet.toLocaleString()} sq ft</span>
+                  <span className="text-sm sm:text-base font-medium text-gray-900 text-center">{listing.squareFeet.toLocaleString()} sq ft</span>
                 </div>
               )}
             </div>

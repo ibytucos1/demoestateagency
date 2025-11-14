@@ -167,50 +167,50 @@ export function HeroSearch() {
   return (
     <div className="w-full">
       {/* Navigation Tabs */}
-      <div className="flex items-center justify-between w-full mb-4 sm:mb-6 border-b border-white/30">
+      <div className="flex items-center justify-center gap-1 sm:justify-between sm:gap-0 w-full mb-4 sm:mb-6 border-b border-white/30">
         <button
           type="button"
           onClick={() => handleTabClick('sell')}
           className={cn(
-            'pb-3 px-2 text-xs sm:text-base font-medium transition-colors relative flex-1 text-center',
+            'pb-4 px-4 sm:pb-3 sm:px-2 text-base sm:text-base font-semibold sm:font-medium transition-colors relative sm:flex-1 sm:text-center',
             selectedTab === 'sell'
-              ? 'text-primary font-semibold'
+              ? 'text-primary sm:font-semibold'
               : 'text-white hover:text-primary'
           )}
         >
           Sell My Home
           {selectedTab === 'sell' && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></span>
+            <span className="absolute bottom-0 left-0 right-0 h-1 sm:h-0.5 bg-primary"></span>
           )}
         </button>
         <button
           type="button"
           onClick={() => handleTabClick('buy')}
           className={cn(
-            'pb-3 px-2 text-xs sm:text-base font-medium transition-colors relative flex-1 text-center',
+            'pb-4 px-4 sm:pb-3 sm:px-2 text-base sm:text-base font-semibold sm:font-medium transition-colors relative sm:flex-1 sm:text-center',
             selectedTab === 'buy'
-              ? 'text-primary font-semibold'
+              ? 'text-primary sm:font-semibold'
               : 'text-white hover:text-primary'
           )}
         >
           Buy
           {selectedTab === 'buy' && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></span>
+            <span className="absolute bottom-0 left-0 right-0 h-1 sm:h-0.5 bg-primary"></span>
           )}
         </button>
         <button
           type="button"
           onClick={() => handleTabClick('rent')}
           className={cn(
-            'pb-3 px-2 text-xs sm:text-base font-medium transition-colors relative flex-1 text-center',
+            'pb-4 px-4 sm:pb-3 sm:px-2 text-base sm:text-base font-semibold sm:font-medium transition-colors relative sm:flex-1 sm:text-center',
             selectedTab === 'rent'
-              ? 'text-primary font-semibold'
+              ? 'text-primary sm:font-semibold'
               : 'text-white hover:text-primary'
           )}
         >
           Rent
           {selectedTab === 'rent' && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></span>
+            <span className="absolute bottom-0 left-0 right-0 h-1 sm:h-0.5 bg-primary"></span>
           )}
         </button>
       </div>

@@ -1,232 +1,131 @@
+import { Suspense } from 'react'
 import { getTenant } from '@/lib/tenant'
 import { requireAuth } from '@/lib/rbac'
-import { db } from '@/lib/db'
-import { LeadsClient } from './leads-client'
+import { LeadsMetrics } from './components/leads-metrics'
+import { LeadsContent } from './components/leads-content'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Plus } from 'lucide-react'
 
-function isConnectionIssue(error: unknown) {
-  if (!(error instanceof Error)) return false
-  const code = (error as any)?.code
-  if (error.name === 'PrismaClientInitializationError') return true
-  if (code === 'P1001') return true
-  const message = typeof error.message === 'string' ? error.message : ''
-  return message.includes("Can't reach database server")
-}
+/**
+ * Leads Page with Suspense Boundaries
+ * 
+ * Structure:
+ * - Shell (instant render): Header + layout
+ * - Suspense 1: Metrics dashboard (9+ DB queries)
+ * - Suspense 2: Leads list (heavy findMany with relations)
+ */
 
 export default async function LeadsPage() {
   const tenant = await getTenant()
   const tenantId = tenant.id
   await requireAuth(tenantId, ['owner', 'admin', 'agent'])
 
-  // Fetch leads with metrics
-  let leads: Awaited<ReturnType<typeof db.lead.findMany>> = []
-  let agents: { id: string; name: string | null; email: string }[] = []
-  let metrics: any[] = []
-
-  try {
-    ;[leads, agents, metrics] = await Promise.all([
-      // Fetch leads with graceful handling for unmigrated DB
-      (async () => {
-        try {
-          return await db.lead.findMany({
-            where: { tenantId },
-            include: {
-              Listing: {
-                select: { title: true, slug: true },
-              },
-              AssignedUser: {
-                select: { id: true, name: true, email: true },
-              },
-            },
-            orderBy: { createdAt: 'desc' },
-            take: 100,
-          })
-        } catch (error) {
-          // Fallback if AssignedUser relation doesn't exist yet
-          console.warn('[LeadsPage] AssignedUser field not available, fetching without assignment')
-          return await db.lead.findMany({
-            where: { tenantId },
-            include: {
-              Listing: {
-                select: { title: true, slug: true },
-              },
-            },
-            orderBy: { createdAt: 'desc' },
-            take: 100,
-          }) as any // Cast to any to match expected type with AssignedUser
-        }
-      })(),
-      // Fetch agents for assignment
-      db.user.findMany({
-        where: { 
-          tenantId,
-          role: { in: ['owner', 'admin', 'agent'] }
-        },
-        select: { id: true, name: true, email: true },
-        orderBy: { name: 'asc' },
-      }),
-      // Calculate metrics
-      Promise.all([
-        // Total leads
-        db.lead.count({ where: { tenantId } }),
-        // Leads by status (with fallback for unmigrated DB)
-        (async () => {
-          try {
-            return await db.lead.groupBy({
-              by: ['status'],
-              where: { tenantId },
-              _count: { status: true },
-            })
-          } catch (error) {
-            // Fallback if status column doesn't exist yet
-            console.warn('[LeadsPage] Status field not available, using fallback')
-            const totalLeads = await db.lead.count({ where: { tenantId } })
-            return [{ status: 'new', _count: { status: totalLeads } }]
-          }
-        })(),
-        // Leads in last 7 days
-        db.lead.count({
-          where: {
-            tenantId,
-            createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
-          },
-        }),
-        // Leads in last 30 days
-        db.lead.count({
-          where: {
-            tenantId,
-            createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
-          },
-        }),
-        // Leads by source
-        db.lead.groupBy({
-          by: ['source'],
-          where: { tenantId },
-          _count: { source: true },
-        }),
-        // WhatsApp clicks - total (with error handling for missing table)
-        (async () => {
-          try {
-            // @ts-ignore - WhatsAppClick model may not exist until migration is run
-            return await (db as any).whatsAppClick?.count({ where: { tenantId } }) || 0
-          } catch {
-            return 0
-          }
-        })(),
-        // WhatsApp clicks - last 7 days
-        (async () => {
-          try {
-            // @ts-ignore - WhatsAppClick model may not exist until migration is run
-            return await (db as any).whatsAppClick?.count({
-              where: {
-                tenantId,
-                createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
-              },
-            }) || 0
-          } catch {
-            return 0
-          }
-        })(),
-        // WhatsApp clicks - last 30 days
-        (async () => {
-          try {
-            // @ts-ignore - WhatsAppClick model may not exist until migration is run
-            return await (db as any).whatsAppClick?.count({
-              where: {
-                tenantId,
-                createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
-              },
-            }) || 0
-          } catch {
-            return 0
-          }
-        })(),
-        // Unique WhatsApp users (by IP) - last 30 days
-        (async () => {
-          try {
-            // @ts-ignore - WhatsAppClick model may not exist until migration is run
-            const clicks = await (db as any).whatsAppClick?.findMany({
-              where: {
-                tenantId,
-                createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
-              },
-              select: { ipAddress: true },
-            }) || []
-            const uniqueIPs = new Set(clicks.map((c: any) => c.ipAddress).filter(Boolean))
-            return Array.from(uniqueIPs).map((ip: any) => ({ ipAddress: ip }))
-          } catch {
-            return []
-          }
-        })(),
-      ]),
-    ])
-  } catch (error) {
-    // Log error but don't throw - return empty state for graceful degradation
-    console.error('[LeadsPage] Error fetching leads data:', error)
-    console.warn('[LeadsPage] Falling back to empty state. This is expected if database migration has not been run yet.')
-
-    // Return empty state instead of demo data to avoid schema mismatches
-    leads = [] as any
-    agents = []
-    metrics = [
-      0, // totalLeads
-      [], // leadsByStatus
-      0, // leadsLast7Days
-      0, // leadsLast30Days
-      [], // leadsBySource
-      0, // whatsappClicksTotal
-      0, // whatsappClicksLast7Days
-      0, // whatsappClicksLast30Days
-      [], // uniqueWhatsappUsers
-    ]
-  }
-
-  const [
-    totalLeads,
-    leadsByStatus,
-    leadsLast7Days,
-    leadsLast30Days,
-    leadsBySource,
-    whatsappClicksTotal,
-    whatsappClicksLast7Days,
-    whatsappClicksLast30Days,
-    uniqueWhatsappUsers,
-  ] = metrics
-
-  // Format status counts
-  const statusCounts = {
-    new: leadsByStatus.find((s: any) => s.status === 'new')?._count.status || 0,
-    contacted: leadsByStatus.find((s: any) => s.status === 'contacted')?._count.status || 0,
-    qualified: leadsByStatus.find((s: any) => s.status === 'qualified')?._count.status || 0,
-    converted: leadsByStatus.find((s: any) => s.status === 'converted')?._count.status || 0,
-    archived: leadsByStatus.find((s: any) => s.status === 'archived')?._count.status || 0,
-  }
-
-  // Format source counts
-  const sourceCounts = {
-    form: leadsBySource.find((s: any) => s.source === 'form')?._count.source || 0,
-    phone: leadsBySource.find((s: any) => s.source === 'phone')?._count.source || 0,
-    portal: leadsBySource.find((s: any) => s.source === 'portal')?._count.source || 0,
-    valuation: leadsBySource.find((s: any) => s.source === 'valuation')?._count.source || 0,
-    contact: leadsBySource.find((s: any) => s.source === 'contact')?._count.source || 0,
-  }
-
-  const uniqueWhatsappUsersCount = uniqueWhatsappUsers.length
-
   return (
-    <LeadsClient
-      initialLeads={leads as any}
-      agents={agents as any}
-      metrics={{
-        totalLeads,
-        statusCounts,
-        leadsLast7Days,
-        leadsLast30Days,
-        sourceCounts,
-        whatsappClicksTotal,
-        whatsappClicksLast7Days,
-        whatsappClicksLast30Days,
-        uniqueWhatsappUsersCount,
-      }}
-    />
+    <div className="space-y-6">
+      {/* ✅ INSTANT: Header (no DB queries) */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">Leads</h1>
+        <Button size="sm" className="gap-2">
+          <Plus className="h-4 w-4" />
+          Create Lead
+        </Button>
+      </div>
+
+      {/* 🔄 SUSPENSE 1: Metrics Dashboard (9+ queries, ~200-500ms) */}
+      <Suspense fallback={<MetricsSkeleton />}>
+        <LeadsMetrics tenantId={tenantId} />
+      </Suspense>
+
+      {/* 🔄 SUSPENSE 2: Leads List (heavy query with relations, ~100-300ms) */}
+      <Suspense fallback={<LeadsListSkeleton />}>
+        <LeadsContent tenantId={tenantId} />
+      </Suspense>
+    </div>
+  )
+}
+
+/**
+ * Skeleton for metrics dashboard (matches actual metrics layout)
+ */
+function MetricsSkeleton() {
+  return (
+    <>
+      {/* Metrics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Card key={i}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-4 rounded" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-7 w-20 mb-1" />
+              <Skeleton className="h-3 w-32" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Status Breakdown */}
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-4 w-48" />
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <Skeleton className="h-6 w-20" />
+                <Skeleton className="h-4 w-8" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </>
+  )
+}
+
+/**
+ * Skeleton for leads list (matches actual leads layout)
+ */
+function LeadsListSkeleton() {
+  return (
+    <>
+      {/* Filters */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <Skeleton className="h-10 flex-1" />
+            <Skeleton className="h-10 w-full md:w-48" />
+            <Skeleton className="h-10 w-full md:w-48" />
+            <Skeleton className="h-10 w-24" />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Leads List */}
+      <div className="space-y-4">
+        <Skeleton className="h-6 w-48" />
+        <div className="grid gap-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i}>
+              <CardContent className="pt-6">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-6 w-32" />
+                    <Skeleton className="h-6 w-20" />
+                  </div>
+                  <Skeleton className="h-16 w-full" />
+                  <Skeleton className="h-4 w-48" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </>
   )
 }
