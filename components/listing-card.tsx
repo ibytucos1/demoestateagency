@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { MapPin, Bed, Bath, Heart, Eye, ChevronLeft, ChevronRight, Maximize2, MessageCircle, Phone, Mail } from 'lucide-react'
+import { MapPin, Bed, Bath, Heart, Eye, ChevronLeft, ChevronRight, Maximize2, MessageCircle, Phone } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getPublicUrlSync } from '@/lib/storage-utils'
 import { getWhatsAppTrackingUrl } from '@/lib/whatsapp-utils'
@@ -258,9 +258,9 @@ export function ListingCard({ listing, whatsappNumber, contactPhone, contactEmai
             </div>
 
             {/* Bottom Section - Contact Buttons */}
-            {(whatsappNumber || contactPhone || contactEmail) && (
+            {(whatsappNumber || contactPhone) && (
               <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200">
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-3">
                   {/* Call Button */}
                   {contactPhone && (
                     <button
@@ -269,25 +269,10 @@ export function ListingCard({ listing, whatsappNumber, contactPhone, contactEmai
                         e.stopPropagation()
                         window.location.href = `tel:${contactPhone}`
                       }}
-                      className="flex items-center justify-center gap-2 py-3 px-3 bg-white hover:bg-indigo-50 text-indigo-600 border-2 border-indigo-600 rounded-lg transition-all duration-200 text-sm font-semibold"
+                      className="flex items-center justify-center gap-2 py-3 px-4 bg-white hover:bg-indigo-50 text-indigo-600 border-2 border-indigo-600 rounded-xl transition-all duration-200 text-sm font-semibold"
                     >
                       <Phone className="h-5 w-5" />
                       <span>Call</span>
-                    </button>
-                  )}
-                  
-                  {/* Email Button - Desktop Only */}
-                  {contactEmail && (
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        window.location.href = `mailto:${contactEmail}?subject=Inquiry about ${listing.title}`
-                      }}
-                      className="hidden md:flex items-center justify-center gap-2 py-3 px-3 bg-white hover:bg-indigo-50 text-indigo-600 border-2 border-indigo-600 rounded-lg transition-all duration-200 text-sm font-semibold"
-                    >
-                      <Mail className="h-5 w-5" />
-                      <span>Email</span>
                     </button>
                   )}
                   
@@ -299,7 +284,7 @@ export function ListingCard({ listing, whatsappNumber, contactPhone, contactEmai
                         e.stopPropagation()
                         window.open(getWhatsAppTrackingUrl(whatsappNumber, `Hi, I'm interested in ${listing.title}`, listing.id, listing.slug), '_blank')
                       }}
-                      className="flex items-center justify-center gap-2 py-3 px-3 bg-white hover:bg-indigo-50 text-indigo-600 border-2 border-indigo-600 rounded-lg transition-all duration-200 text-sm font-semibold"
+                      className="flex items-center justify-center gap-2 py-3 px-4 bg-white hover:bg-indigo-50 text-indigo-600 border-2 border-indigo-600 rounded-xl transition-all duration-200 text-sm font-semibold"
                     >
                       <MessageCircle className="h-5 w-5" />
                       <span>WhatsApp</span>

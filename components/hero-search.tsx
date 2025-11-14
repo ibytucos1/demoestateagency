@@ -167,15 +167,15 @@ export function HeroSearch() {
   return (
     <div className="w-full">
       {/* Navigation Tabs */}
-      <div className="flex items-center gap-2 sm:gap-4 md:gap-6 mb-4 sm:mb-6 border-b border-gray-200 overflow-x-auto scrollbar-hide">
+      <div className="flex items-center justify-between w-full mb-4 sm:mb-6 border-b border-white/30">
         <button
           type="button"
           onClick={() => handleTabClick('sell')}
           className={cn(
-            'pb-3 px-2 sm:px-3 text-sm sm:text-base font-medium transition-colors relative whitespace-nowrap flex-shrink-0',
+            'pb-3 px-2 text-xs sm:text-base font-medium transition-colors relative flex-1 text-center',
             selectedTab === 'sell'
               ? 'text-primary font-semibold'
-              : 'text-gray-700 hover:text-primary'
+              : 'text-white hover:text-primary'
           )}
         >
           Sell My Home
@@ -187,13 +187,13 @@ export function HeroSearch() {
           type="button"
           onClick={() => handleTabClick('buy')}
           className={cn(
-            'pb-3 px-2 sm:px-3 text-sm sm:text-base font-medium transition-colors relative whitespace-nowrap flex-shrink-0',
+            'pb-3 px-2 text-xs sm:text-base font-medium transition-colors relative flex-1 text-center',
             selectedTab === 'buy'
               ? 'text-primary font-semibold'
-              : 'text-gray-700 hover:text-primary'
+              : 'text-white hover:text-primary'
           )}
         >
-          Buy A Home
+          Buy
           {selectedTab === 'buy' && (
             <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></span>
           )}
@@ -202,13 +202,13 @@ export function HeroSearch() {
           type="button"
           onClick={() => handleTabClick('rent')}
           className={cn(
-            'pb-3 px-2 sm:px-3 text-sm sm:text-base font-medium transition-colors relative whitespace-nowrap flex-shrink-0',
+            'pb-3 px-2 text-xs sm:text-base font-medium transition-colors relative flex-1 text-center',
             selectedTab === 'rent'
               ? 'text-primary font-semibold'
-              : 'text-gray-700 hover:text-primary'
+              : 'text-white hover:text-primary'
           )}
         >
-          Rent A Home
+          Rent
           {selectedTab === 'rent' && (
             <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></span>
           )}
@@ -217,10 +217,30 @@ export function HeroSearch() {
 
       {/* Search Form */}
       <form onSubmit={handleSubmit} className="w-full">
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-0">
-          {selectedTab === 'sell' ? (
-            <>
-              {/* Sell My Home - Postcode Input */}
+        {selectedTab === 'sell' ? (
+          <>
+            {/* Sell My Home - Postcode Input */}
+            {/* Mobile: Pill Design */}
+            <div className="relative flex items-center bg-white rounded-full shadow-lg overflow-hidden sm:hidden">
+              <input
+                type="text"
+                value={sellPostcode}
+                onChange={(e) => setSellPostcode(e.target.value)}
+                placeholder="What is the postcode of your home?"
+                className="flex-1 h-12 px-5 bg-transparent border-0 focus:outline-none text-sm text-gray-900 placeholder:text-gray-500"
+              />
+              <Button 
+                type="submit" 
+                size="icon"
+                className="h-9 w-9 rounded-full mr-1.5 flex-shrink-0"
+                loading={isSearching}
+              >
+                {!isSearching && <Search className="h-4 w-4" />}
+              </Button>
+            </div>
+            
+            {/* Desktop: Original Side-by-Side */}
+            <div className="hidden sm:flex sm:flex-row gap-0">
               <div className="flex-1">
                 <div className="relative">
                   <input
@@ -228,21 +248,46 @@ export function HeroSearch() {
                     value={sellPostcode}
                     onChange={(e) => setSellPostcode(e.target.value)}
                     placeholder="What is the postcode of your home?"
-                    className="w-full h-12 px-4 border border-gray-300 rounded-md sm:rounded-r-none sm:rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-base text-gray-900"
+                    className="w-full h-12 px-4 border border-white/20 bg-white/80 backdrop-blur-sm rounded-r-none rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-white text-base text-gray-900 placeholder:text-gray-500 transition-all"
                   />
                 </div>
               </div>
               <Button 
                 type="submit" 
-                className="h-12 px-6 sm:px-4 rounded-md sm:rounded-l-none sm:rounded-r-md flex-shrink-0 w-full sm:w-auto"
+                className="h-12 px-4 rounded-l-none rounded-r-md flex-shrink-0"
                 loading={isSearching}
               >
                 <span>Get Free Valuation</span>
               </Button>
-            </>
-          ) : (
-            <>
-              {/* Buy/Rent - Location Search */}
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Buy/Rent - Location Search */}
+            {/* Mobile: Pill Design */}
+            <div className="relative flex items-center bg-white rounded-full shadow-lg overflow-hidden sm:hidden">
+              <LocationAutocomplete
+                id="city"
+                value={city}
+                onChange={setCity}
+                onLocationSelect={setSelectedLocation}
+                placeholder="Enter city or postcode"
+                className="flex-1 rounded-full border-0 bg-transparent"
+                rightButton={
+                  <Button 
+                    type="submit" 
+                    size="icon"
+                    className="h-9 w-9 rounded-full mr-1.5 flex-shrink-0"
+                    loading={isSearching}
+                  >
+                    {!isSearching && <Search className="h-4 w-4" />}
+                  </Button>
+                }
+              />
+            </div>
+            
+            {/* Desktop: Original Side-by-Side */}
+            <div className="hidden sm:flex sm:flex-row gap-0">
               <div className="flex-1">
                 <LocationAutocomplete
                   id="city"
@@ -250,20 +295,19 @@ export function HeroSearch() {
                   onChange={setCity}
                   onLocationSelect={setSelectedLocation}
                   placeholder="Enter city or postcode"
-                  className="rounded-md sm:rounded-r-none sm:rounded-l-md"
+                  className="rounded-r-none rounded-l-md bg-white/80 backdrop-blur-sm border-white/20 focus:bg-white transition-all"
                 />
               </div>
               <Button 
                 type="submit" 
-                className="h-12 px-6 sm:px-4 rounded-md sm:rounded-l-none sm:rounded-r-md flex-shrink-0 w-full sm:w-auto"
+                className="h-12 px-4 rounded-l-none rounded-r-md flex-shrink-0"
                 loading={isSearching}
               >
-                {!isSearching && <Search className="h-5 w-5 mr-2 sm:mr-0" />}
-                <span className="sm:hidden">{isSearching ? 'Searching...' : 'Search'}</span>
+                {!isSearching && <Search className="h-5 w-5 mr-0" />}
               </Button>
-            </>
-          )}
-        </div>
+            </div>
+          </>
+        )}
       </form>
     </div>
   )

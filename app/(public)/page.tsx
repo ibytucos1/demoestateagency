@@ -15,7 +15,7 @@ export default async function HomePage() {
 
   // Get all tenant IDs for showing featured listings from all branches
   const allTenants = await db.tenant.findMany({
-    select: { id: true, slug: true, whatsappNumber: true },
+    select: { id: true, slug: true, whatsappNumber: true, contactPhone: true },
   })
   const tenantIds = allTenants.map((t: { id: string }) => t.id)
 
@@ -250,18 +250,18 @@ export default async function HomePage() {
             priority
             quality={90}
           />
-          <div className="absolute inset-0 bg-black/30"></div>
+          <div className="absolute inset-0 bg-black/50"></div>
         </div>
         <div className="relative container mx-auto px-4 py-12 md:py-16">
           <div className="max-w-4xl mx-auto text-center mb-8">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
-            {BRAND_TAGLINE}
+              Dominate the <em className="italic underline decoration-blue-500 decoration-2 underline-offset-4">Market</em>
             </h1>
           </div>
 
           {/* Search Bar */}
           <div className="max-w-3xl mx-auto mt-8 md:mt-16">
-            <div className="bg-white/50 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 p-6 md:p-8">
+            <div className="bg-blue-50/50 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 p-6 md:p-8">
               <HeroSearch />
             </div>
           </div>
@@ -301,7 +301,11 @@ export default async function HomePage() {
         </div>
 
         {featured.length > 0 ? (
-          <FeaturedPropertiesCarousel listings={featured} whatsappNumber={tenant.whatsappNumber ?? null} />
+          <FeaturedPropertiesCarousel 
+            listings={featured} 
+            whatsappNumber={tenant.whatsappNumber ?? null}
+            contactPhone={tenant.contactPhone ?? null}
+          />
         ) : (
           <div className="text-center py-16 bg-gray-50 rounded-xl">
             <Home className="h-16 w-16 text-gray-400 mx-auto mb-4" />
